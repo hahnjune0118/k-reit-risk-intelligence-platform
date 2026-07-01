@@ -9,15 +9,15 @@ def build_assurance_asset_priority(asset_risk: pd.DataFrame, scenario: dict, mat
         f"좌측 사이드바 시나리오의 Cap rate +{scenario.get('cap_rate_shock_bp', 'N/A')}bp 가정에서 계산",
     )
     total_value = df["appraised_value_mn_krw_20251231"].sum()
-    df["평가액비중_%"] = df["appraised_value_mn_krw_20251231"] / total_value * 100 if total_value else pd.NA
+    df["평가액비중_%"] = df["appraised_value_mn_krw_20251231"] / total_value * 100 if total_value else None
 
     sens = scenario.get("asset_sensitivity", pd.DataFrame())
     if sens is not None and not sens.empty and "asset_name" in sens.columns:
         sens_cols = ["asset_name", "value_change_pct", "value_change_mn_krw"]
         df = df.merge(sens[sens_cols], on="asset_name", how="left")
     else:
-        df["value_change_pct"] = pd.NA
-        df["value_change_mn_krw"] = pd.NA
+        df["value_change_pct"] = None
+        df["value_change_mn_krw"] = None
 
     df["assurance_priority_score"] = 0.0
     df["assurance_reasons"] = ""
@@ -60,26 +60,26 @@ def build_assurance_asset_priority(asset_risk: pd.DataFrame, scenario: dict, mat
 def build_rmm_mapping(latest_kpi: pd.Series, debt_schedule: pd.DataFrame, scenario: dict, assurance_assets: pd.DataFrame) -> pd.DataFrame:
     near_1y = debt_schedule[debt_schedule["days_to_maturity"].between(0, 365, inclusive="both")]["principal_mn_krw"].sum()
     total_debt = debt_schedule["principal_mn_krw"].sum()
-    near_1y_pct = near_1y / total_debt * 100 if total_debt else pd.NA
+    near_1y_pct = near_1y / total_debt * 100 if total_debt else None
     high_priority_assets = int((assurance_assets["감사 우선순위"] == "높음").sum()) if assurance_assets is not None and not assurance_assets.empty else 0
     scenario_label = scenario.get("scenario_label", "선택 시나리오")
-    cap_rate_shock_bp = scenario.get("cap_rate_shock_bp", pd.NA)
+    cap_rate_shock_bp = scenario.get("cap_rate_shock_bp", None)
     rows = [
         {
             "감사영역": "투자부동산 공정가치",
-            "RMM 신호": f"{scenario_label} / Cap rate +{cap_rate_shock_bp}bp: 감사 우선순위 높은 자산 {high_priority_assets}개, NAV 변화 {scenario.get('nav_change_pct', pd.NA):.1f}%" if pd.notna(scenario.get('nav_change_pct', pd.NA)) else "Cap rate 민감도 확인 필요",
+            "RMM 신호": f"{scenario_label} / Cap rate +{cap_rate_shock_bp}bp: 감사 우선순위 높은 자산 {high_priority_assets}개, NAV 변화 {scenario.get('nav_change_pct', None):.1f}%" if pd.notna(scenario.get('nav_change_pct', None)) else "Cap rate 민감도 확인 필요",
             "왜 중요한가": "리츠 재무제표에서 투자부동산 평가액은 총자산과 순자산가치에 직접 영향을 줍니다.",
             "권장 감사절차": "외부평가보고서, Cap rate, NOI, 공실률, 임대료 성장률, 민감도 공시를 집중 검토",
         },
         {
             "감사영역": "차입금·유동성·계속기업",
-            "RMM 신호": f"1년 내 만기 차입금 비중 {near_1y_pct:.1f}%, 시나리오 후 이자 감당력 {scenario.get('stressed_icr', pd.NA):.2f}x" if pd.notna(near_1y_pct) and pd.notna(scenario.get('stressed_icr', pd.NA)) else "차입금 만기와 이자 감당력 확인 필요",
+            "RMM 신호": f"1년 내 만기 차입금 비중 {near_1y_pct:.1f}%, 시나리오 후 이자 감당력 {scenario.get('stressed_icr', None):.2f}x" if pd.notna(near_1y_pct) and pd.notna(scenario.get('stressed_icr', None)) else "차입금 만기와 이자 감당력 확인 필요",
             "왜 중요한가": "차환 실패나 이자비용 급증은 유동성 주석, 계속기업 검토, 후속사건 검토에 영향을 줄 수 있습니다.",
             "권장 감사절차": "차입약정, 만기연장 계획, 리파이낸싱 term sheet, 현금흐름 forecast, 배당정책 변경 가능성 확인",
         },
         {
             "감사영역": "임대수익·임대채권",
-            "RMM 신호": f"평균 WALE {latest_kpi.get('wale_yrs', pd.NA):.2f}년, 임대율 {latest_kpi.get('occupancy_pct', pd.NA):.1f}%" if pd.notna(latest_kpi.get('wale_yrs', pd.NA)) else "임대율·임대기간 정보 확인 필요",
+            "RMM 신호": f"평균 WALE {latest_kpi.get('wale_yrs', None):.2f}년, 임대율 {latest_kpi.get('occupancy_pct', None):.1f}%" if pd.notna(latest_kpi.get('wale_yrs', None)) else "임대율·임대기간 정보 확인 필요",
             "왜 중요한가": "임차인 이탈, 렌트프리, 계약변경은 수익 지속가능성과 미수채권 회수가능성에 영향을 줄 수 있습니다.",
             "권장 감사절차": "주요 임대차계약, 임대료 변경, 렌트프리, 미수임대료 aging, 후속 임차인 변동 확인",
         },
@@ -113,7 +113,7 @@ def build_kam_candidate_table(scenario: dict, assurance_assets: pd.DataFrame, de
     })
     rows.append({
         "후보": "임대수익 지속가능성 및 주요 임차인 집중",
-        "선정 신호": "강함" if pd.notna(latest_kpi.get("wale_yrs", pd.NA)) and latest_kpi.get("wale_yrs") < 2.0 else "보통",
+        "선정 신호": "강함" if pd.notna(latest_kpi.get("wale_yrs", None)) and latest_kpi.get("wale_yrs") < 2.0 else "보통",
         "중점 고려사항": "WALE, 계약만기, 임차인 신용, 렌트프리, 임대료 인상조항, 미수임대료",
         "KAM/감사보고서 문구 방향": "수익 지속가능성 자체보다는 투자부동산 평가가정과 미수채권 회수가능성으로 연결해 검토",
     })
@@ -137,10 +137,10 @@ def _metric_text(value, suffix: str = "", decimals: int = 1) -> str:
     return f"{float(value):.{decimals}f}{suffix}"
 
 
-def _near_maturity_pct(debt_schedule: pd.DataFrame) -> float | pd.NA:
+def _near_maturity_pct(debt_schedule: pd.DataFrame) -> float | None:
     total_debt = debt_schedule["principal_mn_krw"].sum()
     if not total_debt:
-        return pd.NA
+        return None
     near_1y = debt_schedule[debt_schedule["days_to_maturity"].between(0, 365, inclusive="both")]["principal_mn_krw"].sum()
     return near_1y / total_debt * 100
 
@@ -157,10 +157,10 @@ def build_audit_workflow_checklist(
 ) -> pd.DataFrame:
     """Build a practical REIT audit checklist aligned to risk assessment and response standards."""
     near_1y_pct = _near_maturity_pct(debt_schedule)
-    stressed_icr = scenario.get("stressed_icr", pd.NA)
-    nav_change_pct = scenario.get("nav_change_pct", pd.NA)
-    wale_yrs = latest_kpi.get("wale_yrs", pd.NA)
-    occupancy_pct = latest_kpi.get("occupancy_pct", pd.NA)
+    stressed_icr = scenario.get("stressed_icr", None)
+    nav_change_pct = scenario.get("nav_change_pct", None)
+    wale_yrs = latest_kpi.get("wale_yrs", None)
+    occupancy_pct = latest_kpi.get("occupancy_pct", None)
     high_assets = int((assurance_assets["감사 우선순위"] == "높음").sum()) if assurance_assets is not None and not assurance_assets.empty else 0
 
     valuation_priority = _priority_level(high_assets > 0 or (pd.notna(nav_change_pct) and nav_change_pct <= -8))
@@ -403,10 +403,10 @@ def build_rmm_assertion_checklist(
     assurance_assets: pd.DataFrame,
 ) -> pd.DataFrame:
     near_1y_pct = _near_maturity_pct(debt_schedule)
-    stressed_icr = scenario.get("stressed_icr", pd.NA)
-    nav_change_pct = scenario.get("nav_change_pct", pd.NA)
-    wale_yrs = latest_kpi.get("wale_yrs", pd.NA)
-    occupancy_pct = latest_kpi.get("occupancy_pct", pd.NA)
+    stressed_icr = scenario.get("stressed_icr", None)
+    nav_change_pct = scenario.get("nav_change_pct", None)
+    wale_yrs = latest_kpi.get("wale_yrs", None)
+    occupancy_pct = latest_kpi.get("occupancy_pct", None)
     high_assets = int((assurance_assets["감사 우선순위"] == "높음").sum()) if assurance_assets is not None and not assurance_assets.empty else 0
 
     return pd.DataFrame(
