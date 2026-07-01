@@ -8,6 +8,7 @@ import requests
 import streamlit as st
 
 from config import DART_CORP_CODE_ENDPOINT, DART_LIST_ENDPOINT, DART_SINGLE_FS_ENDPOINT
+from security import sanitize_secret_text
 
 
 def _to_mn_krw_from_dart_amount(value):
@@ -45,7 +46,7 @@ def fetch_dart_corp_code_table(api_key: str) -> tuple[pd.DataFrame, str]:
             })
         return pd.DataFrame(rows), "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"DART corporate code fetch failed: {exc}"
+        return pd.DataFrame(), f"DART corporate code fetch failed: {sanitize_secret_text(exc)}"
 
 
 def resolve_dart_corp_code(api_key: str, stock_code: str = "395400", corp_name_keyword: str = "SK리츠") -> tuple[str, str, str]:
@@ -107,13 +108,13 @@ def fetch_dart_single_year_financials(api_key: str, corp_code: str, year: int, f
         response.raise_for_status()
         payload = response.json()
         if payload.get("status") != "000":
-            return pd.DataFrame(), payload.get("message", "DART returned non-000 status")
+            return pd.DataFrame(), sanitize_secret_text(payload.get("message", "DART returned non-000 status"))
         rows = payload.get("list", [])
         if not rows:
             return pd.DataFrame(), "No financial-statement rows returned"
         return pd.DataFrame(rows), "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"DART financial statement fetch failed: {exc}"
+        return pd.DataFrame(), f"DART financial statement fetch failed: {sanitize_secret_text(exc)}"
 
 
 @st.cache_data(ttl=60 * 60 * 6)
@@ -136,7 +137,7 @@ def fetch_dart_recent_report_list(api_key: str, corp_code: str, years_back: int 
         response.raise_for_status()
         payload = response.json()
         if payload.get("status") != "000":
-            return pd.DataFrame(), payload.get("message", "DART disclosure list returned non-000 status")
+            return pd.DataFrame(), sanitize_secret_text(payload.get("message", "DART disclosure list returned non-000 status"))
         rows = pd.DataFrame(payload.get("list", []))
         if rows.empty:
             return rows, "No DART disclosure rows returned"
@@ -144,7 +145,7 @@ def fetch_dart_recent_report_list(api_key: str, corp_code: str, years_back: int 
             rows = rows[rows["report_nm"].astype(str).str.contains("사업보고서", na=False)].copy()
         return rows, "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"DART disclosure list fetch failed: {exc}"
+        return pd.DataFrame(), f"DART disclosure list fetch failed: {sanitize_secret_text(exc)}"
 
 
 @st.cache_data(ttl=60 * 60 * 6)

@@ -5,6 +5,7 @@ import requests
 import streamlit as st
 
 from config import KRX_KOSPI_DAILY_TRADE_ENDPOINT
+from security import sanitize_secret_text
 
 
 def _parse_krx_number(value):
@@ -50,10 +51,10 @@ def fetch_krx_kospi_daily_trade(api_key: str, bas_dd: str, endpoint: str = KRX_K
         payload = response.json()
         rows = payload.get("OutBlock_1", payload.get("output", payload.get("data", [])))
         if not rows:
-            return pd.DataFrame(), payload.get("message", "No KRX rows returned")
+            return pd.DataFrame(), sanitize_secret_text(payload.get("message", "No KRX rows returned"))
         return pd.DataFrame(rows), "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"KRX daily trade fetch failed: {exc}"
+        return pd.DataFrame(), f"KRX daily trade fetch failed: {sanitize_secret_text(exc)}"
 
 
 @st.cache_data(ttl=60 * 60)

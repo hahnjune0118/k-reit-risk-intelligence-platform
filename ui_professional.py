@@ -3,6 +3,7 @@ import streamlit as st
 
 from ui_assurance import render_assurance_mode
 from ui_deals import render_deals_mode
+from security import sanitize_secret_text
 from ui_tax import render_tax_mode
 
 
@@ -53,7 +54,13 @@ def render_professional_page(
     )
     st.markdown("---")
     with st.expander("자료 출처와 계산 기준 보기", expanded=False):
-        st.caption(f"거시경제 지표: {macro_context['source']} / 과거 금리: {macro_history_status} / DART: {dart_status} / KRX: {krx_status}")
+        st.caption(
+            "거시경제 지표: "
+            f"{sanitize_secret_text(macro_context['source'])} / "
+            f"과거 금리: {sanitize_secret_text(macro_history_status)} / "
+            f"DART: {sanitize_secret_text(dart_status)} / "
+            f"KRX: {sanitize_secret_text(krx_status)}"
+        )
         st.write("자료 신뢰도 요약")
         source_conf = pd.concat([
             asset_risk[["source_document", "source_confidence"]],

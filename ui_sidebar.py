@@ -13,28 +13,7 @@ from api_ecos import build_macro_context, fetch_ecos_key_indicators
 from api_krx import fetch_krx_kospi_daily_trade, fetch_krx_stock_monthly_history, parse_uploaded_krx_csv
 from calculations_scenario import DEFAULT_MACRO_FORECAST, FORECAST_WEIGHTED_SCENARIO_NAME, macro_scenario_parameters
 from config import KRX_KOSPI_DAILY_TRADE_ENDPOINT
-
-
-def _default_ecos_key():
-    try:
-        return st.secrets.get("ECOS_API_KEY", "") or os.getenv("ECOS_API_KEY", "")
-    except Exception:
-        return os.getenv("ECOS_API_KEY", "")
-
-
-def _default_dart_key():
-    try:
-        return st.secrets.get("DART_API_KEY", "") or os.getenv("DART_API_KEY", "")
-    except Exception:
-        return os.getenv("DART_API_KEY", "")
-
-
-def _default_krx_key():
-    try:
-        return st.secrets.get("KRX_API_KEY", "") or os.getenv("KRX_API_KEY", "")
-    except Exception:
-        return os.getenv("KRX_API_KEY", "")
-
+from security import get_secret_value, sanitize_secret_text
 
 
 def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_user_mode: str) -> dict:
@@ -53,15 +32,14 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     st.sidebar.write("**한국은행 ECOS 연결**")
     st.sidebar.caption("인증키를 입력한 뒤 반드시 아래 버튼을 눌러 적용하세요. Enter만 누르면 브라우저/IME 환경에 따라 반영되지 않을 수 있습니다.")
 
-    # ECOS key can be supplied from Streamlit secrets, environment variable, or sidebar form.
+    # Manual password entry overrides Streamlit secrets and environment variables.
     if "ecos_api_key" not in st.session_state:
         st.session_state["ecos_api_key"] = ""
 
-    configured_ecos_api_key = _default_ecos_key()
-    with st.sidebar.form("ecos_api_key_form", clear_on_submit=False):
+    with st.sidebar.form("ecos_api_key_form", clear_on_submit=True):
         ecos_api_key_input = st.text_input(
             "ECOS API 인증키",
-            value=configured_ecos_api_key or st.session_state.get("ecos_api_key", ""),
+            value="",
             type="password",
             help="한국은행 ECOS Open API에서 발급받은 인증키를 입력한 뒤 'ECOS 지표 불러오기'를 누르세요.",
         )
@@ -71,7 +49,9 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         st.session_state["ecos_api_key"] = ecos_api_key_input.strip()
         fetch_ecos_key_indicators.clear()
 
-    ecos_api_key = configured_ecos_api_key or st.session_state.get("ecos_api_key", "")
+    ecos_api_key = get_secret_value("ECOS_API_KEY", st.session_state.get("ecos_api_key", ""))
+    if ecos_api_key:
+        st.sidebar.success("ECOS API key loaded")
     macro_context = build_macro_context(ecos_api_key)
 
     if macro_context["status"] == "connected":
@@ -82,7 +62,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     else:
         st.sidebar.warning("ECOS 미연결: 예시값으로 실행 중")
         with st.sidebar.expander("ECOS 연결 상태 보기", expanded=False):
-            st.write(macro_context.get("status", "unknown"))
+            st.write(sanitize_secret_text(macro_context.get("status", "unknown")))
 
     macro_display = pd.DataFrame([
         {"지표": "한국은행 기준금리", "값": f"{macro_context['base_rate_pct']:.2f}%"},
@@ -103,11 +83,10 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     if "dart_company_keyword" not in st.session_state:
         st.session_state["dart_company_keyword"] = "SK리츠"
 
-    configured_dart_api_key = _default_dart_key()
-    with st.sidebar.form("dart_api_key_form", clear_on_submit=False):
+    with st.sidebar.form("dart_api_key_form", clear_on_submit=True):
         dart_api_key_input = st.text_input(
             "DART API 인증키",
-            value=configured_dart_api_key or st.session_state.get("dart_api_key", ""),
+            value="",
             type="password",
             help="금융감독원 OpenDART에서 발급받은 인증키를 입력한 뒤 버튼을 누르세요.",
         )
@@ -124,7 +103,9 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         fetch_dart_annual_financial_history.clear()
         fetch_dart_recent_report_list.clear()
 
-    dart_api_key = configured_dart_api_key or st.session_state.get("dart_api_key", "")
+    dart_api_key = get_secret_value("DART_API_KEY", st.session_state.get("dart_api_key", ""))
+    if dart_api_key:
+        st.sidebar.success("DART API key loaded")
     dart_stock_code = st.session_state.get("dart_stock_code", "395400")
     dart_company_keyword = st.session_state.get("dart_company_keyword", "SK리츠")
 
@@ -140,7 +121,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     else:
         st.sidebar.warning("DART 미연결 또는 일부 자료 수집 실패")
         with st.sidebar.expander("DART 연결 상태 보기", expanded=False):
-            st.write(dart_status)
+            st.write(sanitize_secret_text(dart_status))
 
     st.sidebar.divider()
     st.sidebar.write("**한국거래소 KRX 연결**")
@@ -153,11 +134,10 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     if "krx_endpoint" not in st.session_state:
         st.session_state["krx_endpoint"] = KRX_KOSPI_DAILY_TRADE_ENDPOINT
 
-    configured_krx_api_key = _default_krx_key()
-    with st.sidebar.form("krx_api_key_form", clear_on_submit=False):
+    with st.sidebar.form("krx_api_key_form", clear_on_submit=True):
         krx_api_key_input = st.text_input(
             "KRX API 인증키",
-            value=configured_krx_api_key or st.session_state.get("krx_api_key", ""),
+            value="",
             type="password",
             help="KRX Data Marketplace Open API 인증키를 입력한 뒤 버튼을 누르세요. 해당 API 서비스 활용승인이 필요할 수 있습니다.",
         )
@@ -172,7 +152,9 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         fetch_krx_kospi_daily_trade.clear()
         fetch_krx_stock_monthly_history.clear()
 
-    krx_api_key = configured_krx_api_key or st.session_state.get("krx_api_key", "")
+    krx_api_key = get_secret_value("KRX_API_KEY", st.session_state.get("krx_api_key", ""))
+    if krx_api_key:
+        st.sidebar.success("KRX API key loaded")
     krx_stock_code = st.session_state.get("krx_stock_code", "395400")
     krx_endpoint = st.session_state.get("krx_endpoint", KRX_KOSPI_DAILY_TRADE_ENDPOINT)
 
@@ -197,7 +179,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     else:
         st.sidebar.warning("KRX 미연결 또는 일부 자료 수집 실패")
         with st.sidebar.expander("KRX 연결 상태 보기", expanded=False):
-            st.write(krx_status)
+            st.write(sanitize_secret_text(krx_status))
 
     st.sidebar.divider()
     st.sidebar.write("**시나리오 선택**")

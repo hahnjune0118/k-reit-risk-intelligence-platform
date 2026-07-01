@@ -5,6 +5,7 @@ import requests
 import streamlit as st
 
 from formatting import _safe_float
+from security import sanitize_secret_text
 
 
 def parse_official_price_upload(uploaded_file) -> tuple[pd.DataFrame, str]:
@@ -154,7 +155,7 @@ def fetch_official_price_history_generic(api_key: str, endpoint: str, param_temp
                 "year": year,
                 "official_land_price_per_sqm_krw": pd.NA,
                 "building_standard_value_mn_krw": pd.NA,
-                "official_price_source": f"api_error: {exc}",
+                "official_price_source": f"api_error: {sanitize_secret_text(exc)}",
             })
     df = pd.DataFrame(collected)
     if df.empty:

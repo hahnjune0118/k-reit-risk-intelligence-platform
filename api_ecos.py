@@ -11,6 +11,7 @@ from config import (
     FALLBACK_MACRO,
 )
 from formatting import _safe_float
+from security import sanitize_secret_text
 
 
 @st.cache_data(ttl=60 * 60)
@@ -28,11 +29,11 @@ def fetch_ecos_key_indicators(api_key: str) -> tuple[pd.DataFrame, str]:
         rows = root.get("row", [])
         if not rows:
             message = payload.get("RESULT", {}).get("MESSAGE", "No ECOS rows returned")
-            return pd.DataFrame(), message
+            return pd.DataFrame(), sanitize_secret_text(message)
         df = pd.DataFrame(rows)
         return df, "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"ECOS fetch failed: {exc}"
+        return pd.DataFrame(), f"ECOS fetch failed: {sanitize_secret_text(exc)}"
 
 
 def macro_value_from_ecos(df: pd.DataFrame, indicator_name: str):
@@ -149,7 +150,7 @@ def fetch_ecos_stat_series(api_key: str, stat_code: str, cycle: str, item_code: 
         rows = root.get("row", [])
         if not rows:
             msg = payload.get("RESULT", {}).get("MESSAGE", "No ECOS StatisticSearch rows returned")
-            return pd.DataFrame(), msg
+            return pd.DataFrame(), sanitize_secret_text(msg)
         df = pd.DataFrame(rows)
         df["DATA_VALUE"] = pd.to_numeric(df.get("DATA_VALUE"), errors="coerce")
         df["TIME"] = df.get("TIME").astype(str)
@@ -161,7 +162,7 @@ def fetch_ecos_stat_series(api_key: str, stat_code: str, cycle: str, item_code: 
             df["date"] = pd.to_datetime(df["TIME"], errors="coerce")
         return df.dropna(subset=["date", "DATA_VALUE"]), "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"ECOS StatisticSearch fetch failed: {exc}"
+        return pd.DataFrame(), f"ECOS StatisticSearch fetch failed: {sanitize_secret_text(exc)}"
 
 
 def fallback_macro_annual_history() -> pd.DataFrame:

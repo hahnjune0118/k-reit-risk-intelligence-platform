@@ -4,6 +4,7 @@ import streamlit as st
 
 from calculations_scenario import korean_metric_label, korean_risk_label
 from formatting import format_pct_from_100, format_ratio, format_score, format_trn_krw_from_mn
+from security import sanitize_secret_text
 from ui_common import compact_fig, fmt_metric_value, fmt_mn_to_bn, mode_specific_action_items
 
 
@@ -458,7 +459,13 @@ def render_general_dashboard(
                 kpis[["source_document", "source_confidence"]],
             ], ignore_index=True).drop_duplicates()
             st.dataframe(source_conf, width="stretch", hide_index=True, height=170)
-            st.caption(f"거시경제 지표: {macro_context['source']} / 과거 금리: {macro_history_status} / DART: {dart_status} / KRX: {krx_status}")
+            st.caption(
+                "거시경제 지표: "
+                f"{sanitize_secret_text(macro_context['source'])} / "
+                f"과거 금리: {sanitize_secret_text(macro_history_status)} / "
+                f"DART: {sanitize_secret_text(dart_status)} / "
+                f"KRX: {sanitize_secret_text(krx_status)}"
+            )
         with s2:
             st.write("**추가 수집 자료 계획**")
             st.dataframe(source_plan, width="stretch", hide_index=True, height=170)
