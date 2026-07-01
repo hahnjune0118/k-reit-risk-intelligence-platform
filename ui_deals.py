@@ -1,4 +1,5 @@
-﻿import plotly.express as px
+﻿import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from calculations_valuation import build_deals_backtest_table, build_deals_valuation_summary
