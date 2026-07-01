@@ -1,0 +1,6 @@
+asset_name,year,official_land_price_per_sqm_krw,building_standard_value_mn_krw,land_area_sqm,source
+SK서린빌딩,2022,22000000,240000,5779,sample_replace_with_official_price_source
+SK서린빌딩,2023,22800000,242000,5779,sample_replace_with_official_price_source
+SK서린빌딩,2024,23600000,244000,5779,sample_replace_with_official_price_source
+SK서린빌딩,2025,24500000,246000,5779,sample_replace_with_official_price_source
+SK서린빌딩,2026,25300000,248000,5779,sample_replace_with_official_price_source

@@ -1,0 +1,49 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments
+.venv/
+venv/
+env/
+ENV/
+
+# Streamlit and local secrets
+.streamlit/secrets.toml
+secrets.toml
+*.secrets.toml
+.env
+.env.*
+!.env.example
+
+# Raw credentials and API key dumps
+api_keys.*
+*api_key*
+*apikey*
+*.key
+*.pem
+*.token
+*.crt
+
+# Runtime logs and local outputs
+*.log
+streamlit_*.out.log
+streamlit_*.err.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Test/build artifacts
+htmlcov/
+coverage.xml
+dist/
+build/
+*.egg-info/

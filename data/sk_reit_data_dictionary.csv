@@ -1,0 +1,7 @@
+﻿table,field,definition,use
+sk_reit_consolidated_financials.csv,gross_ltv_interest_debt_to_assets_pct,interest_bearing_debt_mn_krw / total_assets_mn_krw; derived by assistant from disclosed balance-sheet line items,balance-sheet leverage trend
+sk_reit_latest_kpis.csv,FFO,investment report formula: net income + depreciation ± valuation gains/losses ± disposal gains/losses ± impairment ± sales gains/losses,dividend sustainability
+sk_reit_asset_metrics.csv,estimated_annual_rent_mn_krw,annual rent when explicitly shown as approx. rent in annual report; otherwise marked as derived using cap_rate*acquisition_price,NOI / tenant concentration proxy
+sk_reit_debt_schedule_20260331.csv,all_in_rate_pct,Investment report definition: loan/bond interest rate plus relevant financing fees,refinancing risk and interest expense sensitivity
+sk_reit_debt_summary_20260331.csv,weighted_avg_all_in_rate_pct,principal-weighted average all-in rate within bucket,maturity wall heatmap
+sk_reit_parent_direct_assets_20260331.csv,book_value_mn_krw,directly owned property carrying amount in 2026 Q1 investment report; excludes subsidiary-held assets,parent-only balance sheet / collateral map
