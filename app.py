@@ -3,6 +3,7 @@ import streamlit as st
 
 from api_ecos import build_ecos_annual_rate_history
 from api_krx import market_snapshot_from_krx
+from api_manager import get_api_key
 from calculations_risk import (
     build_asset_concentration_table,
     build_asset_risk_table,
@@ -53,7 +54,10 @@ sidebar_state = render_data_sidebar(kpis, financials, selected_user_mode)
 selected_period = sidebar_state["selected_period"]
 latest_kpi = sidebar_state["latest_kpi"]
 latest_fin = sidebar_state["latest_fin"]
-ecos_conn = sidebar_state["ecos_conn"]
+ecos_conn = sidebar_state.get("ecos_conn") or get_api_key("ECOS", sidebar_state.get("ecos_api_key", ""))
+dart_conn = sidebar_state.get("dart_conn") or get_api_key("DART", sidebar_state.get("dart_api_key", ""))
+krx_conn = sidebar_state.get("krx_conn") or get_api_key("KRX", sidebar_state.get("krx_api_key", ""))
+realty_conn = sidebar_state.get("realty_conn") or get_api_key("V-World", sidebar_state.get("realty_api_key", ""))
 macro_context = sidebar_state["macro_context"]
 dart_history = sidebar_state["dart_history"]
 dart_reports = sidebar_state["dart_reports"]
