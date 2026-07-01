@@ -11,9 +11,9 @@ from api_dart import (
 )
 from api_ecos import build_macro_context, fetch_ecos_key_indicators
 from api_krx import fetch_krx_kospi_daily_trade, fetch_krx_stock_monthly_history, parse_uploaded_krx_csv
+from api_manager import get_api_key, sanitize_secret_text
 from calculations_scenario import DEFAULT_MACRO_FORECAST, FORECAST_WEIGHTED_SCENARIO_NAME, macro_scenario_parameters
 from config import KRX_KOSPI_DAILY_TRADE_ENDPOINT
-from security import get_secret_value, sanitize_secret_text
 
 
 def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_user_mode: str) -> dict:
@@ -28,31 +28,93 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     latest_fin_candidates = financials[financials["period_end"].dt.strftime("%Y-%m-%d") == selected_period]
     latest_fin = latest_fin_candidates.iloc[0] if not latest_fin_candidates.empty else financials.sort_values("period_end").iloc[-1]
 
+    for session_key in ["ecos_api_key", "dart_api_key", "krx_api_key", "realty_price_api_key"]:
+        if session_key not in st.session_state:
+            st.session_state[session_key] = ""
+
+    st.sidebar.divider()
+    with st.sidebar.expander("고급 설정: 수동 API Key 입력", expanded=False):
+        with st.form("manual_api_key_form", clear_on_submit=True):
+            ecos_api_key_input = st.text_input(
+                "ECOS API Key",
+                value="",
+                type="password",
+                placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
+            )
+            dart_api_key_input = st.text_input(
+                "DART API Key",
+                value="",
+                type="password",
+                placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
+            )
+            krx_api_key_input = st.text_input(
+                "KRX API Key",
+                value="",
+                type="password",
+                placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
+            )
+            realty_price_api_key_input = st.text_input(
+                "V-World / Realty Price API Key",
+                value="",
+                type="password",
+                placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
+            )
+            apply_manual_keys = st.form_submit_button("수동 API Key 적용", width="stretch")
+            clear_manual_keys = st.form_submit_button("수동 API Key 초기화", width="stretch")
+
+        if apply_manual_keys:
+            manual_updates = {
+                "ecos_api_key": ecos_api_key_input.strip(),
+                "dart_api_key": dart_api_key_input.strip(),
+                "krx_api_key": krx_api_key_input.strip(),
+                "realty_price_api_key": realty_price_api_key_input.strip(),
+            }
+            for session_key, manual_value in manual_updates.items():
+                if manual_value:
+                    st.session_state[session_key] = manual_value
+            fetch_ecos_key_indicators.clear()
+            fetch_dart_corp_code_table.clear()
+            fetch_dart_single_year_financials.clear()
+            fetch_dart_annual_financial_history.clear()
+            fetch_dart_recent_report_list.clear()
+            fetch_krx_kospi_daily_trade.clear()
+            fetch_krx_stock_monthly_history.clear()
+
+        if clear_manual_keys:
+            for session_key in ["ecos_api_key", "dart_api_key", "krx_api_key", "realty_price_api_key"]:
+                st.session_state[session_key] = ""
+            fetch_ecos_key_indicators.clear()
+            fetch_dart_corp_code_table.clear()
+            fetch_dart_single_year_financials.clear()
+            fetch_dart_annual_financial_history.clear()
+            fetch_dart_recent_report_list.clear()
+            fetch_krx_kospi_daily_trade.clear()
+            fetch_krx_stock_monthly_history.clear()
+
+    ecos_conn = get_api_key("ECOS", st.session_state.get("ecos_api_key", ""))
+    dart_conn = get_api_key("DART", st.session_state.get("dart_api_key", ""))
+    krx_conn = get_api_key("KRX", st.session_state.get("krx_api_key", ""))
+    realty_conn = get_api_key("V-World", st.session_state.get("realty_price_api_key", ""))
+    api_status_rows = [
+        {"상태": "ECOS: API key loaded" if ecos_conn.configured else "ECOS: not configured"},
+        {"상태": "DART: API key loaded" if dart_conn.configured else "DART: not configured"},
+        {"상태": "KRX: API key loaded" if krx_conn.configured else "KRX: not configured"},
+        {"상태": "V-World: API key loaded" if realty_conn.configured else "V-World: not configured"},
+    ]
+
+    st.sidebar.write("**API 연결 상태**")
+    st.sidebar.dataframe(
+        pd.DataFrame(api_status_rows),
+        hide_index=True,
+        width="stretch",
+        height=176,
+    )
+
     st.sidebar.divider()
     st.sidebar.write("**한국은행 ECOS 연결**")
-    st.sidebar.caption("인증키를 입력한 뒤 반드시 아래 버튼을 눌러 적용하세요. Enter만 누르면 브라우저/IME 환경에 따라 반영되지 않을 수 있습니다.")
+    st.sidebar.caption("ECOS API key는 Streamlit Secrets, 환경변수 또는 고급 설정의 수동 입력에서 불러옵니다.")
 
-    # Manual password entry overrides Streamlit secrets and environment variables.
-    if "ecos_api_key" not in st.session_state:
-        st.session_state["ecos_api_key"] = ""
-
-    with st.sidebar.form("ecos_api_key_form", clear_on_submit=True):
-        ecos_api_key_input = st.text_input(
-            "ECOS API 인증키",
-            value="",
-            type="password",
-            help="한국은행 ECOS Open API에서 발급받은 인증키를 입력한 뒤 'ECOS 지표 불러오기'를 누르세요.",
-        )
-        submitted_ecos_key = st.form_submit_button("ECOS 지표 불러오기", width="stretch")
-
-    if submitted_ecos_key:
-        st.session_state["ecos_api_key"] = ecos_api_key_input.strip()
-        fetch_ecos_key_indicators.clear()
-
-    ecos_api_key = get_secret_value("ECOS_API_KEY", st.session_state.get("ecos_api_key", ""))
-    if ecos_api_key:
-        st.sidebar.success("ECOS API key loaded")
-    macro_context = build_macro_context(ecos_api_key)
+    macro_context = build_macro_context(ecos_conn.key)
 
     if macro_context["status"] == "connected":
         if macro_context["source"] == "한국은행 ECOS API":
@@ -76,26 +138,17 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     st.sidebar.write("**금융감독원 DART 연결**")
     st.sidebar.caption("DART 인증키를 입력하면 SK리츠의 최근 5개 사업연도 재무제표를 자동으로 불러와 시계열 분석에 사용합니다.")
 
-    if "dart_api_key" not in st.session_state:
-        st.session_state["dart_api_key"] = ""
     if "dart_stock_code" not in st.session_state:
         st.session_state["dart_stock_code"] = "395400"
     if "dart_company_keyword" not in st.session_state:
         st.session_state["dart_company_keyword"] = "SK리츠"
 
-    with st.sidebar.form("dart_api_key_form", clear_on_submit=True):
-        dart_api_key_input = st.text_input(
-            "DART API 인증키",
-            value="",
-            type="password",
-            help="금융감독원 OpenDART에서 발급받은 인증키를 입력한 뒤 버튼을 누르세요.",
-        )
+    with st.sidebar.form("dart_config_form", clear_on_submit=False):
         dart_stock_code_input = st.text_input("종목코드", value=st.session_state.get("dart_stock_code", "395400"))
         dart_company_keyword_input = st.text_input("회사명 검색어", value=st.session_state.get("dart_company_keyword", "SK리츠"))
         submitted_dart_key = st.form_submit_button("DART 최근 5년 재무제표 불러오기", width="stretch")
 
     if submitted_dart_key:
-        st.session_state["dart_api_key"] = dart_api_key_input.strip()
         st.session_state["dart_stock_code"] = dart_stock_code_input.strip()
         st.session_state["dart_company_keyword"] = dart_company_keyword_input.strip()
         fetch_dart_corp_code_table.clear()
@@ -103,18 +156,15 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         fetch_dart_annual_financial_history.clear()
         fetch_dart_recent_report_list.clear()
 
-    dart_api_key = get_secret_value("DART_API_KEY", st.session_state.get("dart_api_key", ""))
-    if dart_api_key:
-        st.sidebar.success("DART API key loaded")
     dart_stock_code = st.session_state.get("dart_stock_code", "395400")
     dart_company_keyword = st.session_state.get("dart_company_keyword", "SK리츠")
 
     dart_history, dart_reports, dart_status = fetch_dart_annual_financial_history(
-        dart_api_key,
+        dart_conn.key,
         dart_stock_code,
         dart_company_keyword,
         years_back=5,
-    ) if dart_api_key else (pd.DataFrame(), pd.DataFrame(), "DART 미연결: 로컬 CSV 기준으로 실행")
+    ) if dart_conn.key else (pd.DataFrame(), pd.DataFrame(), "DART 미연결: 로컬 CSV 기준으로 실행")
 
     if dart_status == "connected":
         st.sidebar.success("DART API 연결 완료")
@@ -127,43 +177,31 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     st.sidebar.write("**한국거래소 KRX 연결**")
     st.sidebar.caption("KRX 인증키를 입력하면 SK리츠 주가·시가총액을 불러와 P/NAV와 시장가격 반응을 분석합니다.")
 
-    if "krx_api_key" not in st.session_state:
-        st.session_state["krx_api_key"] = ""
     if "krx_stock_code" not in st.session_state:
         st.session_state["krx_stock_code"] = "395400"
     if "krx_endpoint" not in st.session_state:
         st.session_state["krx_endpoint"] = KRX_KOSPI_DAILY_TRADE_ENDPOINT
 
-    with st.sidebar.form("krx_api_key_form", clear_on_submit=True):
-        krx_api_key_input = st.text_input(
-            "KRX API 인증키",
-            value="",
-            type="password",
-            help="KRX Data Marketplace Open API 인증키를 입력한 뒤 버튼을 누르세요. 해당 API 서비스 활용승인이 필요할 수 있습니다.",
-        )
+    with st.sidebar.form("krx_config_form", clear_on_submit=False):
         krx_stock_code_input = st.text_input("KRX 종목코드", value=st.session_state.get("krx_stock_code", "395400"))
         krx_endpoint_input = st.text_input("KRX 일별매매정보 Endpoint", value=st.session_state.get("krx_endpoint", KRX_KOSPI_DAILY_TRADE_ENDPOINT))
         submitted_krx_key = st.form_submit_button("KRX 주가·시가총액 불러오기", width="stretch")
 
     if submitted_krx_key:
-        st.session_state["krx_api_key"] = krx_api_key_input.strip()
         st.session_state["krx_stock_code"] = krx_stock_code_input.strip()
         st.session_state["krx_endpoint"] = krx_endpoint_input.strip()
         fetch_krx_kospi_daily_trade.clear()
         fetch_krx_stock_monthly_history.clear()
 
-    krx_api_key = get_secret_value("KRX_API_KEY", st.session_state.get("krx_api_key", ""))
-    if krx_api_key:
-        st.sidebar.success("KRX API key loaded")
     krx_stock_code = st.session_state.get("krx_stock_code", "395400")
     krx_endpoint = st.session_state.get("krx_endpoint", KRX_KOSPI_DAILY_TRADE_ENDPOINT)
 
     krx_history, krx_status = fetch_krx_stock_monthly_history(
-        krx_api_key,
+        krx_conn.key,
         krx_stock_code,
         years_back=5,
         endpoint=krx_endpoint,
-    ) if krx_api_key else (pd.DataFrame(), "KRX 미연결: 시장가격 분석은 표시하지 않음")
+    ) if krx_conn.key else (pd.DataFrame(), "KRX 미연결: 시장가격 분석은 표시하지 않음")
 
     st.sidebar.caption("API 승인/endpoint 문제로 연결이 안 되면 KRX 일별/월별 CSV를 업로드해 대체할 수 있습니다.")
     krx_csv_upload = st.sidebar.file_uploader("KRX CSV 대체 업로드", type=["csv"], key="krx_csv_upload")
@@ -244,7 +282,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
 
     st.sidebar.divider()
     st.sidebar.write("**모드별 가정값**")
-    professional_assumptions = {}
+    professional_assumptions = {"realty_conn": realty_conn}
     if selected_user_mode == "Assurance":
         professional_assumptions["assurance_materiality_pct"] = st.sidebar.slider(
             "감사 중점 자산 기준: 평가액 비중",
@@ -326,7 +364,10 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         "selected_period": selected_period,
         "latest_kpi": latest_kpi,
         "latest_fin": latest_fin,
-        "ecos_api_key": ecos_api_key,
+        "ecos_conn": ecos_conn,
+        "dart_conn": dart_conn,
+        "krx_conn": krx_conn,
+        "realty_conn": realty_conn,
         "macro_context": macro_context,
         "dart_history": dart_history,
         "dart_reports": dart_reports,

@@ -4,7 +4,7 @@ import streamlit as st
 
 from calculations_scenario import korean_metric_label, korean_risk_label
 from formatting import format_pct_from_100, format_ratio, format_score, format_trn_krw_from_mn
-from security import sanitize_secret_text
+from api_manager import sanitize_secret_text
 from ui_common import compact_fig, fmt_metric_value, fmt_mn_to_bn, mode_specific_action_items
 
 

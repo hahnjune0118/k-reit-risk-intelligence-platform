@@ -11,7 +11,7 @@ from config import (
     FALLBACK_MACRO,
 )
 from formatting import _safe_float
-from security import sanitize_secret_text
+from api_manager import sanitize_secret_text
 
 
 @st.cache_data(ttl=60 * 60)

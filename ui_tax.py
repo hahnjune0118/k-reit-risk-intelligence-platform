@@ -17,7 +17,7 @@ from calculations_tax import (
 )
 from config import REALTY_PRICE_API_ENDPOINT_DEFAULT
 from formatting import format_bn_krw, format_pct_from_100
-from security import get_secret_value, sanitize_secret_text
+from api_manager import get_api_key, sanitize_secret_dataframe, sanitize_secret_text
 from ui_common import compact_fig
 
 
@@ -68,14 +68,10 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
     default_template = '{"format":"json", "pnu":"{pnu}", "stdrYear":"{year}", "pageNo":"1", "numOfRows":"50"}'
     if "realty_price_api_key" not in st.session_state:
         st.session_state["realty_price_api_key"] = ""
+    realty_conn = assumptions.get("realty_conn") or get_api_key("V-World", st.session_state.get("realty_price_api_key", ""))
     with st.form("realty_price_api_form", clear_on_submit=True):
         c1, c2 = st.columns([0.95, 1.05])
         with c1:
-            api_key = st.text_input(
-                "한국부동산원/공시가격 API 인증키",
-                type="password",
-                value="",
-            )
             endpoint = st.text_input("공시가격 API endpoint", value=st.session_state.get("realty_price_endpoint", REALTY_PRICE_API_ENDPOINT_DEFAULT), placeholder="예: 활용승인 받은 공시가격/개별공시지가 조회 endpoint")
             selected_api_asset = st.selectbox("API 테스트 자산", asset_risk["asset_name"].tolist(), index=0)
             selected_row = asset_risk[asset_risk["asset_name"] == selected_api_asset].iloc[0]
@@ -90,20 +86,15 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
     api_price_history = st.session_state.get("realty_price_api_history", pd.DataFrame())
     api_status = sanitize_secret_text(st.session_state.get("realty_price_api_status", "API 미사용"))
     if fetch_api:
-        st.session_state["realty_price_api_key"] = api_key.strip()
         st.session_state["realty_price_endpoint"] = endpoint.strip()
         st.session_state["realty_price_param_template"] = param_template
         st.session_state["realty_price_pnu_or_code"] = pnu_or_code.strip()
-        effective_api_key = get_secret_value("REALTY_PRICE_API_KEY", st.session_state.get("realty_price_api_key", ""))
         api_price_history, api_status = fetch_official_price_history_generic(
-            effective_api_key, endpoint.strip(), param_template,
+            realty_conn.key, endpoint.strip(), param_template,
             selected_api_asset, str(selected_row.get("location", "")), pnu_or_code.strip(), start_year, current_year
         )
         st.session_state["realty_price_api_history"] = api_price_history
         st.session_state["realty_price_api_status"] = api_status
-    effective_api_key = get_secret_value("REALTY_PRICE_API_KEY", st.session_state.get("realty_price_api_key", ""))
-    if effective_api_key:
-        st.success("Realty price API key loaded")
 
     uploaded_price_history, upload_status = parse_official_price_upload(uploaded_price_csv) if uploaded_price_csv is not None else (pd.DataFrame(), "업로드 없음")
 
@@ -124,9 +115,7 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
         )
         price_data_status = "공시가격 API/CSV 미연결: 평가액 기반 proxy 사용 중"
 
-    if "official_price_source" in official_price_history.columns:
-        official_price_history = official_price_history.copy()
-        official_price_history["official_price_source"] = official_price_history["official_price_source"].apply(sanitize_secret_text)
+    official_price_history = sanitize_secret_dataframe(official_price_history)
 
     if "land_area_sqm" in official_price_history.columns:
         # Uploaded area can override asset master only if present.

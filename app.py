@@ -53,7 +53,7 @@ sidebar_state = render_data_sidebar(kpis, financials, selected_user_mode)
 selected_period = sidebar_state["selected_period"]
 latest_kpi = sidebar_state["latest_kpi"]
 latest_fin = sidebar_state["latest_fin"]
-ecos_api_key = sidebar_state["ecos_api_key"]
+ecos_conn = sidebar_state["ecos_conn"]
 macro_context = sidebar_state["macro_context"]
 dart_history = sidebar_state["dart_history"]
 dart_reports = sidebar_state["dart_reports"]
@@ -83,7 +83,7 @@ scenario = build_interactive_scenario_outputs(
     macro_scenario,
 )
 verdict_text, verdict_level, verdict_reason = scenario_verdict(scenario)
-macro_history, macro_history_status = build_ecos_annual_rate_history(ecos_api_key, years_back=5)
+macro_history, macro_history_status = build_ecos_annual_rate_history(ecos_conn.key, years_back=5)
 historical_panel = build_historical_panel(financials, kpis, macro_history, dart_history, krx_history)
 market_snapshot = market_snapshot_from_krx(krx_history, latest_kpi.get("nav_mn_krw", pd.NA))
 market_gap = build_market_implied_gap_table(market_snapshot, latest_kpi.get("nav_mn_krw", pd.NA), scenario)

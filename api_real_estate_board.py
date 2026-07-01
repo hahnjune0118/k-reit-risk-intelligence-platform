@@ -5,7 +5,7 @@ import requests
 import streamlit as st
 
 from formatting import _safe_float
-from security import sanitize_secret_text
+from api_manager import sanitize_secret_text
 
 
 def parse_official_price_upload(uploaded_file) -> tuple[pd.DataFrame, str]:

@@ -8,7 +8,7 @@ import requests
 import streamlit as st
 
 from config import DART_CORP_CODE_ENDPOINT, DART_LIST_ENDPOINT, DART_SINGLE_FS_ENDPOINT
-from security import sanitize_secret_text
+from api_manager import sanitize_secret_text
 
 
 def _to_mn_krw_from_dart_amount(value):

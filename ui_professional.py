@@ -3,7 +3,7 @@ import streamlit as st
 
 from ui_assurance import render_assurance_mode
 from ui_deals import render_deals_mode
-from security import sanitize_secret_text
+from api_manager import sanitize_secret_text
 from ui_tax import render_tax_mode
 
 

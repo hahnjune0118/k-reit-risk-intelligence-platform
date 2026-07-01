@@ -5,7 +5,7 @@ import requests
 import streamlit as st
 
 from config import KRX_KOSPI_DAILY_TRADE_ENDPOINT
-from security import sanitize_secret_text
+from api_manager import sanitize_secret_text
 
 
 def _parse_krx_number(value):
