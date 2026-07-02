@@ -3,7 +3,7 @@ from pathlib import Path
 
 APP_VERSION = "v12"
 APP_VERSION_NAME = "Peer Benchmark & Red Flag Engine"
-APP_VERSION_LABEL = f"{APP_VERSION} - {APP_VERSION_NAME}"
+APP_VERSION_LABEL = f"{APP_VERSION} - Peer Benchmark 및 Red Flag 자동화 버전"
 APP_TITLE = "K-REIT Risk Intelligence Platform"
 APP_SUBTITLE = (
     "상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터를 연결하여 "
