@@ -67,14 +67,14 @@ def get_api_key(provider: str, manual_value: str = "") -> ApiConnection:
         source = "manual"
     else:
         key = _secret_value(secret_name)
-        source = "st.secrets" if key else ""
+        source = "server_config" if key else ""
         if not key:
             key = os.getenv(secret_name, "").strip()
             source = "environment" if key else "none"
 
     configured = bool(key)
     status = "loaded" if configured else "not_configured"
-    message = f"{provider} API Key가 설정되어 있습니다." if configured else f"{provider} API Key가 설정되지 않았습니다."
+    message = f"{provider} 데이터 연결 설정 완료" if configured else f"{provider} 데이터 연결 설정 없음"
     return ApiConnection(
         provider=provider,
         secret_name=secret_name,

@@ -38,7 +38,7 @@ USER_MODE_CONFIG = {
     },
     "Methodology & Data Sources": {
         "title": PUBLIC_MODE_LABELS["Methodology & Data Sources"],
-        "goal": "사용 데이터, 계산 방식, 가정, 한계, API Key 보안 구조, 버전 관리 기준을 설명합니다.",
+        "goal": "사용 데이터, 계산 방식, 가정, 한계, 외부 데이터 인증값 보안 구조, 버전 관리 기준을 설명합니다.",
         "decision": "분석 결과를 해석하기 전에 어떤 자료가 API, CSV, 사용자 업로드, 추정치에서 왔는지 확인합니다.",
         "questions": [
             "DART, ECOS, V-World, 내부 CSV 중 어떤 자료가 어느 표에 사용되나요?",

@@ -28,7 +28,7 @@ def _to_mn_krw_from_dart_amount(value):
 def fetch_dart_corp_code_table(api_key: str) -> tuple[pd.DataFrame, str]:
     """Download DART corporate-code ZIP and parse CORPCODE.xml."""
     if not api_key:
-        return pd.DataFrame(), "DART API Key가 없어 예시 데이터를 사용합니다."
+        return pd.DataFrame(), "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다."
     try:
         response = requests.get(DART_CORP_CODE_ENDPOINT, params={"crtfc_key": api_key.strip()}, timeout=20)
         response.raise_for_status()
@@ -95,7 +95,7 @@ def _sum_account_amounts(df: pd.DataFrame, patterns: list[str]):
 def fetch_dart_single_year_financials(api_key: str, corp_code: str, year: int, fs_div: str = "CFS") -> tuple[pd.DataFrame, str]:
     """Fetch one year's annual-report financial statement rows from OpenDART."""
     if not api_key or not corp_code:
-        return pd.DataFrame(), "DART API Key 또는 회사 고유번호가 없어 예시 데이터를 사용합니다."
+        return pd.DataFrame(), "DART 데이터 연결 설정 또는 회사 고유번호가 없어 예시 데이터를 사용합니다."
     params = {
         "crtfc_key": api_key.strip(),
         "corp_code": corp_code,
@@ -121,7 +121,7 @@ def fetch_dart_single_year_financials(api_key: str, corp_code: str, year: int, f
 def fetch_dart_recent_report_list(api_key: str, corp_code: str, years_back: int = 5) -> tuple[pd.DataFrame, str]:
     """Fetch recent DART disclosure list and keep annual reports."""
     if not api_key or not corp_code:
-        return pd.DataFrame(), "DART API Key 또는 회사 고유번호가 없어 예시 데이터를 사용합니다."
+        return pd.DataFrame(), "DART 데이터 연결 설정 또는 회사 고유번호가 없어 예시 데이터를 사용합니다."
     end_date = datetime.today().strftime("%Y%m%d")
     start_date = (datetime.today() - timedelta(days=365 * years_back + 45)).strftime("%Y%m%d")
     params = {
@@ -152,7 +152,7 @@ def fetch_dart_recent_report_list(api_key: str, corp_code: str, years_back: int 
 def fetch_dart_annual_financial_history(api_key: str, stock_code: str = "395400", corp_name_keyword: str = "SK리츠", years_back: int = 5) -> tuple[pd.DataFrame, pd.DataFrame, str]:
     """Fetch recent annual K-IFRS financials and annual-report list for one listed company."""
     if not api_key:
-        return pd.DataFrame(), pd.DataFrame(), "DART API Key가 없어 예시 데이터를 사용합니다."
+        return pd.DataFrame(), pd.DataFrame(), "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다."
     corp_code, corp_name, status = resolve_dart_corp_code(api_key, stock_code, corp_name_keyword)
     if not corp_code:
         return pd.DataFrame(), pd.DataFrame(), status

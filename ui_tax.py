@@ -66,11 +66,9 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
     st.caption("실제 API endpoint와 파라미터는 활용승인 받은 서비스별로 다를 수 있습니다. 승인받은 endpoint와 파라미터 템플릿을 입력하거나, CSV 업로드로 안정적으로 테스트할 수 있습니다.")
 
     default_template = '{"format":"json", "pnu":"{pnu}", "stdrYear":"{year}", "pageNo":"1", "numOfRows":"50"}'
-    if "realty_price_api_key" not in st.session_state:
-        st.session_state["realty_price_api_key"] = ""
-    realty_conn = assumptions.get("realty_conn") or get_api_key("V-World", st.session_state.get("realty_price_api_key", ""))
+    realty_conn = assumptions.get("realty_conn") or get_api_key("V-World")
     if not realty_conn.configured:
-        st.warning("실시간 API Key가 없어 예시 데이터를 사용합니다.")
+        st.warning("실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다.")
     with st.form("realty_price_api_form", clear_on_submit=True):
         c1, c2 = st.columns([0.95, 1.05])
         with c1:

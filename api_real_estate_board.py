@@ -111,7 +111,7 @@ def fetch_official_price_history_generic(api_key: str, endpoint: str, param_temp
     템플릿에서는 {year}, {asset_name}, {address}, {pnu}, {service_key} placeholder를 사용할 수 있습니다.
     """
     if not api_key or not endpoint:
-        return pd.DataFrame(), "실시간 API Key 또는 endpoint가 없어 예시 데이터를 사용합니다."
+        return pd.DataFrame(), "실시간 데이터 연결 설정 또는 endpoint가 없어 예시 데이터를 사용합니다."
     import json
     collected = []
     try:

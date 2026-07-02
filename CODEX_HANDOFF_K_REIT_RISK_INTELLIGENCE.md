@@ -24,7 +24,7 @@ py -m streamlit run app.py
 ## 주요 파일
 
 - `config.py`: 앱 버전, 제목, 표시 라벨, endpoint 상수
-- `api_manager.py`: 안전한 API Key 로딩과 마스킹
+- `api_manager.py`: 안전한 외부 데이터 인증값 로딩과 마스킹
 - `ui_layout.py`: 공개 모드 선택과 첫 화면 설명
 - `ui_sidebar.py`: ECOS, DART, V-World / 공시가격 API 설정
 - `ui_general.py`: 일반 정보 및 Scenario 분석
@@ -34,7 +34,7 @@ py -m streamlit run app.py
 
 ## 보안
 
-API Key를 Streamlit widget의 `value=`에 넣거나 화면에 표시하면 안 됩니다. API Key는 `api_manager.get_api_key()`로 로드하고, 화면에 표시될 수 있는 API 응답이나 상태 문구는 `api_manager.sanitize_secret_text()`로 마스킹합니다.
+외부 데이터 인증값을 Streamlit widget의 `value=`에 넣거나 화면에 표시하면 안 됩니다. 인증값은 `api_manager.get_api_key()`로 로드하고, 화면에 표시될 수 있는 API 응답이나 상태 문구는 `api_manager.sanitize_secret_text()`로 마스킹합니다.
 
 ## 버전 관리
 

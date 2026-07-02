@@ -14,6 +14,9 @@ from api_manager import get_api_key, sanitize_secret_text
 from calculations_scenario import DEFAULT_MACRO_FORECAST, FORECAST_WEIGHTED_SCENARIO_NAME, macro_scenario_parameters
 
 
+SHOW_DEVELOPER_API_INPUTS = os.getenv("SHOW_DEVELOPER_API_INPUTS", "false").lower() == "true"
+
+
 def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_user_mode: str) -> dict:
     st.sidebar.header("데이터 연결과 시나리오")
     st.sidebar.caption("사용자가 금리를 임의로 넣는 대신, ECOS에서 불러온 금리 지표를 기준으로 시나리오를 선택합니다.")
@@ -26,69 +29,87 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     latest_fin_candidates = financials[financials["period_end"].dt.strftime("%Y-%m-%d") == selected_period]
     latest_fin = latest_fin_candidates.iloc[0] if not latest_fin_candidates.empty else financials.sort_values("period_end").iloc[-1]
 
-    for session_key in ["ecos_api_key", "dart_api_key", "realty_price_api_key"]:
-        if session_key not in st.session_state:
-            st.session_state[session_key] = ""
-
-    st.sidebar.divider()
-    with st.sidebar.expander("고급 설정: 개발자용 API Key 직접 입력", expanded=False):
-        with st.form("manual_api_key_form", clear_on_submit=True):
-            ecos_api_key_input = st.text_input(
-                "ECOS API Key",
-                value="",
-                type="password",
-                placeholder="서버 Secrets가 없을 때만 직접 입력",
-            )
-            dart_api_key_input = st.text_input(
-                "DART API Key",
-                value="",
-                type="password",
-                placeholder="서버 Secrets가 없을 때만 직접 입력",
-            )
-            realty_price_api_key_input = st.text_input(
-                "V-World / Realty Price API Key",
-                value="",
-                type="password",
-                placeholder="서버 Secrets가 없을 때만 직접 입력",
-            )
-            apply_manual_keys = st.form_submit_button("수동 API Key 적용", width="stretch")
-            clear_manual_keys = st.form_submit_button("수동 API Key 초기화", width="stretch")
-
-        if apply_manual_keys:
-            manual_updates = {
-                "ecos_api_key": ecos_api_key_input.strip(),
-                "dart_api_key": dart_api_key_input.strip(),
-                "realty_price_api_key": realty_price_api_key_input.strip(),
-            }
-            for session_key, manual_value in manual_updates.items():
-                if manual_value:
-                    st.session_state[session_key] = manual_value
-            fetch_ecos_key_indicators.clear()
-            fetch_dart_corp_code_table.clear()
-            fetch_dart_single_year_financials.clear()
-            fetch_dart_annual_financial_history.clear()
-            fetch_dart_recent_report_list.clear()
-
-        if clear_manual_keys:
-            for session_key in ["ecos_api_key", "dart_api_key", "realty_price_api_key"]:
+    manual_ecos_value = ""
+    manual_dart_value = ""
+    manual_realty_value = ""
+    if SHOW_DEVELOPER_API_INPUTS:
+        for session_key in ["ecos_api_key", "dart_api_key", "realty_price_api_key"]:
+            if session_key not in st.session_state:
                 st.session_state[session_key] = ""
-            fetch_ecos_key_indicators.clear()
-            fetch_dart_corp_code_table.clear()
-            fetch_dart_single_year_financials.clear()
-            fetch_dart_annual_financial_history.clear()
-            fetch_dart_recent_report_list.clear()
 
-    ecos_conn = get_api_key("ECOS", st.session_state.get("ecos_api_key", ""))
-    dart_conn = get_api_key("DART", st.session_state.get("dart_api_key", ""))
-    realty_conn = get_api_key("V-World", st.session_state.get("realty_price_api_key", ""))
+        st.sidebar.divider()
+        with st.sidebar.expander("개발자 설정: 외부 데이터 인증값", expanded=False):
+            with st.form("manual_api_key_form", clear_on_submit=True):
+                ecos_api_key_input = st.text_input(
+                    "ECOS 인증값",
+                    value="",
+                    type="password",
+                    placeholder="로컬 테스트용 임시 값",
+                )
+                dart_api_key_input = st.text_input(
+                    "DART 인증값",
+                    value="",
+                    type="password",
+                    placeholder="로컬 테스트용 임시 값",
+                )
+                realty_price_api_key_input = st.text_input(
+                    "V-World 인증값",
+                    value="",
+                    type="password",
+                    placeholder="로컬 테스트용 임시 값",
+                )
+                apply_manual_keys = st.form_submit_button("임시 인증값 적용", width="stretch")
+                clear_manual_keys = st.form_submit_button("임시 인증값 초기화", width="stretch")
+
+            if apply_manual_keys:
+                manual_updates = {
+                    "ecos_api_key": ecos_api_key_input.strip(),
+                    "dart_api_key": dart_api_key_input.strip(),
+                    "realty_price_api_key": realty_price_api_key_input.strip(),
+                }
+                for session_key, manual_value in manual_updates.items():
+                    if manual_value:
+                        st.session_state[session_key] = manual_value
+                fetch_ecos_key_indicators.clear()
+                fetch_dart_corp_code_table.clear()
+                fetch_dart_single_year_financials.clear()
+                fetch_dart_annual_financial_history.clear()
+                fetch_dart_recent_report_list.clear()
+
+            if clear_manual_keys:
+                for session_key in ["ecos_api_key", "dart_api_key", "realty_price_api_key"]:
+                    st.session_state[session_key] = ""
+                fetch_ecos_key_indicators.clear()
+                fetch_dart_corp_code_table.clear()
+                fetch_dart_single_year_financials.clear()
+                fetch_dart_annual_financial_history.clear()
+                fetch_dart_recent_report_list.clear()
+
+            manual_ecos_value = st.session_state.get("ecos_api_key", "")
+            manual_dart_value = st.session_state.get("dart_api_key", "")
+            manual_realty_value = st.session_state.get("realty_price_api_key", "")
+
+    ecos_conn = get_api_key("ECOS", manual_ecos_value)
+    dart_conn = get_api_key("DART", manual_dart_value)
+    realty_conn = get_api_key("V-World", manual_realty_value)
     api_status_rows = [
-        {"상태": "ECOS API: 서버 설정 완료" if ecos_conn.configured else "ECOS API: API Key가 설정되지 않았습니다. 예시 데이터로 실행됩니다."},
-        {"상태": "DART API: 서버 설정 완료" if dart_conn.configured else "DART API: API Key가 설정되지 않았습니다. 예시 데이터로 실행됩니다."},
-        {"상태": "V-World API: 서버 설정 완료" if realty_conn.configured else "V-World API: API Key가 설정되지 않았습니다. 예시 데이터로 실행됩니다."},
+        {
+            "데이터": "ECOS 거시경제 데이터",
+            "상태": "연결 준비 완료" if ecos_conn.configured else "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다.",
+        },
+        {
+            "데이터": "DART 공시 데이터",
+            "상태": "연결 준비 완료" if dart_conn.configured else "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다.",
+        },
+        {
+            "데이터": "V-World 공시가격 데이터",
+            "상태": "연결 준비 완료" if realty_conn.configured else "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다.",
+        },
     ]
 
-    st.sidebar.write("**API 연결 상태**")
-    st.sidebar.caption("API Key는 보안상 화면에 표시되지 않습니다.")
+    st.sidebar.divider()
+    st.sidebar.write("**데이터 연결 상태**")
+    st.sidebar.caption("본 공개 버전은 서버 측 데이터 연결 설정을 사용하며, 필요 시 예시 데이터로 자동 전환됩니다.")
     st.sidebar.dataframe(
         pd.DataFrame(api_status_rows),
         hide_index=True,
@@ -96,27 +117,23 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         height=176,
     )
     st.sidebar.info(
-        "본 공개 버전은 서버에 저장된 API Key를 사용하도록 설계되어 있습니다. 사용자는 별도의 API Key를 "
-        "발급하거나 입력할 필요가 없습니다. 보안상 API Key는 화면에 표시되지 않으며, 실시간 API 호출이 "
-        "실패할 경우 내장 예시 데이터로 자동 전환됩니다."
+        "본 공개 버전은 서버 측 데이터 연결 설정을 사용하도록 설계되어 있습니다. 사용자는 별도의 인증키를 "
+        "입력할 필요가 없으며, 실시간 데이터 연결이 제한될 경우 예시 데이터로 자동 전환됩니다."
     )
 
     st.sidebar.divider()
-    st.sidebar.write("**한국은행 ECOS 연결**")
-    st.sidebar.caption("ECOS API Key는 서버 측 Streamlit Secrets 또는 환경변수에서 우선 불러옵니다.")
+    st.sidebar.write("**한국은행 ECOS 데이터**")
+    st.sidebar.caption("서버 측 데이터 연결이 준비되어 있으면 실시간 거시경제 지표를 불러오고, 제한되는 경우 예시 데이터를 사용합니다.")
 
     macro_context = build_macro_context(ecos_conn.key)
 
     if macro_context["status"] == "connected":
         if macro_context["source"] == "한국은행 ECOS API":
-            st.sidebar.success("ECOS API 연결 완료")
+            st.sidebar.success("ECOS 데이터 연결 완료")
         else:
-            st.sidebar.warning("실시간 API 호출 결과가 일부 부족해 예시 데이터를 함께 사용합니다.")
+            st.sidebar.warning("실시간 데이터 일부가 제한되어 예시 데이터를 함께 사용합니다.")
     else:
-        if ecos_conn.configured:
-            st.sidebar.warning("실시간 API 호출이 실패해 예시 데이터를 사용합니다.")
-        else:
-            st.sidebar.warning("실시간 API Key가 없어 예시 데이터를 사용합니다.")
+        st.sidebar.warning("실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다.")
         with st.sidebar.expander("ECOS 연결 상태 보기", expanded=False):
             st.write(sanitize_secret_text(macro_context.get("status", "unknown")))
 
@@ -129,8 +146,8 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     st.sidebar.dataframe(macro_display, hide_index=True, width="stretch", height=150)
 
     st.sidebar.divider()
-    st.sidebar.write("**금융감독원 DART 연결**")
-    st.sidebar.caption("DART API Key가 서버에 설정되어 있으면 최근 5개 사업연도 재무제표를 자동으로 불러오고, 없으면 내장 CSV를 사용합니다.")
+    st.sidebar.write("**금융감독원 DART 데이터**")
+    st.sidebar.caption("서버 측 데이터 연결이 준비되어 있으면 최근 5개 사업연도 재무제표를 불러오고, 제한되는 경우 내장 CSV를 사용합니다.")
 
     if "dart_stock_code" not in st.session_state:
         st.session_state["dart_stock_code"] = "395400"
@@ -158,15 +175,12 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         dart_stock_code,
         dart_company_keyword,
         years_back=5,
-    ) if dart_conn.key else (pd.DataFrame(), pd.DataFrame(), "실시간 API Key가 없어 예시 데이터를 사용합니다.")
+    ) if dart_conn.key else (pd.DataFrame(), pd.DataFrame(), "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다.")
 
     if dart_status == "connected":
-        st.sidebar.success("DART API 연결 완료")
+        st.sidebar.success("DART 데이터 연결 완료")
     else:
-        if dart_conn.configured:
-            st.sidebar.warning("실시간 API 호출이 실패해 예시 데이터를 사용합니다.")
-        else:
-            st.sidebar.warning("실시간 API Key가 없어 예시 데이터를 사용합니다.")
+        st.sidebar.warning("실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다.")
         with st.sidebar.expander("DART 연결 상태 보기", expanded=False):
             st.write(sanitize_secret_text(dart_status))
 
@@ -263,7 +277,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         professional_assumptions["include_local_education_tax"] = st.sidebar.checkbox("지방교육세 포함", value=True)
         professional_assumptions["apply_tax_burden_cap"] = st.sidebar.checkbox("세부담상한 단순 적용", value=False)
         professional_assumptions["tax_burden_cap_pct"] = st.sidebar.slider("세부담상한 추정치(proxy)", min_value=110.0, max_value=200.0, value=150.0, step=10.0)
-        with st.sidebar.expander("API 미연결 시 추정치(proxy) 가정", expanded=False):
+        with st.sidebar.expander("실시간 공시가격 데이터 제한 시 추정치(proxy) 가정", expanded=False):
             professional_assumptions["proxy_land_growth_pct"] = st.slider("연간 공시지가 상승률 추정치(proxy)", 0.0, 15.0, 3.0, 0.5)
             professional_assumptions["official_to_appraisal_ratio_pct"] = st.slider("토지 공시가격/감정가 추정치(proxy)", 10.0, 90.0, 55.0, 5.0)
             professional_assumptions["building_standard_ratio_pct"] = st.slider("건물 기준시가/감정가 추정치(proxy)", 0.0, 60.0, 20.0, 5.0)

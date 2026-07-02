@@ -18,7 +18,7 @@ from api_manager import sanitize_secret_text
 def fetch_ecos_key_indicators(api_key: str) -> tuple[pd.DataFrame, str]:
     """한국은행 ECOS 100대 통계지표를 조회합니다."""
     if not api_key:
-        return pd.DataFrame(), "ECOS API Key가 없어 예시 데이터를 사용합니다."
+        return pd.DataFrame(), "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다."
 
     try:
         url = ECOS_KEY_INDICATOR_ENDPOINT.format(api_key=api_key.strip())
@@ -132,7 +132,7 @@ def build_macro_context(api_key: str) -> dict:
 def fetch_ecos_stat_series(api_key: str, stat_code: str, cycle: str, item_code: str, start_date: str, end_date: str, count: int = 10000) -> tuple[pd.DataFrame, str]:
     """Fetch one ECOS time series with StatisticSearch."""
     if not api_key:
-        return pd.DataFrame(), "ECOS API Key가 없어 예시 데이터를 사용합니다."
+        return pd.DataFrame(), "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다."
     try:
         url = ECOS_STAT_SEARCH_ENDPOINT.format(
             api_key=api_key.strip(),
