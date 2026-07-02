@@ -2,7 +2,6 @@ import pandas as pd
 import streamlit as st
 
 from api_ecos import build_ecos_annual_rate_history
-from api_krx import market_snapshot_from_krx
 from api_manager import get_api_key
 from calculations_risk import (
     build_asset_concentration_table,
@@ -19,10 +18,8 @@ from calculations_risk import (
 from calculations_transmission import (
     build_historical_panel,
     build_macro_transmission_table,
-    build_market_implied_gap_table,
     build_transmission_correlation_table,
     build_transmission_narrative,
-    interpret_market_gap,
 )
 from data_loader import load_data
 from ui_general import render_general_dashboard
@@ -55,15 +52,10 @@ selected_period = sidebar_state["selected_period"]
 latest_kpi = sidebar_state["latest_kpi"]
 latest_fin = sidebar_state["latest_fin"]
 ecos_conn = sidebar_state.get("ecos_conn") or get_api_key("ECOS", sidebar_state.get("ecos_api_key", ""))
-dart_conn = sidebar_state.get("dart_conn") or get_api_key("DART", sidebar_state.get("dart_api_key", ""))
-krx_conn = sidebar_state.get("krx_conn") or get_api_key("KRX", sidebar_state.get("krx_api_key", ""))
-realty_conn = sidebar_state.get("realty_conn") or get_api_key("V-World", sidebar_state.get("realty_api_key", ""))
 macro_context = sidebar_state["macro_context"]
 dart_history = sidebar_state["dart_history"]
 dart_reports = sidebar_state["dart_reports"]
 dart_status = sidebar_state["dart_status"]
-krx_history = sidebar_state["krx_history"]
-krx_status = sidebar_state["krx_status"]
 macro_scenario = sidebar_state["macro_scenario"]
 rate_shock_bp = sidebar_state["rate_shock_bp"]
 refinancing_share_pct = sidebar_state["refinancing_share_pct"]
@@ -88,10 +80,10 @@ scenario = build_interactive_scenario_outputs(
 )
 verdict_text, verdict_level, verdict_reason = scenario_verdict(scenario)
 macro_history, macro_history_status = build_ecos_annual_rate_history(ecos_conn.key, years_back=5)
-historical_panel = build_historical_panel(financials, kpis, macro_history, dart_history, krx_history)
-market_snapshot = market_snapshot_from_krx(krx_history, latest_kpi.get("nav_mn_krw", pd.NA))
-market_gap = build_market_implied_gap_table(market_snapshot, latest_kpi.get("nav_mn_krw", pd.NA), scenario)
-market_gap_narrative = interpret_market_gap(market_gap)
+historical_panel = build_historical_panel(financials, kpis, macro_history, dart_history)
+market_snapshot = {"available": False}
+market_gap = pd.DataFrame()
+market_gap_narrative = ""
 transmission_table = build_macro_transmission_table(historical_panel)
 transmission_corr = build_transmission_correlation_table(historical_panel)
 transmission_narrative = build_transmission_narrative(transmission_table, transmission_corr)
@@ -103,15 +95,14 @@ if selected_user_mode != "General Info & Scenario":
         debt_schedule,
         latest_kpi,
         scenario,
-        market_snapshot,
-        historical_panel,
         professional_assumptions,
         macro_context,
         macro_history_status,
         dart_status,
-        krx_status,
         financials,
         kpis,
+        source_plan,
+        data_dictionary,
     )
     st.stop()
 
@@ -147,7 +138,5 @@ render_general_dashboard(
     kpis,
     macro_history_status,
     dart_status,
-    krx_status,
     dart_reports,
-    krx_history,
 )

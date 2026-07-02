@@ -2,6 +2,7 @@
 import plotly.express as px
 import streamlit as st
 
+# Archived for future KRX-based Deals valuation module.
 from calculations_valuation import build_deals_backtest_table, build_deals_valuation_summary
 from ui_common import compact_fig
 

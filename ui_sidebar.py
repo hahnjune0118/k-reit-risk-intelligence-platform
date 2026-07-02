@@ -10,10 +10,8 @@ from api_dart import (
     fetch_dart_single_year_financials,
 )
 from api_ecos import build_macro_context, fetch_ecos_key_indicators
-from api_krx import fetch_krx_kospi_daily_trade, fetch_krx_stock_monthly_history, parse_uploaded_krx_csv
 from api_manager import get_api_key, sanitize_secret_text
 from calculations_scenario import DEFAULT_MACRO_FORECAST, FORECAST_WEIGHTED_SCENARIO_NAME, macro_scenario_parameters
-from config import KRX_KOSPI_DAILY_TRADE_ENDPOINT
 
 
 def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_user_mode: str) -> dict:
@@ -28,7 +26,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     latest_fin_candidates = financials[financials["period_end"].dt.strftime("%Y-%m-%d") == selected_period]
     latest_fin = latest_fin_candidates.iloc[0] if not latest_fin_candidates.empty else financials.sort_values("period_end").iloc[-1]
 
-    for session_key in ["ecos_api_key", "dart_api_key", "krx_api_key", "realty_price_api_key"]:
+    for session_key in ["ecos_api_key", "dart_api_key", "realty_price_api_key"]:
         if session_key not in st.session_state:
             st.session_state[session_key] = ""
 
@@ -47,12 +45,6 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
                 type="password",
                 placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
             )
-            krx_api_key_input = st.text_input(
-                "KRX API Key",
-                value="",
-                type="password",
-                placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
-            )
             realty_price_api_key_input = st.text_input(
                 "V-World / Realty Price API Key",
                 value="",
@@ -66,7 +58,6 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
             manual_updates = {
                 "ecos_api_key": ecos_api_key_input.strip(),
                 "dart_api_key": dart_api_key_input.strip(),
-                "krx_api_key": krx_api_key_input.strip(),
                 "realty_price_api_key": realty_price_api_key_input.strip(),
             }
             for session_key, manual_value in manual_updates.items():
@@ -77,28 +68,22 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
             fetch_dart_single_year_financials.clear()
             fetch_dart_annual_financial_history.clear()
             fetch_dart_recent_report_list.clear()
-            fetch_krx_kospi_daily_trade.clear()
-            fetch_krx_stock_monthly_history.clear()
 
         if clear_manual_keys:
-            for session_key in ["ecos_api_key", "dart_api_key", "krx_api_key", "realty_price_api_key"]:
+            for session_key in ["ecos_api_key", "dart_api_key", "realty_price_api_key"]:
                 st.session_state[session_key] = ""
             fetch_ecos_key_indicators.clear()
             fetch_dart_corp_code_table.clear()
             fetch_dart_single_year_financials.clear()
             fetch_dart_annual_financial_history.clear()
             fetch_dart_recent_report_list.clear()
-            fetch_krx_kospi_daily_trade.clear()
-            fetch_krx_stock_monthly_history.clear()
 
     ecos_conn = get_api_key("ECOS", st.session_state.get("ecos_api_key", ""))
     dart_conn = get_api_key("DART", st.session_state.get("dart_api_key", ""))
-    krx_conn = get_api_key("KRX", st.session_state.get("krx_api_key", ""))
     realty_conn = get_api_key("V-World", st.session_state.get("realty_price_api_key", ""))
     api_status_rows = [
         {"상태": "ECOS: API key loaded" if ecos_conn.configured else "ECOS: not configured"},
         {"상태": "DART: API key loaded" if dart_conn.configured else "DART: not configured"},
-        {"상태": "KRX: API key loaded" if krx_conn.configured else "KRX: not configured"},
         {"상태": "V-World: API key loaded" if realty_conn.configured else "V-World: not configured"},
     ]
 
@@ -173,51 +158,8 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         with st.sidebar.expander("DART 연결 상태 보기", expanded=False):
             st.write(sanitize_secret_text(dart_status))
 
-    st.sidebar.divider()
-    st.sidebar.write("**한국거래소 KRX 연결**")
-    st.sidebar.caption("KRX 인증키를 입력하면 SK리츠 주가·시가총액을 불러와 P/NAV와 시장가격 반응을 분석합니다.")
-
-    if "krx_stock_code" not in st.session_state:
-        st.session_state["krx_stock_code"] = "395400"
-    if "krx_endpoint" not in st.session_state:
-        st.session_state["krx_endpoint"] = KRX_KOSPI_DAILY_TRADE_ENDPOINT
-
-    with st.sidebar.form("krx_config_form", clear_on_submit=False):
-        krx_stock_code_input = st.text_input("KRX 종목코드", value=st.session_state.get("krx_stock_code", "395400"))
-        krx_endpoint_input = st.text_input("KRX 일별매매정보 Endpoint", value=st.session_state.get("krx_endpoint", KRX_KOSPI_DAILY_TRADE_ENDPOINT))
-        submitted_krx_key = st.form_submit_button("KRX 주가·시가총액 불러오기", width="stretch")
-
-    if submitted_krx_key:
-        st.session_state["krx_stock_code"] = krx_stock_code_input.strip()
-        st.session_state["krx_endpoint"] = krx_endpoint_input.strip()
-        fetch_krx_kospi_daily_trade.clear()
-        fetch_krx_stock_monthly_history.clear()
-
-    krx_stock_code = st.session_state.get("krx_stock_code", "395400")
-    krx_endpoint = st.session_state.get("krx_endpoint", KRX_KOSPI_DAILY_TRADE_ENDPOINT)
-
-    krx_history, krx_status = fetch_krx_stock_monthly_history(
-        krx_conn.key,
-        krx_stock_code,
-        years_back=5,
-        endpoint=krx_endpoint,
-    ) if krx_conn.key else (pd.DataFrame(), "KRX 미연결: 시장가격 분석은 표시하지 않음")
-
-    st.sidebar.caption("API 승인/endpoint 문제로 연결이 안 되면 KRX 일별/월별 CSV를 업로드해 대체할 수 있습니다.")
-    krx_csv_upload = st.sidebar.file_uploader("KRX CSV 대체 업로드", type=["csv"], key="krx_csv_upload")
-    if krx_csv_upload is not None:
-        uploaded_krx_history, uploaded_krx_status = parse_uploaded_krx_csv(krx_csv_upload, krx_stock_code)
-        if not uploaded_krx_history.empty:
-            krx_history, krx_status = uploaded_krx_history, uploaded_krx_status
-        else:
-            st.sidebar.warning(uploaded_krx_status)
-
-    if krx_status == "connected" or str(krx_status).startswith("connected"):
-        st.sidebar.success("KRX 시장가격 데이터 연결 완료")
-    else:
-        st.sidebar.warning("KRX 미연결 또는 일부 자료 수집 실패")
-        with st.sidebar.expander("KRX 연결 상태 보기", expanded=False):
-            st.write(sanitize_secret_text(krx_status))
+    market_history = pd.DataFrame()
+    market_status = "Market data module archived for future version"
 
     st.sidebar.divider()
     st.sidebar.write("**시나리오 선택**")
@@ -313,28 +255,6 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
             professional_assumptions["proxy_land_growth_pct"] = st.slider("연간 공시지가 상승률 proxy", 0.0, 15.0, 3.0, 0.5)
             professional_assumptions["official_to_appraisal_ratio_pct"] = st.slider("토지 공시가격/감정가 proxy", 10.0, 90.0, 55.0, 5.0)
             professional_assumptions["building_standard_ratio_pct"] = st.slider("건물 기준시가/감정가 proxy", 0.0, 60.0, 20.0, 5.0)
-    elif selected_user_mode == "Deals":
-        professional_assumptions["p_nav_multiple"] = st.sidebar.slider(
-            "적용 P/NAV multiple",
-            min_value=0.40,
-            max_value=1.20,
-            value=0.80,
-            step=0.05,
-        )
-        professional_assumptions["p_ffo_multiple"] = st.sidebar.slider(
-            "적용 P/FFO multiple",
-            min_value=5.0,
-            max_value=30.0,
-            value=16.0,
-            step=0.5,
-        )
-        professional_assumptions["required_dividend_yield_pct"] = st.sidebar.slider(
-            "요구 배당수익률",
-            min_value=3.0,
-            max_value=12.0,
-            value=7.0,
-            step=0.25,
-        )
 
 
     st.sidebar.divider()
@@ -346,10 +266,6 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         {
             "소스": "DART",
             "상태": "API" if dart_status == "connected" else "Local CSV",
-        },
-        {
-            "소스": "KRX",
-            "상태": "API/CSV" if str(krx_status).startswith("connected") else "미연결",
         },
     ]
     st.sidebar.write("**데이터 소스 상태**")
@@ -366,19 +282,17 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         "latest_fin": latest_fin,
         "ecos_conn": ecos_conn,
         "dart_conn": dart_conn,
-        "krx_conn": krx_conn,
         "realty_conn": realty_conn,
         "ecos_api_key": ecos_conn.key,
         "dart_api_key": dart_conn.key,
-        "krx_api_key": krx_conn.key,
         "realty_api_key": realty_conn.key,
         "realty_price_api_key": realty_conn.key,
         "macro_context": macro_context,
         "dart_history": dart_history,
         "dart_reports": dart_reports,
         "dart_status": dart_status,
-        "krx_history": krx_history,
-        "krx_status": krx_status,
+        "market_history": market_history,
+        "market_status": market_status,
         "macro_scenario": macro_scenario,
         "rate_shock_bp": rate_shock_bp,
         "refinancing_share_pct": refinancing_share_pct,

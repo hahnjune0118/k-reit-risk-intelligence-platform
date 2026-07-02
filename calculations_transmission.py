@@ -1,7 +1,5 @@
 import pandas as pd
 
-from api_krx import build_market_annual_history
-
 
 def build_historical_panel(financials: pd.DataFrame, kpis: pd.DataFrame, macro_history: pd.DataFrame, dart_history: pd.DataFrame | None = None, krx_history: pd.DataFrame | None = None) -> pd.DataFrame:
     """Combine available REIT financials/KPIs with ECOS annual rates for a 5-year view."""
@@ -21,7 +19,11 @@ def build_historical_panel(financials: pd.DataFrame, kpis: pd.DataFrame, macro_h
     if macro_history is not None and not macro_history.empty:
         panel = panel.merge(macro_history, on="year", how="left")
 
-    market_annual = build_market_annual_history(krx_history) if krx_history is not None and not krx_history.empty else pd.DataFrame()
+    market_annual = pd.DataFrame()
+    if krx_history is not None and not krx_history.empty:
+        # Archived for future KRX-based Deals valuation module.
+        from api_krx import build_market_annual_history
+        market_annual = build_market_annual_history(krx_history)
     if market_annual is not None and not market_annual.empty:
         panel = panel.merge(market_annual, on="year", how="left")
 
@@ -95,7 +97,7 @@ def build_market_implied_gap_table(market_snapshot: dict, latest_nav_mn_krw, sce
 
 def interpret_market_gap(market_gap: pd.DataFrame) -> str:
     if market_gap is None or market_gap.empty or "시장할인율_pct" not in market_gap.columns:
-        return "KRX 시가총액이 연결되면 공시 NAV와 시장가치의 차이를 해석할 수 있습니다."
+        return "Market-price history is archived for a future version; current v11 diagnostics focus on financial and macro transmission."
     current = market_gap[market_gap["기준"] == "현재 공시 NAV"]
     stressed = market_gap[market_gap["기준"] == "선택 시나리오 후 NAV"]
     if current.empty:

@@ -40,9 +40,7 @@ def render_general_dashboard(
     kpis,
     macro_history_status,
     dart_status,
-    krx_status,
     dart_reports,
-    krx_history,
 ):
     st.markdown("## 1. 한눈에 보는 결론")
 
@@ -67,30 +65,6 @@ def render_general_dashboard(
     k3.metric("이자 감당력", format_ratio(scenario["stressed_icr"]), f"현재 {format_ratio(scenario['reported_icr'])}")
     k4.metric("순자산가치 영향", format_pct_from_100(scenario["nav_change_pct"]), fmt_mn_to_bn(scenario["total_value_change"]))
     k5.metric("부채비율 추정", format_pct_from_100(scenario["stressed_ltv_proxy"]), f"현재 {format_pct_from_100(scenario['base_ltv_proxy'])}")
-
-    if market_snapshot.get("available"):
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("최근 주가", f"{market_snapshot['close_price_krw']:,.0f}원" if pd.notna(market_snapshot['close_price_krw']) else "N/A")
-        m2.metric("시가총액", fmt_mn_to_bn(market_snapshot.get("market_cap_mn_krw")))
-        m3.metric("P/NAV", format_ratio(market_snapshot.get("p_nav")))
-        m4.metric("NAV 할인율", format_pct_from_100(market_snapshot.get("nav_discount_pct")))
-        st.caption(f"시장가격 기준일: {pd.to_datetime(market_snapshot.get('date')).strftime('%Y-%m-%d') if market_snapshot.get('date') is not None else 'N/A'} / 자료: {market_snapshot.get('source')}")
-    else:
-        st.caption("KRX API를 연결하면 최근 주가, 시가총액, P/NAV, NAV 할인율이 이 위치에 표시됩니다.")
-
-    if market_gap is not None and not market_gap.empty:
-        st.write("**시장가격이 공시 NAV와 스트레스 NAV를 어떻게 평가하는가**")
-        mg = market_gap.copy()
-        for c in ["NAV_백만원", "시가총액_백만원"]:
-            if c in mg.columns:
-                mg[c] = mg[c].apply(lambda x: fmt_mn_to_bn(x) if pd.notna(x) else "-")
-        if "P_NAV" in mg.columns:
-            mg["P_NAV"] = mg["P_NAV"].apply(lambda x: format_ratio(x) if pd.notna(x) else "-")
-        if "시장할인율_pct" in mg.columns:
-            mg["시장할인율_pct"] = mg["시장할인율_pct"].apply(lambda x: format_pct_from_100(x) if pd.notna(x) else "-")
-        mg = mg.rename(columns={"기준": "비교 기준", "NAV_백만원": "NAV", "시가총액_백만원": "시가총액", "P_NAV": "P/NAV", "시장할인율_pct": "할인율/차이"})
-        st.dataframe(mg, width="stretch", hide_index=True, height=142)
-        st.caption(market_gap_narrative)
 
     st.markdown("---")
     st.markdown("## 2. 현재 상태와 선택한 시나리오 비교")
@@ -121,7 +95,7 @@ def render_general_dashboard(
     st.markdown("## 3. 최근 5년 흐름: 금리와 리츠 지표가 같이 어떻게 움직였나")
     st.caption(
         "DART API가 연결되면 최근 5개 사업연도 재무제표를 사용하고, 연결되지 않으면 현재 프로젝트의 로컬 공시 CSV를 사용합니다. "
-        "ECOS API가 연결되면 기준금리·시장금리 시계열을 사용하고, KRX API가 연결되면 주가·시가총액·P/NAV도 함께 표시합니다."
+        "ECOS API가 연결되면 기준금리·시장금리 시계열을 사용합니다."
     )
 
     h_left, h_right = st.columns([1.2, 1.0])
@@ -204,8 +178,8 @@ def render_general_dashboard(
 
     st.markdown("### 3-1. 위험 전이 진단: 금리 → FFO/NAV → 시장가격")
     st.caption(
-        "이 섹션은 금리가 바뀐 해에 리츠의 현금흐름, 순자산가치, 시가총액, P/NAV가 어떻게 움직였는지 요약합니다. "
-        "인과관계 확정이 아니라, Deals/Assurance 초기검토에서 어디를 더 봐야 하는지 알려주는 신호입니다."
+        "이 섹션은 금리가 바뀐 해에 리츠의 현금흐름과 순자산가치가 어떻게 움직였는지 요약합니다. "
+        "인과관계 확정이 아니라, Assurance와 Tax 초기검토에서 어디를 더 봐야 하는지 알려주는 신호입니다."
     )
     st.info(transmission_narrative)
 
@@ -244,7 +218,7 @@ def render_general_dashboard(
     st.dataframe(mode_specific_action_items(selected_user_mode), width="stretch", hide_index=True, height=140)
 
     st.markdown("---")
-    st.info("Assurance, Tax, Deals 상세 분석은 좌측 사용자 모드에서 해당 전문가 모드를 선택하면 별도 화면으로 표시됩니다.")
+    st.info("Assurance와 Tax 상세 분석은 좌측 사용자 모드에서 해당 모드를 선택하면 별도 화면으로 표시됩니다.")
 
     st.markdown("---")
     st.markdown("## 4. 위험 점수와 우선 확인 항목")
@@ -463,8 +437,7 @@ def render_general_dashboard(
                 "거시경제 지표: "
                 f"{sanitize_secret_text(macro_context['source'])} / "
                 f"과거 금리: {sanitize_secret_text(macro_history_status)} / "
-                f"DART: {sanitize_secret_text(dart_status)} / "
-                f"KRX: {sanitize_secret_text(krx_status)}"
+                f"DART: {sanitize_secret_text(dart_status)}"
             )
         with s2:
             st.write("**추가 수집 자료 계획**")
@@ -474,11 +447,6 @@ def render_general_dashboard(
             st.write("**DART에서 확인한 최근 사업보고서**")
             report_cols = [c for c in ["rcept_dt", "report_nm", "rcept_no"] if c in dart_reports.columns]
             st.dataframe(dart_reports[report_cols].head(10), width="stretch", hide_index=True, height=150)
-
-        if krx_history is not None and not krx_history.empty:
-            st.write("**KRX에서 불러온 주가·시가총액 월별 표본**")
-            krx_cols = [c for c in ["date", "stock_code", "stock_name", "close_price_krw", "market_cap_mn_krw", "trading_volume"] if c in krx_history.columns]
-            st.dataframe(krx_history[krx_cols].tail(12), width="stretch", hide_index=True, height=170)
 
         st.write("**데이터 사전**")
         st.dataframe(data_dictionary, width="stretch", hide_index=True, height=160)
@@ -511,6 +479,6 @@ def render_general_dashboard(
     st.divider()
     st.caption(
         "주의: 이 Streamlit 프로토타입은 리츠 위험을 빠르게 확인하기 위한 예비 분석 도구입니다. "
-        "KRX·DART·ECOS API 결과는 각 기관의 제공 범위와 승인 상태에 따라 달라질 수 있으며, "
+        "DART·ECOS API 결과는 각 기관의 제공 범위와 승인 상태에 따라 달라질 수 있으며, "
         "투자추천, 정식 가치평가, 감사의견, 신용등급, 법률·세무 자문을 제공하지 않습니다."
     )

@@ -816,7 +816,7 @@ def build_watchlist(asset_risk: pd.DataFrame, debt_schedule: pd.DataFrame, lates
 def build_due_diligence_questions(risk_scores: dict, latest_kpi: pd.Series) -> pd.DataFrame:
     rows = []
     question_bank = {
-        "Deals / FDD": [
+        "Transaction / FDD": [
             "Is disclosed FFO normalized for one-off acquisition, refinancing, disposition, or tenant transition items?",
             "Which assets drive most of the portfolio value and rent, and are those cash flows backed by enforceable long-term leases?",
             "Are related-party/master leases economically at market, or do they embed sponsor support?",

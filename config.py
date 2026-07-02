@@ -1,7 +1,9 @@
 from pathlib import Path
 
 
-APP_TITLE = "K-REIT Risk Intelligence Platform | v10.1 General Scenario · Assurance · Holding Tax · Deals"
+APP_VERSION = "v11"
+APP_VERSION_NAME = "Tax & Assurance Focus"
+APP_TITLE = f"K-REIT Risk Intelligence Platform | {APP_VERSION} - {APP_VERSION_NAME}"
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
@@ -12,8 +14,7 @@ DART_CORP_CODE_ENDPOINT = "https://opendart.fss.or.kr/api/corpCode.xml"
 DART_SINGLE_FS_ENDPOINT = "https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json"
 DART_LIST_ENDPOINT = "https://opendart.fss.or.kr/api/list.json"
 
-# KRX Data Marketplace Open API.
-# 사용자의 KRX Open API 사용신청/승인 상태에 따라 호출 가능 여부가 달라질 수 있습니다.
+# Archived for future KRX-based Deals valuation module.
 KRX_KOSPI_DAILY_TRADE_ENDPOINT = "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd"
 
 # 한국부동산원 부동산공시가격 계열 API는 사용신청 서비스별 endpoint/파라미터가 다를 수 있어
