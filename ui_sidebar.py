@@ -17,7 +17,12 @@ from calculations_scenario import DEFAULT_MACRO_FORECAST, FORECAST_WEIGHTED_SCEN
 SHOW_DEVELOPER_API_INPUTS = os.getenv("SHOW_DEVELOPER_API_INPUTS", "false").lower() == "true"
 
 
-def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_user_mode: str) -> dict:
+def render_data_sidebar(
+    kpis: pd.DataFrame,
+    financials: pd.DataFrame,
+    selected_user_mode: str,
+    peer_metrics: pd.DataFrame | None = None,
+) -> dict:
     st.sidebar.header("데이터 연결과 시나리오")
     st.sidebar.caption("사용자가 금리를 임의로 넣는 대신, ECOS에서 불러온 금리 지표를 기준으로 시나리오를 선택합니다.")
 
@@ -28,6 +33,25 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     latest_kpi = kpis[kpis["period_end"].dt.strftime("%Y-%m-%d") == selected_period].iloc[0]
     latest_fin_candidates = financials[financials["period_end"].dt.strftime("%Y-%m-%d") == selected_period]
     latest_fin = latest_fin_candidates.iloc[0] if not latest_fin_candidates.empty else financials.sort_values("period_end").iloc[-1]
+
+    st.sidebar.divider()
+    st.sidebar.write("**Peer Benchmark 대상**")
+    if peer_metrics is not None and not peer_metrics.empty and "company_name" in peer_metrics.columns:
+        company_options = peer_metrics["company_name"].dropna().astype(str).drop_duplicates().sort_values().tolist()
+    else:
+        company_options = ["SK리츠"]
+    default_company = "SK리츠" if "SK리츠" in company_options else company_options[0]
+    target_company = st.sidebar.selectbox(
+        "대상 리츠",
+        company_options,
+        index=company_options.index(default_company),
+        help="v12 Peer Benchmark와 Red Flag Engine에서 비교할 대상 리츠를 선택합니다.",
+    )
+    peer_group = st.sidebar.selectbox("Peer Group", ["전체 상장리츠"], index=0)
+    st.sidebar.caption(
+        "Peer Benchmark는 공개 배포 안정성을 위해 내장 snapshot 데이터를 기본으로 사용합니다. "
+        "실시간 전체 DART 호출은 앱 시작 시 수행하지 않습니다."
+    )
 
     manual_ecos_value = ""
     manual_dart_value = ""
@@ -306,6 +330,8 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         "selected_period": selected_period,
         "latest_kpi": latest_kpi,
         "latest_fin": latest_fin,
+        "target_company": target_company,
+        "peer_group": peer_group,
         "ecos_conn": ecos_conn,
         "dart_conn": dart_conn,
         "realty_conn": realty_conn,

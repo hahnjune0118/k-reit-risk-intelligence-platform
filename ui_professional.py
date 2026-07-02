@@ -19,6 +19,7 @@ def render_professional_mode_section(
     latest_kpi: pd.Series,
     scenario: dict,
     assumptions: dict,
+    peer_context: dict | None = None,
 ):
     if selected_mode == "Assurance":
         render_assurance_mode(
@@ -27,9 +28,10 @@ def render_professional_mode_section(
             latest_kpi,
             scenario,
             assumptions.get("assurance_materiality_pct", 10.0),
+            peer_context,
         )
     elif selected_mode == "Tax":
-        render_tax_mode(asset_risk, scenario, latest_kpi, assumptions)
+        render_tax_mode(asset_risk, scenario, latest_kpi, assumptions, peer_context)
     else:
         st.info("업무별 상세 분석은 Assurance 또는 Tax 화면에서 확인할 수 있습니다.")
 
@@ -48,6 +50,7 @@ def render_professional_page(
     kpis,
     source_plan=None,
     data_dictionary=None,
+    peer_context=None,
 ):
     if selected_user_mode == "Methodology & Data Sources":
         render_methodology_page(
@@ -60,6 +63,7 @@ def render_professional_page(
             debt_schedule,
             source_plan if source_plan is not None else pd.DataFrame(),
             data_dictionary if data_dictionary is not None else pd.DataFrame(),
+            peer_context,
         )
         return
 
@@ -72,6 +76,7 @@ def render_professional_page(
         latest_kpi,
         scenario,
         professional_assumptions,
+        peer_context,
     )
     st.markdown("---")
     with st.expander("분석 방법론과 자료 기준", expanded=False):

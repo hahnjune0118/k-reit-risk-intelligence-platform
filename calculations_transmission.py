@@ -97,7 +97,7 @@ def build_market_implied_gap_table(market_snapshot: dict, latest_nav_mn_krw, sce
 
 def interpret_market_gap(market_gap: pd.DataFrame) -> str:
     if market_gap is None or market_gap.empty or "시장할인율_pct" not in market_gap.columns:
-        return "Market-price history is archived for a future version; current v11 diagnostics focus on financial and macro transmission."
+        return "시장가격 시계열은 향후 버전을 위해 비활성화되어 있습니다. v12 진단은 재무, 거시경제, Peer Benchmark 신호에 집중합니다."
     current = market_gap[market_gap["기준"] == "현재 공시 NAV"]
     stressed = market_gap[market_gap["기준"] == "선택 시나리오 후 NAV"]
     if current.empty:

@@ -19,9 +19,72 @@ from config import REALTY_PRICE_API_ENDPOINT_DEFAULT
 from formatting import format_bn_krw, format_pct_from_100
 from api_manager import get_api_key, sanitize_secret_dataframe, sanitize_secret_text
 from ui_common import compact_fig
+from ui_peer import build_peer_metric_table, flags_to_dataframe, render_overall_risk_message, render_red_flag_cards
 
 
-def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Series, assumptions: dict | None = None):
+def _render_peer_tax_section(peer_context: dict | None):
+    if not peer_context:
+        return
+    flags = peer_context.get("tax_red_flags", [])
+    peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())
+    target_company = peer_context.get("target_company", "선택 리츠")
+
+    st.markdown("---")
+    st.markdown("## Peer 기반 보유세 부담 분석")
+    st.caption(
+        "본 분석은 신고 목적의 세액 산출이 아닙니다. 리츠 보유자산별 세금 부담의 방향성과 "
+        "민감도를 파악하기 위한 예비 분석입니다."
+    )
+    render_overall_risk_message("Tax 보유세 Red Flag", flags)
+
+    metric_table = build_peer_metric_table(
+        peer_metrics,
+        target_company,
+        {
+            "holding_tax_to_ffo": "보유세/FFO",
+            "holding_tax_to_operating_revenue": "보유세/영업수익",
+            "official_price_to_investment_property": "공시가격/투자부동산",
+            "dividend_to_ffo": "배당/FFO",
+            "debt_to_assets": "차입금/총자산",
+        },
+    )
+
+    tab_flags, tab_metrics, tab_review = st.tabs(["Tax red flag 카드", "Peer 부담 비교", "검토 포인트와 요청자료"])
+    with tab_flags:
+        render_red_flag_cards(flags, "tax_review_points", "Tax advisory review points")
+
+    with tab_metrics:
+        if metric_table.empty:
+            st.info("Peer 보유세 부담 비교를 만들 수 있는 데이터가 부족합니다.")
+        else:
+            st.dataframe(metric_table, width="stretch", hide_index=True, height=240)
+
+    with tab_review:
+        table = flags_to_dataframe(flags, "tax_review_points")
+        if table.empty:
+            st.info("표시할 Tax Red Flag가 없습니다.")
+        else:
+            st.dataframe(table, width="stretch", hide_index=True, height=280)
+            review_points = sorted({item for flag in flags for item in flag.get("tax_review_points", [])})
+            evidence = sorted({item for flag in flags for item in flag.get("evidence_request", [])})
+            c1, c2 = st.columns(2)
+            with c1:
+                st.write("**Tax advisory review points**")
+                for item in review_points or ["데이터 부족"]:
+                    st.write(f"- {item}")
+            with c2:
+                st.write("**Requested document checklist**")
+                for item in evidence or ["데이터 부족"]:
+                    st.write(f"- {item}")
+
+
+def render_tax_mode(
+    asset_risk: pd.DataFrame,
+    scenario: dict,
+    latest_kpi: pd.Series,
+    assumptions: dict | None = None,
+    peer_context: dict | None = None,
+):
     st.markdown("## T. Tax: 보유세 분석")
     st.caption(
         "이 화면은 리츠 보유자산의 공시가격/기준시가, 토지·건물 시가표준액, 과세표준, 재산세, "
@@ -176,6 +239,8 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
         )
         fig_asset_tax.update_traces(texttemplate="%{text:,.0f}", textposition="outside", cliponaxis=False)
         st.plotly_chart(compact_fig(fig_asset_tax, 260), width="stretch")
+
+    _render_peer_tax_section(peer_context)
 
     cash_flow_scenarios = build_property_tax_cash_flow_scenarios(
         latest_kpi,

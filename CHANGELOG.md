@@ -1,5 +1,14 @@
 # 변경 이력
 
+## v12 - Peer Benchmark & Red Flag Engine
+
+- 상장리츠 Peer Benchmark 기능 추가
+- Assurance Red Flag Engine 추가
+- Tax 보유세 부담 Peer Benchmark 추가
+- Red Flag별 감사절차 및 요청자료 추천 기능 추가
+- DART 전체 실시간 호출 대신 Snapshot 기반 데이터 구조 도입
+- Deals 및 KRX 비활성화 유지
+
 ## v11 - Tax & Assurance 중심 버전
 
 - Deal 모드를 공개 버전에서 비활성화

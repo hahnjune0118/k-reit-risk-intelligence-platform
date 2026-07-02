@@ -10,6 +10,7 @@ from calculations_assurance import (
     build_audit_workflow_checklist,
     build_rmm_assertion_checklist,
 )
+from calculations_peer import calculate_peer_metrics, classify_metric_risk, load_peer_snapshot, summarize_peer_position
 from calculations_risk import (
     build_asset_risk_table,
     build_interactive_scenario_outputs,
@@ -24,6 +25,7 @@ from calculations_tax import (
     build_tax_risk_register,
 )
 from data_loader import load_data
+from red_flag_engine import build_assurance_red_flags, build_tax_red_flags, load_red_flag_rules
 
 
 def _base_case():
@@ -178,3 +180,34 @@ def test_forecast_weighted_macro_scenario_builds_probabilities():
     assert probabilities is not None
     assert sum(probabilities.values()) == pytest.approx(1.0, abs=0.001)
     assert scenario["cap_rate_shock_bp"] >= 0
+
+
+def test_v12_peer_snapshot_and_red_flags_are_built():
+    snapshot = load_peer_snapshot()
+    metrics = calculate_peer_metrics(snapshot)
+    rules = load_red_flag_rules()
+    company = metrics.loc[metrics["company_name"].str.contains("SK", na=False), "company_name"].iloc[0]
+
+    summary = summarize_peer_position(metrics, company)
+    assurance_flags = build_assurance_red_flags(company, metrics, rules)
+    tax_flags = build_tax_red_flags(company, metrics, rules)
+
+    assert summary["available"] is True
+    assert summary["peer_count"] >= 5
+    assert "debt_to_assets" in metrics.columns
+    assert "holding_tax_to_ffo" in metrics.columns
+    assert assurance_flags
+    assert tax_flags
+    assert {flag["risk_level"] for flag in assurance_flags}.issubset({"green", "yellow", "red", "gray"})
+    assert {flag["risk_level"] for flag in tax_flags}.issubset({"green", "yellow", "red", "gray"})
+
+
+def test_v12_peer_metric_missing_value_is_gray():
+    rule = {
+        "metric": "missing_metric",
+        "risk_direction": "high_is_bad",
+        "yellow_percentile": 0.7,
+        "red_percentile": 0.9,
+    }
+
+    assert classify_metric_risk(pd.NA, pd.NA, rule) == "gray"

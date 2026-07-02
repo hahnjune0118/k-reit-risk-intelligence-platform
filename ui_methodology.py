@@ -33,17 +33,18 @@ def render_methodology_page(
     debt_schedule,
     source_plan,
     data_dictionary,
+    peer_context=None,
 ):
     st.markdown("## 분석 방법론 및 데이터 출처")
     st.caption(f"현재 안정 공개 버전: {APP_VERSION_LABEL}")
 
-    st.markdown("### v11 현재 범위")
+    st.markdown("### v12 현재 범위")
     st.dataframe(
         pd.DataFrame([
-            {"화면": "일반 정보 및 시나리오", "목적": "REIT 기본 위험 프로필, 거시경제 Scenario 스트레스, 자산·부채 개요"},
-            {"화면": "Assurance: 감사위험 분석", "목적": "감사계획, RMM(중요왜곡표시위험), KAM(핵심감사사항), 통제 대응 체크리스트"},
-            {"화면": "Tax: 보유세 분석", "목적": "공시가격/기준시가 기반 보유세 추정, FFO 현금 유출 부담 분석"},
-            {"화면": "분석 방법론 및 데이터 출처", "목적": "자료 출처, 추정 한계, API 보안 구조, 향후 개선 방향 설명"},
+            {"화면": "일반 정보 및 시나리오", "목적": "REIT 기본 위험 프로필, 거시경제 Scenario, Peer Benchmark 요약"},
+            {"화면": "Assurance: 감사위험 분석", "목적": "감사계획, RMM(중요왜곡표시위험), KAM(핵심감사사항), Peer 기반 감사위험 Red Flag"},
+            {"화면": "Tax: 보유세 분석", "목적": "공시가격/기준시가 기반 보유세 추정, Peer 기반 보유세 부담 Benchmark"},
+            {"화면": "분석 방법론 및 데이터 출처", "목적": "자료 출처, Snapshot 구조, Red Flag 기준, 한계 및 보안 구조 설명"},
         ]),
         hide_index=True,
         width="stretch",
@@ -55,9 +56,40 @@ def render_methodology_page(
         {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},
         {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": _display_api_status(macro_history_status)},
         {"자료": "V-World / 공시가격 API", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "설정된 경우 사용 가능"},
+        {"자료": "REIT Peer Snapshot", "사용 목적": "v12 Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
+        {"자료": "Red Flag Rules", "사용 목적": "Assurance 및 Tax 위험수준 판단 기준", "상태": "앱에 포함"},
         {"자료": "내부 CSV", "사용 목적": "공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블", "상태": "앱에 포함"},
     ])
-    st.dataframe(source_status, hide_index=True, width="stretch", height=190)
+    st.dataframe(source_status, hide_index=True, width="stretch", height=230)
+
+    st.markdown("### v12 Peer Benchmark 및 Red Flag 방법론")
+    st.write(
+        "Peer Benchmark는 `data/reit_peer_snapshot.csv`의 snapshot 데이터를 기준으로 선택 리츠와 상장리츠 peer group을 비교합니다. "
+        "총자산, 투자부동산, 차입금, FFO(리츠의 반복적 영업현금흐름에 가까운 지표), 배당, 보유세, 공시가격 입력값을 이용해 "
+        "감사위험과 보유세 부담 관련 비율을 계산합니다."
+    )
+    st.write(
+        "Red Flag 판단은 `data/red_flag_rules.json`의 규칙을 사용합니다. 각 규칙은 절대 기준과 peer percentile을 함께 보며, "
+        "정상·주의·높음·데이터 부족으로 표시합니다. 데이터가 없거나 0으로 나누는 계산은 강제로 추정하지 않고 데이터 부족으로 표시합니다."
+    )
+    st.info(
+        "앱 실행 시 모든 상장리츠의 DART API를 실시간 호출하지 않습니다. 공개 배포 버전에서는 빠른 실행과 안정성을 위해 "
+        "Snapshot 데이터를 기본으로 사용하고, 필요 시 별도 수집 스크립트로 갱신할 수 있도록 설계했습니다."
+    )
+    if peer_context:
+        peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())
+        rules = peer_context.get("red_flag_rules", {})
+        st.dataframe(
+            pd.DataFrame([
+                {"항목": "Peer 회사 수", "값": peer_metrics["company_name"].nunique() if not peer_metrics.empty and "company_name" in peer_metrics.columns else 0},
+                {"항목": "Assurance 규칙 수", "값": len(rules.get("assurance", []))},
+                {"항목": "Tax 규칙 수", "값": len(rules.get("tax", []))},
+                {"항목": "자료 기준", "값": "Snapshot 기준 / sample_snapshot은 공식·감사 확정 데이터가 아닌 예시 데이터"},
+            ]),
+            hide_index=True,
+            width="stretch",
+            height=176,
+        )
 
     st.markdown("### 계산 기준")
     st.write(
@@ -96,6 +128,6 @@ def render_methodology_page(
 
     st.markdown("### 한계 및 향후 개선 방향")
     st.write(
-        "v11은 감사위험과 보유세 분석에 집중한 공개 포트폴리오 버전입니다. 향후 v12/v13에서는 데이터 연결이 더 안정화된 뒤 "
-        "시장가격 기반 가치평가, 거래 분석, 다중 REIT 비교, 자료 대사 자동화 기능을 순차적으로 검토할 수 있습니다."
+        "v12는 감사위험, 보유세 분석, Peer Benchmark, Red Flag Engine에 집중한 공개 포트폴리오 버전입니다. "
+        "향후 v13 이후에는 문서 추출, 요청자료 export, AI-assisted memo drafting, 다기간 peer trend 비교를 검토할 수 있습니다."
     )

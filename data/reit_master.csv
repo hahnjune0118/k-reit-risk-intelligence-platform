@@ -1,0 +1,9 @@
+company_name,stock_code,dart_corp_code,market,reit_type,main_asset_type,main_region,note
+SK리츠,395400,sample_001,KOSPI,위탁관리리츠,Office,Seoul,sample master data for public portfolio review
+롯데리츠,330590,sample_002,KOSPI,위탁관리리츠,Retail,Nationwide,sample master data for public portfolio review
+ESR켄달스퀘어리츠,365550,sample_003,KOSPI,위탁관리리츠,Logistics,Greater Seoul,sample master data for public portfolio review
+제이알글로벌리츠,348950,sample_004,KOSPI,위탁관리리츠,Office,Overseas,sample master data for public portfolio review
+신한알파리츠,293940,sample_005,KOSPI,위탁관리리츠,Office,Seoul,sample master data for public portfolio review
+코람코라이프인프라리츠,357120,sample_006,KOSPI,위탁관리리츠,Retail / Infra,Nationwide,sample master data for public portfolio review
+이지스밸류리츠,334890,sample_007,KOSPI,위탁관리리츠,Office,Seoul,sample master data for public portfolio review
+NH올원리츠,400760,sample_008,KOSPI,위탁관리리츠,Diversified,Nationwide,sample master data for public portfolio review

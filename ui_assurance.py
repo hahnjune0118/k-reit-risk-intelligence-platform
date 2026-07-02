@@ -10,6 +10,7 @@ from calculations_assurance import (
     build_rmm_assertion_checklist,
     build_rmm_mapping,
 )
+from ui_peer import build_peer_metric_table, flags_to_dataframe, render_overall_risk_message, render_red_flag_cards
 
 
 def _stage_rows(workflow: pd.DataFrame, stages: list[str]) -> pd.DataFrame:
@@ -28,12 +29,75 @@ def _render_checklist(df: pd.DataFrame, key: str, height: int = 360):
     )
 
 
+def _render_peer_assurance_section(peer_context: dict | None):
+    if not peer_context:
+        return
+    flags = peer_context.get("assurance_red_flags", [])
+    peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())
+    target_company = peer_context.get("target_company", "선택 리츠")
+
+    st.markdown("---")
+    st.markdown("## Peer 기반 감사위험 Red Flag")
+    st.caption(
+        "감사계획 단계에서 참고할 수 있는 위험 스크리닝 결과입니다. "
+        "최종 판단은 감사인과 전문가의 검토가 필요합니다."
+    )
+    render_overall_risk_message("Overall Assurance risk summary", flags)
+
+    metric_table = build_peer_metric_table(
+        peer_metrics,
+        target_company,
+        {
+            "investment_property_to_total_assets": "투자부동산/총자산",
+            "debt_to_assets": "차입금/총자산",
+            "current_debt_to_total_debt": "유동성 차입금/총차입금",
+            "interest_expense_to_ffo": "이자비용/FFO",
+            "dividend_to_ffo": "배당/FFO",
+            "operating_cash_flow_to_dividends": "영업현금흐름/배당",
+        },
+    )
+
+    tab_flags, tab_metrics, tab_response = st.tabs(["Red Flag 카드", "Peer metric table", "감사절차와 요청자료"])
+    with tab_flags:
+        render_red_flag_cards(flags, "audit_response", "권장 감사절차", include_kam_indicator=True)
+
+    with tab_metrics:
+        if metric_table.empty:
+            st.info("Peer metric table을 만들 수 있는 데이터가 부족합니다.")
+        else:
+            st.dataframe(metric_table, width="stretch", hide_index=True, height=260)
+
+    with tab_response:
+        table = flags_to_dataframe(flags, "audit_response")
+        if table.empty:
+            st.info("표시할 Red Flag가 없습니다.")
+        else:
+            st.dataframe(table, width="stretch", hide_index=True, height=300)
+            procedures = sorted({item for flag in flags for item in flag.get("audit_response", [])})
+            evidence = sorted({item for flag in flags for item in flag.get("evidence_request", [])})
+            c1, c2 = st.columns(2)
+            with c1:
+                st.write("**Recommended audit procedures**")
+                for item in procedures or ["데이터 부족"]:
+                    st.write(f"- {item}")
+            with c2:
+                st.write("**Evidence request checklist**")
+                for item in evidence or ["데이터 부족"]:
+                    st.write(f"- {item}")
+
+    st.info(
+        "이 결과는 감사계획 단계에서 참고할 수 있는 위험 스크리닝 결과입니다. "
+        "앱이 실제 감사의견이나 KAM(핵심감사사항)을 확정하지 않습니다."
+    )
+
+
 def render_assurance_mode(
     asset_risk: pd.DataFrame,
     debt_schedule: pd.DataFrame,
     latest_kpi: pd.Series,
     scenario: dict,
     materiality_pct: float,
+    peer_context: dict | None = None,
 ):
     st.markdown("## A. Assurance: 감사위험 분석")
     st.caption(
@@ -102,6 +166,8 @@ def render_assurance_mode(
 
         st.write("**감사 작업문서 인덱스**")
         st.dataframe(workpaper_index, width="stretch", hide_index=True, height=300)
+
+    _render_peer_assurance_section(peer_context)
 
     st.warning(
         "계속기업 관련 중요한 불확실성이 존재한다고 단정하지 않습니다. 다만 차입금 만기, 이자 감당력, 배당정책, "

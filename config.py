@@ -1,13 +1,13 @@
 from pathlib import Path
 
 
-APP_VERSION = "v11"
-APP_VERSION_NAME = "Tax & Assurance 중심 버전"
+APP_VERSION = "v12"
+APP_VERSION_NAME = "Peer Benchmark & Red Flag Engine"
 APP_VERSION_LABEL = f"{APP_VERSION} - {APP_VERSION_NAME}"
 APP_TITLE = "K-REIT Risk Intelligence Platform"
 APP_SUBTITLE = (
     "상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터를 연결하여 "
-    "감사위험과 보유세 부담을 분석하는 Streamlit 기반 리스크 분석 도구"
+    "감사위험, 보유세 부담, Peer Benchmark 기반 Red Flag를 분석하는 Streamlit 기반 리스크 분석 도구"
 )
 PUBLIC_MODE_LABELS = {
     "General Info & Scenario": "일반 정보 및 시나리오",

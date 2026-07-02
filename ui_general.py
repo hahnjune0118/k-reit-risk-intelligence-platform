@@ -6,11 +6,71 @@ from calculations_scenario import korean_metric_label, korean_risk_label
 from formatting import format_pct_from_100, format_ratio, format_score, format_trn_krw_from_mn
 from api_manager import sanitize_secret_text
 from ui_common import compact_fig, fmt_metric_value, fmt_mn_to_bn, mode_specific_action_items
+from ui_peer import build_peer_metric_table, format_peer_percentile, format_peer_value, render_overall_risk_message
 
 
 def _display_api_status(status: str) -> str:
     sanitized = sanitize_secret_text(status)
     return "API 연결 완료" if sanitized == "connected" else sanitized
+
+
+def _render_peer_benchmark_overview(peer_context: dict | None):
+    if not peer_context:
+        return
+    peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())
+    peer_summary = peer_context.get("peer_summary", {})
+    target_company = peer_context.get("target_company", "선택 리츠")
+    if not peer_summary.get("available"):
+        st.info("Peer Benchmark를 계산할 수 있는 snapshot 데이터가 부족합니다.")
+        return
+
+    st.markdown("### v12 Peer Benchmark & Red Flag 요약")
+    st.caption(
+        "v12는 선택한 리츠 회사를 상장리츠 Peer Group과 비교하여 감사위험과 보유세 부담이 "
+        "상대적으로 높은 영역을 자동으로 스크리닝합니다."
+    )
+    st.caption(
+        f"대상 리츠: {target_company} / Peer Group: {peer_context.get('peer_group', '전체 상장리츠')} / "
+        f"Snapshot 기준: data/reit_peer_snapshot.csv / source_type={peer_summary.get('source_type', 'unknown')} / "
+        "실시간 API 호출 실패 시 예시 데이터 사용"
+    )
+
+    metrics = peer_summary.get("metrics", {})
+    asset_size = metrics.get("total_assets", {})
+    debt_burden = metrics.get("debt_to_assets", {})
+    interest_burden = metrics.get("interest_expense_to_ffo", {})
+    holding_tax_burden = metrics.get("holding_tax_to_ffo", {})
+    official_price_ratio = metrics.get("official_price_to_investment_property", {})
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("자산규모", format_peer_value("total_assets", asset_size.get("value")), format_peer_percentile(asset_size.get("percentile")))
+    c2.metric("차입부담", format_peer_value("debt_to_assets", debt_burden.get("value")), format_peer_percentile(debt_burden.get("percentile")))
+    c3.metric("이자비용 부담", format_peer_value("interest_expense_to_ffo", interest_burden.get("value")), format_peer_percentile(interest_burden.get("percentile")))
+    c4.metric("보유세 부담", format_peer_value("holding_tax_to_ffo", holding_tax_burden.get("value")), format_peer_percentile(holding_tax_burden.get("percentile")))
+    c5.metric("공시가격/투자부동산", format_peer_value("official_price_to_investment_property", official_price_ratio.get("value")), format_peer_percentile(official_price_ratio.get("percentile")))
+
+    a_flags = peer_context.get("assurance_red_flags", [])
+    t_flags = peer_context.get("tax_red_flags", [])
+    c_left, c_right = st.columns(2)
+    with c_left:
+        render_overall_risk_message("Assurance Red Flag", a_flags, "감사계획 단계의 참고용 스크리닝 결과입니다.")
+    with c_right:
+        render_overall_risk_message("Tax Red Flag", t_flags, "신고 목적 세액 산출이 아닌 예비 검토 신호입니다.")
+
+    metric_table = build_peer_metric_table(
+        peer_metrics,
+        target_company,
+        {
+            "total_assets": "자산규모",
+            "debt_to_assets": "차입부담",
+            "interest_expense_to_ffo": "이자비용/FFO",
+            "holding_tax_to_ffo": "보유세/FFO",
+            "holding_tax_to_operating_revenue": "보유세/영업수익",
+            "official_price_to_investment_property": "공시가격/투자부동산",
+        },
+    )
+    if not metric_table.empty:
+        st.dataframe(metric_table, width="stretch", hide_index=True, height=220)
 
 
 def render_general_dashboard(
@@ -46,6 +106,7 @@ def render_general_dashboard(
     macro_history_status,
     dart_status,
     dart_reports,
+    peer_context=None,
 ):
     st.markdown("## 1. 한눈에 보는 결론")
 
@@ -70,6 +131,8 @@ def render_general_dashboard(
     k3.metric("이자 감당력", format_ratio(scenario["stressed_icr"]), f"현재 {format_ratio(scenario['reported_icr'])}")
     k4.metric("순자산가치 영향", format_pct_from_100(scenario["nav_change_pct"]), fmt_mn_to_bn(scenario["total_value_change"]))
     k5.metric("부채비율 추정", format_pct_from_100(scenario["stressed_ltv_proxy"]), f"현재 {format_pct_from_100(scenario['base_ltv_proxy'])}")
+
+    _render_peer_benchmark_overview(peer_context)
 
     st.markdown("---")
     st.markdown("## 2. 현재 상태와 선택한 시나리오 비교")
@@ -471,6 +534,9 @@ def render_general_dashboard(
                 "sk_reit_debt_summary_20260331.csv",
                 "sk_reit_additional_source_plan.csv",
                 "sk_reit_data_dictionary.csv",
+                "reit_master.csv",
+                "reit_peer_snapshot.csv",
+                "red_flag_rules.json",
             ],
             "purpose": [
                 "재무 추이와 K-IFRS 기준 부채비율 분석",
@@ -481,6 +547,9 @@ def render_general_dashboard(
                 "연도별 차환 부담 요약",
                 "추가 수집이 필요한 자료 계획",
                 "컬럼 정의와 산식 기준 메모",
+                "상장리츠 peer master 정보",
+                "v12 Peer Benchmark와 Red Flag Engine snapshot",
+                "Assurance 및 Tax Red Flag 판단 규칙",
             ],
         })
         st.dataframe(loaded.rename(columns={"table": "파일명", "purpose": "사용 목적"}), width="stretch", hide_index=True, height=170)

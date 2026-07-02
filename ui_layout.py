@@ -38,7 +38,7 @@ def render_mode_selector():
         index=0,
         format_func=lambda mode: PUBLIC_MODE_LABELS.get(mode, mode),
     )
-    st.sidebar.caption("v11은 일반 정보, 감사위험 분석, 보유세 분석, 분석 방법론 화면에 집중합니다.")
+    st.sidebar.caption("v12는 일반 정보, 감사위험 분석, 보유세 분석, 분석 방법론 화면에 Peer Benchmark와 Red Flag Engine을 더했습니다.")
     st.sidebar.divider()
     return selected_user_mode
 
@@ -68,10 +68,11 @@ def render_intro(selected_user_mode: str):
             리츠 업무를 처음 접하는 회계사, 감사·세무·자문 업무 담당자, 그리고 회계/컨설팅
             디지털 전환 포트폴리오를 검토하는 사용자를 기준으로 설계했습니다.
 
-            **v11 현재 범위**
+            **v12 현재 범위**
             공개 버전은 일반 정보 및 시나리오, Assurance: 감사위험 분석, Tax: 보유세 분석,
-            분석 방법론 및 데이터 출처에 집중합니다. 시장가격 기반 가치평가와 거래 분석은
-            향후 버전에서 별도 모듈로 재검토할 예정입니다.
+            분석 방법론 및 데이터 출처에 집중합니다. v12에서는 상장리츠 Peer Benchmark와
+            Assurance·Tax Red Flag Engine을 추가했습니다. 시장가격 기반 가치평가와 거래 분석은
+            공개 버전에서 비활성화되어 있으며 향후 버전에서 별도 모듈로 재검토할 예정입니다.
             """
         )
 
