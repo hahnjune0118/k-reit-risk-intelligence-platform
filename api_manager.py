@@ -74,7 +74,7 @@ def get_api_key(provider: str, manual_value: str = "") -> ApiConnection:
 
     configured = bool(key)
     status = "loaded" if configured else "not_configured"
-    message = f"{provider}: API key loaded" if configured else f"{provider}: not configured"
+    message = f"{provider} API Key가 설정되어 있습니다." if configured else f"{provider} API Key가 설정되지 않았습니다."
     return ApiConnection(
         provider=provider,
         secret_name=secret_name,

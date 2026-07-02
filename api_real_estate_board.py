@@ -105,11 +105,10 @@ def _pick_first_numeric(row: dict, candidates: list[str]):
 
 @st.cache_data(ttl=60 * 60)
 def fetch_official_price_history_generic(api_key: str, endpoint: str, param_template: str, asset_name: str, address: str, pnu_or_code: str, start_year: int, end_year: int) -> tuple[pd.DataFrame, str]:
-    """Fetch official price history using a user-configurable API endpoint and parameter template.
+    """사용자가 입력한 endpoint와 파라미터 템플릿으로 공시가격 이력을 조회합니다.
 
-    This intentionally avoids hard-coding one endpoint because Korean official-price APIs differ by
-    service approval and data type. The parameter template supports placeholders:
-    {year}, {asset_name}, {address}, {pnu}, {service_key}.
+    공시가격 API는 활용승인 서비스와 자료 유형에 따라 endpoint와 필수 파라미터가 달라질 수 있습니다.
+    템플릿에서는 {year}, {asset_name}, {address}, {pnu}, {service_key} placeholder를 사용할 수 있습니다.
     """
     if not api_key or not endpoint:
         return pd.DataFrame(), "API key 또는 endpoint가 입력되지 않았습니다."
@@ -159,5 +158,5 @@ def fetch_official_price_history_generic(api_key: str, endpoint: str, param_temp
             })
     df = pd.DataFrame(collected)
     if df.empty:
-        return df, "API 응답에서 공시가격/공시지가 필드를 찾지 못했습니다. endpoint·파라미터·응답 컬럼을 확인하세요."
-    return df, "connected_or_partial"
+        return df, "API 응답에서 공시가격/공시지가 필드를 찾지 못했습니다. endpoint, 파라미터, 응답 컬럼을 확인하세요."
+    return df, "API 연결됨 또는 일부 연도 수집"

@@ -22,26 +22,26 @@ from ui_common import compact_fig
 
 
 def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Series, assumptions: dict | None = None):
-    st.markdown("## T. Tax 모드: 리츠 세무·보유세·FFO 현금유출 분석")
+    st.markdown("## T. Tax: 보유세 분석")
     st.caption(
-        "목적: 회계법인 Tax 부서가 리츠회사 세무신고·지방세·세무 리스크·Tax Technology 업무를 수행할 때 "
-        "공시가격/기준시가, 보유세, FFO와 배당 여력을 한 화면에서 검토하도록 지원합니다."
+        "이 화면은 리츠 보유자산의 공시가격/기준시가, 토지·건물 시가표준액, 과세표준, 재산세, "
+        "도시지역분, 지방교육세를 연결해 보유세 부담과 FFO 현금 유출 영향을 예비 분석합니다."
     )
     assumptions = assumptions or {}
 
     with st.expander("보유세 계산 산식, 과세표준, 세율 보기", expanded=False):
         st.markdown(
             """
-            **이 화면의 기본 전제**  
-            SK리츠 보유 상업용 부동산은 일반적으로 토지분 재산세에서 **별도합산과세대상 토지**로 보는 것이 1차 proxy입니다. 실제 세액은 자산별 용도, 면적기준, 지방자치단체 조례, 감면, 세부담상한, 건축물 시가표준액에 따라 달라질 수 있습니다.
+            **이 화면의 기본 전제**
+            보유 상업용 부동산은 일반적으로 토지분 재산세에서 **별도합산과세대상 토지**로 보는 것이 1차 추정치(proxy)입니다. 실제 세액은 자산별 용도, 면적기준, 지방자치단체 조례, 감면, 세부담상한, 건축물 시가표준액에 따라 달라질 수 있습니다.
 
-            **1) 토지 시가표준액**  
+            **1) 토지 시가표준액**
             `토지 시가표준액 = 1㎡당 개별공시지가 × 토지면적`  
             앱은 한국부동산원/부동산공시가격 계열 API 또는 CSV 업로드의 개별공시지가를 우선 사용합니다.
 
-            **2) 토지 과세표준**  
+            **2) 토지 과세표준**
             `토지 과세표준 = 토지 시가표준액 × 공정시장가액비율`  
-            기본값은 토지·건축물 70%입니다. 필요하면 sidebar에서 조정합니다.
+            기본값은 토지·건축물 70%입니다. 필요하면 좌측 사이드바에서 조정합니다.
 
             **3) 별도합산 토지분 재산세 본세**  
             - 과세표준 2억원 이하: `과세표준 × 0.2%`  
@@ -51,7 +51,7 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
             **4) 건축물분 재산세 본세**  
             `건축물 과세표준 = 건물 기준시가 또는 시가표준액 × 공정시장가액비율`  
             `건축물분 재산세 = 건축물 과세표준 × 건축물 세율`  
-            기본 세율은 일반 건축물 proxy 0.25%로 두되, 실제 용도에 따라 조정해야 합니다.
+            기본 세율은 일반 건축물 추정치(proxy) 0.25%로 두되, 실제 용도에 따라 조정해야 합니다.
 
             **5) 도시지역분과 지방교육세**  
             `도시지역분 = 과세표준 × 0.14%`  
@@ -63,7 +63,7 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
         )
 
     st.write("**공시가격·기준시가 데이터 연결**")
-    st.caption("실제 API endpoint와 파라미터는 활용승인 받은 서비스별로 다를 수 있어, endpoint와 파라미터 템플릿을 사용자가 입력할 수 있게 했습니다. CSV 업로드를 사용하면 더 안정적으로 테스트할 수 있습니다.")
+    st.caption("실제 API endpoint와 파라미터는 활용승인 받은 서비스별로 다를 수 있습니다. 승인받은 endpoint와 파라미터 템플릿을 입력하거나, CSV 업로드로 안정적으로 테스트할 수 있습니다.")
 
     default_template = '{"format":"json", "pnu":"{pnu}", "stdrYear":"{year}", "pageNo":"1", "numOfRows":"50"}'
     if "realty_price_api_key" not in st.session_state:
@@ -113,7 +113,7 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
             official_to_appraisal_ratio_pct=assumptions.get("official_to_appraisal_ratio_pct", 55.0),
             building_standard_ratio_pct=assumptions.get("building_standard_ratio_pct", 20.0),
         )
-        price_data_status = "공시가격 API/CSV 미연결: 평가액 기반 proxy 사용 중"
+        price_data_status = "공시가격 API/CSV 미연결: 평가액 기반 추정치(proxy) 사용 중"
 
     official_price_history = sanitize_secret_dataframe(official_price_history)
 
@@ -136,7 +136,7 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
 
     st.info(sanitize_secret_text(price_data_status))
     if tax_history is None or tax_history.empty:
-        st.warning("보유세 계산에 필요한 공시가격/기준시가 데이터가 부족합니다. API endpoint·파라미터 또는 CSV 컬럼을 확인하세요.")
+        st.warning("보유세 계산에 필요한 공시가격/기준시가 데이터가 부족합니다. API endpoint, 파라미터, CSV 컬럼을 확인하세요.")
         return
 
     latest_year = int(tax_history["year"].max())
@@ -150,7 +150,7 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
     m1.metric(f"{latest_year}E 보유세", format_bn_krw(latest_total_tax))
     m2.metric("5년 누적 증가율", format_pct_from_100(cumulative_increase))
     m3.metric("토지 과세표준", format_bn_krw(latest_tax_base))
-    m4.metric("자료 기준", "API/CSV" if "proxy" not in price_data_status else "Proxy")
+    m4.metric("자료 기준", "API/CSV" if "proxy" not in price_data_status else "추정치(proxy)")
 
     left, right = st.columns([1.15, 0.85])
     with left:
@@ -213,7 +213,7 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
     with tab_cash:
         st.write("**보유세 인상 시나리오별 FFO·배당 여력**")
         st.caption(
-            "최신 KPI의 FFO와 배당총액은 연환산 proxy로 비교합니다. 실제 연간 예산/forecast가 있으면 별도 입력값으로 대체해야 합니다."
+            "최신 KPI의 FFO와 배당총액은 연환산 추정치(proxy)로 비교합니다. 실제 연간 예산이나 forecast가 있으면 별도 입력값으로 대체해야 합니다."
         )
         if cash_flow_scenarios.empty:
             st.warning("FFO 현금유출 시나리오를 계산할 수 없습니다. KPI와 보유세 요약 데이터를 확인하세요.")
@@ -246,7 +246,7 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
         st.write("**세무 리스크·환급기회 레지스터**")
         st.dataframe(tax_risk_register, width="stretch", hide_index=True, height=260)
 
-        st.write("**Tax Technology 구현 백로그**")
+        st.write("**Tax Technology 자동화 과제 목록**")
         st.dataframe(tax_automation_backlog, width="stretch", hide_index=True, height=240)
 
     with tab_detail:
@@ -262,6 +262,6 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
         st.caption("CSV 권장 컬럼: asset_name, year, official_land_price_per_sqm_krw, building_standard_value_mn_krw, land_area_sqm, source")
 
     st.warning(
-        "본 Tax 모드는 보유세 부담의 방향성과 민감도를 파악하기 위한 preliminary estimator입니다. "
+        "본 보유세 계산은 신고 목적의 세액 산출이 아니라, 리츠 보유자산별 세금 부담의 방향성과 민감도를 파악하기 위한 예비 분석입니다. "
         "실제 고지세액은 과세대상 구분, 지자체 조례, 감면, 세부담상한, 건축물 시가표준액, 리츠별 보유 구조에 따라 달라질 수 있습니다."
     )

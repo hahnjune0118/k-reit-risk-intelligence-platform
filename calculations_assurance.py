@@ -278,7 +278,7 @@ def build_audit_workflow_checklist(
             "체크 항목": "투자부동산 공정가치 검토 통제",
             "리츠 감사 포인트": "외부평가기관 선정, NOI·cap rate·공실률 가정 검토, 민감도 승인 통제",
             "수행 절차": "통제 설계와 구현을 확인하고, 의존 예정이면 검토 evidence와 승인 흔적을 표본 테스트",
-            "증거/문서화": "ICFR test sheet, valuation review evidence",
+            "증거/문서화": "ICFR 테스트 시트, 평가가정 검토 증거",
             "우선순위": valuation_priority,
             "완료": False,
         },
@@ -318,7 +318,7 @@ def build_audit_workflow_checklist(
             "체크 항목": "투자부동산 평가 실증절차",
             "리츠 감사 포인트": "평가액이 NAV와 총자산을 좌우하므로 가정과 원천자료의 완전성·정확성을 검증",
             "수행 절차": "외부평가보고서, NOI, cap rate, 공실률, 임대료 성장률, 비교거래, 민감도 공시를 테스트",
-            "증거/문서화": "Valuation workpaper, independent expectation",
+            "증거/문서화": "투자부동산 평가 작업문서, 독립적 기대값",
             "우선순위": valuation_priority,
             "완료": False,
         },
@@ -388,7 +388,7 @@ def build_audit_workflow_checklist(
             "체크 항목": "감사위원회 커뮤니케이션과 내부통제 미비점 보고",
             "리츠 감사 포인트": "유의적 위험, KAM 후보, 미수정 왜곡, 내부회계 통제 미비점을 명확히 전달",
             "수행 절차": "TCWG 보고자료, 내부통제 미비점 평가, 경영진 답변, 후속조치 계획을 정리",
-            "증거/문서화": "TCWG communication, deficiency evaluation",
+            "증거/문서화": "감사위원회 커뮤니케이션, 내부통제 미비점 평가",
             "우선순위": "중간",
             "완료": False,
         },
@@ -481,14 +481,14 @@ def build_rmm_assertion_checklist(
 
 def build_assurance_workpaper_index() -> pd.DataFrame:
     rows = [
-        ("A-100", "기업과 기업환경 이해", "Entity understanding memo", "사업모델, 규제환경, 지배구조, 정보시스템", "감사기준서 315 이해사항과 정보 원천 문서화"),
-        ("A-200", "위험평가절차", "Risk assessment analytics", "NAV/FFO/LTV/ICR, 금리·cap rate 시나리오", "분석적 절차와 질문 결과가 RMM 결론으로 연결"),
-        ("A-210", "위험평가절차", "RMM assertion matrix", "계정/공시별 주장, 유의적 위험, 통제 의존 판단", "RMM과 후속 감사절차의 명확한 linkage"),
+        ("A-100", "기업과 기업환경 이해", "기업 이해 메모", "사업모델, 규제환경, 지배구조, 정보시스템", "감사기준서 315 이해사항과 정보 원천 문서화"),
+        ("A-200", "위험평가절차", "위험평가 분석표", "NAV/FFO/LTV/ICR, 금리·Cap rate 시나리오", "분석적 절차와 질문 결과가 RMM 결론으로 연결"),
+        ("A-210", "위험평가절차", "RMM 주장별 매핑표", "계정/공시별 주장, 유의적 위험, 통제 의존 판단", "RMM과 후속 감사절차의 연결 관계 명확화"),
         ("C-100", "통제테스트", "Process walkthrough", "임대, 차입금, 평가, 결산, 공시 프로세스", "설계·구현 확인 및 운영효과성 테스트 범위 결정"),
-        ("C-200", "통제테스트", "ICFR test sheets", "핵심 통제 표본, 검토 증거, 예외사항", "통제 의존 결론 또는 실증절차 확대 판단"),
-        ("D-100", "실증절차", "Investment property valuation", "평가보고서, NOI, cap rate, 민감도, 공시", "평가 주장에 대한 충분하고 적합한 감사증거"),
+        ("C-200", "통제테스트", "ICFR 테스트 시트", "핵심 통제 표본, 검토 증거, 예외사항", "통제 의존 결론 또는 실증절차 확대 판단"),
+        ("D-100", "실증절차", "투자부동산 공정가치 평가", "평가보고서, NOI, Cap rate, 민감도, 공시", "평가 주장에 대한 충분하고 적합한 감사증거"),
         ("D-200", "실증절차", "Debt and going concern", "조회서, 약정서, covenant, 차환증빙, forecast", "차입금·유동성·계속기업 결론 문서화"),
-        ("D-300", "실증절차", "Lease revenue and receivables", "계약서, 청구/수납, cut-off, 후속수납", "수익·채권 주장 테스트 완료"),
-        ("E-100", "보고·KAM·커뮤니케이션", "KAM and TCWG memo", "KAM 후보, 감사대응, 내부통제 미비점, 보고 영향", "감사위원회 커뮤니케이션과 보고서 판단 근거"),
+        ("D-300", "실증절차", "임대수익 및 임대채권", "계약서, 청구/수납, cut-off, 후속수납", "수익·채권 주장 테스트 완료"),
+        ("E-100", "보고·KAM·커뮤니케이션", "KAM 및 감사위원회 보고 메모", "KAM 후보, 감사대응, 내부통제 미비점, 보고 영향", "감사위원회 커뮤니케이션과 보고서 판단 근거"),
     ]
     return pd.DataFrame(rows, columns=["WP Ref", "감사단계", "작업문서", "연계 산출물", "완료 기준"])

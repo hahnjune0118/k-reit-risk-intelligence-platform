@@ -1,5 +1,5 @@
 # K-REIT Risk Intelligence Platform
 
-Current stable public version: v11
+현재 안정 공개 버전: **v11 - Tax & Assurance 중심 버전**
 
-See [README.md](README.md) for the current public portfolio documentation.
+현재 공개 포트폴리오 문서는 [README.md](README.md)를 기준으로 관리합니다.

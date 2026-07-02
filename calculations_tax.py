@@ -6,9 +6,9 @@ from formatting import _is_na, _safe_float
 
 
 def build_proxy_official_price_history(asset_risk: pd.DataFrame, years_back: int = 5, latest_year: int | None = None, annual_land_growth_pct: float = 3.0, official_to_appraisal_ratio_pct: float = 55.0, building_standard_ratio_pct: float = 20.0) -> pd.DataFrame:
-    """Fallback proxy when official price API/CSV is unavailable.
+    """공시가격 API/CSV가 없을 때 사용하는 추정치(proxy)입니다.
 
-    This is clearly labeled proxy and should be replaced by official API/upload data for real tax work.
+    실무 사용 전에는 공식 API 또는 업로드 자료로 대체해야 합니다.
     """
     latest_year = latest_year or datetime.today().year
     start_year = latest_year - years_back + 1
@@ -192,7 +192,7 @@ def build_reit_tax_workflow_checklist(
     cash_flow_scenarios: pd.DataFrame,
     price_data_status: str,
 ) -> pd.DataFrame:
-    """Practical Big-4-style REIT tax work checklist for compliance, advisory, and tax tech."""
+    """REIT 세무, 보유세, Tax Technology 업무를 위한 실무형 체크리스트입니다."""
     latest_tax = pd.NA
     latest_growth = pd.NA
     if annual_summary is not None and not annual_summary.empty:
@@ -247,7 +247,7 @@ def build_reit_tax_workflow_checklist(
             "자동화 툴": "부동산 취득/매각/현물출자 세무 DD 체크리스트",
             "리츠 실무 체크": "취득세, 등록면허세, 법인세, 부가세, 부동산집합투자기구/리츠 규제와 구조상 세무효율을 검토",
             "데이터 입력": "거래구조, 매매계약, 취득원가, 감면 검토자료, 자금흐름, 보유차량",
-            "자동 산출물": "Tax DD 이슈로그, 구조별 세부담 비교, closing 전 필요조치",
+            "자동 산출물": "Tax DD(세무 실사) 이슈로그, 구조별 세부담 비교, 거래종결 전 필요조치",
             "우선순위": "중간",
             "완료": False,
         },
@@ -261,7 +261,7 @@ def build_reit_tax_workflow_checklist(
             "완료": False,
         },
         {
-            "업무영역": "Tax Technology",
+            "업무영역": "Tax Technology(세무 자동화)",
             "자동화 툴": "세무 데이터 마트와 변경 추적",
             "리츠 실무 체크": "공시가격, 고지서, 장부, 계약, DART 자료를 자산 단위로 연결하고 변경이력과 승인흔적을 보관",
             "데이터 입력": "API/CSV 원천, ERP trial balance, 계약 master, 전자고지 파일, 계산 spreadsheet",
@@ -317,7 +317,7 @@ def build_tax_risk_register(
         },
         {
             "리스크/기회": "세부담상한·감면·과세구분 오류",
-            "신호": "별도합산 토지 proxy 적용 중",
+            "신호": "별도합산 토지 추정치(proxy) 적용 중",
             "영향": "과다 납부 또는 경정청구 기회 발생",
             "권장 자동화": "자산별 과세대상 구분, 감면요건, 상한 적용 여부 체크박스화",
             "등급": "중간",
@@ -344,9 +344,9 @@ def build_tax_automation_backlog() -> pd.DataFrame:
     rows = [
         ("1", "공시가격·고지서 수집", "공시가격 API, 지방세 고지서, CSV 업로드를 자산 master에 자동 매칭", "수작업 수집 시간 감소, 오류 조기 발견"),
         ("2", "세무 캘린더", "재산세, 종부세, 법인세, VAT, 원천세 신고·납부 마감과 담당자 관리", "누락 방지와 업무 현황 가시화"),
-        ("3", "FFO Tax Stress", "보유세·금리·임대료 시나리오가 FFO와 배당가능재원에 미치는 영향 산출", "CFO/이사회 보고 자동화"),
+        ("3", "FFO 보유세 Stress", "보유세·금리·임대료 시나리오가 FFO와 배당가능재원에 미치는 영향 산출", "CFO/이사회 보고 자동화"),
         ("4", "경정청구 탐지", "고지세액과 자체 산출세액 차이를 자산·세목별로 분해", "환급기회 및 불복 쟁점 발굴"),
-        ("5", "Tax DD 팩", "취득/매각 자산의 취득세·부가세·법인세·지방세 체크리스트 생성", "거래 전 세무 이슈 누락 방지"),
+        ("5", "Tax DD(세무 실사) 팩", "취득/매각 자산의 취득세·부가세·법인세·지방세 체크리스트 생성", "거래 전 세무 이슈 누락 방지"),
         ("6", "세무 리스크 통제", "자료 원천, 산식 변경, 검토자 승인, 증빙 링크를 추적", "세무조사 대응과 내부통제 강화"),
     ]
     return pd.DataFrame(rows, columns=["순서", "자동화 과제", "구현 내용", "기대효과"])

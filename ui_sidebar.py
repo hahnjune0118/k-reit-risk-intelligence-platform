@@ -82,9 +82,9 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     dart_conn = get_api_key("DART", st.session_state.get("dart_api_key", ""))
     realty_conn = get_api_key("V-World", st.session_state.get("realty_price_api_key", ""))
     api_status_rows = [
-        {"상태": "ECOS: API key loaded" if ecos_conn.configured else "ECOS: not configured"},
-        {"상태": "DART: API key loaded" if dart_conn.configured else "DART: not configured"},
-        {"상태": "V-World: API key loaded" if realty_conn.configured else "V-World: not configured"},
+        {"상태": "ECOS API Key가 설정되어 있습니다." if ecos_conn.configured else "ECOS API Key가 설정되지 않았습니다."},
+        {"상태": "DART API Key가 설정되어 있습니다." if dart_conn.configured else "DART API Key가 설정되지 않았습니다."},
+        {"상태": "V-World API Key가 설정되어 있습니다." if realty_conn.configured else "V-World API Key가 설정되지 않았습니다."},
     ]
 
     st.sidebar.write("**API 연결 상태**")
@@ -97,7 +97,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
 
     st.sidebar.divider()
     st.sidebar.write("**한국은행 ECOS 연결**")
-    st.sidebar.caption("ECOS API key는 Streamlit Secrets, 환경변수 또는 고급 설정의 수동 입력에서 불러옵니다.")
+    st.sidebar.caption("ECOS API Key는 Streamlit Secrets, 환경변수 또는 고급 설정의 수동 입력에서 불러옵니다.")
 
     macro_context = build_macro_context(ecos_conn.key)
 
@@ -159,7 +159,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
             st.write(sanitize_secret_text(dart_status))
 
     market_history = pd.DataFrame()
-    market_status = "Market data module archived for future version"
+    market_status = "시장가격 데이터 모듈은 향후 버전을 위해 비활성화되어 있습니다."
 
     st.sidebar.divider()
     st.sidebar.write("**시나리오 선택**")
@@ -174,7 +174,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     )
     macro_forecast = DEFAULT_MACRO_FORECAST.copy()
     with st.sidebar.expander("전망 기반 시나리오 가정", expanded=selected_macro_scenario == FORECAST_WEIGHTED_SCENARIO_NAME):
-        st.caption("기본값은 2026년 주요 전망치 수준을 반영한 시작점입니다. 실제 house view가 있으면 이 값만 조정하세요.")
+        st.caption("기본값은 2026년 주요 전망치 수준을 반영한 시작점입니다. 내부 전망치가 있으면 이 값만 조정하세요.")
         macro_forecast["gdp_growth_2026_pct"] = st.slider(
             "2026 GDP 성장률 전망",
             min_value=0.0,
@@ -244,28 +244,28 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
             "건축물 공정시장가액비율", min_value=40.0, max_value=100.0, value=70.0, step=5.0,
         )
         professional_assumptions["building_tax_rate_pct"] = st.sidebar.slider(
-            "일반 건축물 재산세율 proxy", min_value=0.05, max_value=1.00, value=0.25, step=0.05,
-            help="상업용 일반 건축물 proxy입니다. 실제 용도별 세율 검토가 필요합니다."
+            "일반 건축물 재산세율 추정치(proxy)", min_value=0.05, max_value=1.00, value=0.25, step=0.05,
+            help="상업용 일반 건축물에 대한 단순 추정치(proxy)입니다. 실제 용도별 세율 검토가 필요합니다."
         )
         professional_assumptions["include_urban_area_tax"] = st.sidebar.checkbox("도시지역분 포함", value=True)
         professional_assumptions["include_local_education_tax"] = st.sidebar.checkbox("지방교육세 포함", value=True)
         professional_assumptions["apply_tax_burden_cap"] = st.sidebar.checkbox("세부담상한 단순 적용", value=False)
-        professional_assumptions["tax_burden_cap_pct"] = st.sidebar.slider("세부담상한 proxy", min_value=110.0, max_value=200.0, value=150.0, step=10.0)
-        with st.sidebar.expander("API 미연결시 proxy 가정", expanded=False):
-            professional_assumptions["proxy_land_growth_pct"] = st.slider("연간 공시지가 상승률 proxy", 0.0, 15.0, 3.0, 0.5)
-            professional_assumptions["official_to_appraisal_ratio_pct"] = st.slider("토지 공시가격/감정가 proxy", 10.0, 90.0, 55.0, 5.0)
-            professional_assumptions["building_standard_ratio_pct"] = st.slider("건물 기준시가/감정가 proxy", 0.0, 60.0, 20.0, 5.0)
+        professional_assumptions["tax_burden_cap_pct"] = st.sidebar.slider("세부담상한 추정치(proxy)", min_value=110.0, max_value=200.0, value=150.0, step=10.0)
+        with st.sidebar.expander("API 미연결 시 추정치(proxy) 가정", expanded=False):
+            professional_assumptions["proxy_land_growth_pct"] = st.slider("연간 공시지가 상승률 추정치(proxy)", 0.0, 15.0, 3.0, 0.5)
+            professional_assumptions["official_to_appraisal_ratio_pct"] = st.slider("토지 공시가격/감정가 추정치(proxy)", 10.0, 90.0, 55.0, 5.0)
+            professional_assumptions["building_standard_ratio_pct"] = st.slider("건물 기준시가/감정가 추정치(proxy)", 0.0, 60.0, 20.0, 5.0)
 
 
     st.sidebar.divider()
     status_rows = [
         {
             "소스": "ECOS",
-            "상태": "API" if macro_context.get("source") == "한국은행 ECOS API" else "Fallback",
+            "상태": "API 연결" if macro_context.get("source") == "한국은행 ECOS API" else "예시값 사용",
         },
         {
             "소스": "DART",
-            "상태": "API" if dart_status == "connected" else "Local CSV",
+            "상태": "API 연결" if dart_status == "connected" else "로컬 CSV 사용",
         },
     ]
     st.sidebar.write("**데이터 소스 상태**")

@@ -6,7 +6,7 @@ from formatting import format_pct_from_100, format_ratio, format_years
 
 
 def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame, assets: pd.DataFrame):
-    """Rule-based scoring designed for REIT screening, not formal credit rating."""
+    """REIT 예비 검토용 규칙 기반 점수입니다. 정식 신용등급이 아닙니다."""
     scores = {}
     flags = []
 
@@ -16,19 +16,19 @@ def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame
     wale = latest_kpi.get("wale_yrs", pd.NA)
     if pd.notna(occupancy) and occupancy < 95:
         income_score += 35
-        flags.append("Portfolio occupancy below 95%")
+        flags.append("포트폴리오 임대율 95% 미만")
     if pd.notna(wale):
         if wale < 2.0:
             income_score += 30
-            flags.append("WALE below 2.0 years")
+            flags.append("WALE 2.0년 미만")
         elif wale < 3.0:
             income_score += 15
-            flags.append("WALE below 3.0 years")
+            flags.append("WALE 3.0년 미만")
     if "single_tenant_or_master_lease" in assets.columns:
         single_tenant_share = assets[assets["single_tenant_or_master_lease"]]["appraised_value_mn_krw_20251231"].sum() / assets["appraised_value_mn_krw_20251231"].sum()
         if single_tenant_share > 0.65:
             income_score += 20
-            flags.append("High master-lease / single-tenant exposure by appraised value")
+            flags.append("평가액 기준 마스터리스 또는 단일 임차인 노출 높음")
     scores["Income / Lease Stability Risk"] = min(income_score, 100)
 
     # Refinancing / debt service
@@ -42,37 +42,37 @@ def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame
     if pd.notna(leverage):
         if leverage >= 55:
             debt_score += 30
-            flags.append("Leverage at or above 55%")
+            flags.append("부채비율 55% 이상")
         elif leverage >= 50:
             debt_score += 15
-            flags.append("Leverage at or above 50%")
+            flags.append("부채비율 50% 이상")
     if pd.notna(icr):
         if icr < 2.0:
             debt_score += 30
-            flags.append("Interest coverage below 2.0x")
+            flags.append("이자 감당력 2.0배 미만")
         elif icr < 2.5:
             debt_score += 20
-            flags.append("Interest coverage below 2.5x")
+            flags.append("이자 감당력 2.5배 미만")
     if pd.notna(wam):
         if wam < 1.5:
             debt_score += 25
-            flags.append("Debt weighted average maturity below 1.5 years")
+            flags.append("차입금 가중평균 만기 1.5년 미만")
         elif wam < 2.0:
             debt_score += 15
-            flags.append("Debt weighted average maturity below 2.0 years")
+            flags.append("차입금 가중평균 만기 2.0년 미만")
     if pd.notna(fixed_pct) and fixed_pct < 50:
         debt_score += 15
-        flags.append("Fixed-rate debt ratio below 50%")
+        flags.append("고정금리 차입금 비중 50% 미만")
     if pd.notna(avg_rate) and avg_rate > 4.5:
         debt_score += 10
-        flags.append("Average borrowing rate above 4.5%")
+        flags.append("평균 차입금리 4.5% 초과")
 
     near_term_debt = debt_schedule[debt_schedule["days_to_maturity"].between(0, 365, inclusive="both")]["principal_mn_krw"].sum()
     total_debt = debt_schedule["principal_mn_krw"].sum()
     near_term_share = near_term_debt / total_debt if total_debt else 0
     if near_term_share > 0.25:
         debt_score += 20
-        flags.append("More than 25% of disclosed debt matures within one year")
+        flags.append("공시 차입금의 25% 초과가 1년 내 만기")
     scores["Refinancing / Debt Service Risk"] = min(debt_score, 100)
 
     # Valuation / NAV risk
@@ -81,14 +81,14 @@ def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame
     cap_rate_mean = assets["cap_rate_pct_20251231"].mean()
     if pd.notna(cap_rate_mean) and cap_rate_mean < 4.0:
         valuation_score += 20
-        flags.append("Average asset cap rate below 4%")
+        flags.append("평균 자산 Cap rate 4% 미만")
     if pd.notna(uplift) and uplift > 20:
         valuation_score += 15
-        flags.append("Average valuation uplift above 20% vs acquisition price")
+        flags.append("취득가 대비 평균 평가상승률 20% 초과")
     office_share = assets[assets["asset_type"].str.contains("office", case=False, na=False)]["appraised_value_mn_krw_20251231"].sum() / assets["appraised_value_mn_krw_20251231"].sum()
     if office_share > 0.65:
         valuation_score += 10
-        flags.append("Office-concentrated portfolio")
+        flags.append("오피스 자산 집중도 높음")
     scores["Valuation / NAV Sensitivity Risk"] = min(valuation_score, 100)
 
     # Data quality / basis risk
@@ -97,12 +97,12 @@ def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame
     missing_nla_count = assets["nla_or_leasable_area_sqm"].isna().sum()
     if derived_rent_count > 0:
         data_score += min(derived_rent_count * 10, 40)
-        flags.append("Some asset-level annual rent figures are derived rather than directly disclosed")
+        flags.append("일부 자산별 연 임대수익이 직접 공시값이 아닌 추정치")
     if missing_nla_count > 0:
         data_score += min(missing_nla_count * 5, 25)
-        flags.append("Some assets lack explicit NLA / leasable area")
+        flags.append("일부 자산의 임대가능면적 정보 부족")
     data_score += 15
-    flags.append("Parent investment-report KPIs and consolidated K-IFRS figures are separate bases")
+    flags.append("투자보고서 KPI와 연결 K-IFRS 수치는 기준이 서로 다름")
     scores["Disclosure / Data Basis Risk"] = min(data_score, 100)
 
     total_score = (
@@ -123,7 +123,7 @@ def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame
 
 
 def add_score_rule(rows, category, driver, triggered, score_delta, weight, current_value="", threshold="", interpretation=""):
-    """Append one transparent rule row for score decomposition."""
+    """점수 산정 원인을 표 형태로 남깁니다."""
     rows.append({
         "risk_category": category,
         "driver": driver,
@@ -138,7 +138,7 @@ def add_score_rule(rows, category, driver, triggered, score_delta, weight, curre
 
 
 def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.DataFrame, assets: pd.DataFrame) -> pd.DataFrame:
-    """Create a rating-agency style decomposition of the REIT-level rule-based score."""
+    """REIT 수준 규칙 기반 점수의 산정 원인을 설명합니다."""
     rows = []
     weights = {
         "Income / Lease Stability Risk": 0.25,
@@ -161,46 +161,46 @@ def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.Data
     add_score_rule(
         rows,
         "Income / Lease Stability Risk",
-        "Portfolio occupancy below 95%",
+        "포트폴리오 임대율 95% 미만",
         pd.notna(occupancy) and occupancy < 95,
         35,
         weights["Income / Lease Stability Risk"],
         format_pct_from_100(occupancy),
         "< 95.0%",
-        "Lower occupancy directly weakens recurring rental income and signals reletting risk.",
+        "임대율 하락은 반복 임대수익을 약화시키고 재임대 위험을 높입니다.",
     )
     add_score_rule(
         rows,
         "Income / Lease Stability Risk",
-        "WALE below 2.0 years",
+        "WALE 2.0년 미만",
         pd.notna(wale) and wale < 2.0,
         30,
         weights["Income / Lease Stability Risk"],
         format_years(wale),
-        "< 2.0 years",
-        "Short WALE increases near-term lease rollover risk and weakens income visibility.",
+        "< 2.0년",
+        "WALE가 짧으면 단기 임대차 갱신 위험이 커지고 수익 예측 가능성이 낮아집니다.",
     )
     add_score_rule(
         rows,
         "Income / Lease Stability Risk",
-        "WALE between 2.0 and 3.0 years",
+        "WALE 2.0년 이상 3.0년 미만",
         pd.notna(wale) and 2.0 <= wale < 3.0,
         15,
         weights["Income / Lease Stability Risk"],
         format_years(wale),
-        "2.0–3.0 years",
-        "Medium WALE is not critical but still requires tenant renewal monitoring.",
+        "2.0년 이상 3.0년 미만",
+        "즉시 위험은 아니지만 주요 임차인의 갱신 가능성을 계속 모니터링해야 합니다.",
     )
     add_score_rule(
         rows,
         "Income / Lease Stability Risk",
-        "Master-lease / single-tenant exposure above 65% of appraised value",
+        "마스터리스 또는 단일 임차인 노출 65% 초과",
         pd.notna(single_tenant_share) and single_tenant_share > 65,
         20,
         weights["Income / Lease Stability Risk"],
         format_pct_from_100(single_tenant_share),
         "> 65.0%",
-        "Concentration can be stable when tenants are strong, but it raises counterparty and renegotiation dependency.",
+        "우량 임차인이라도 집중도가 높으면 거래상대방 의존도와 재협상 리스크가 커집니다.",
     )
 
     leverage = latest_kpi.get("leverage_pct", pd.NA)
@@ -215,101 +215,101 @@ def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.Data
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "Leverage at or above 55%",
+        "부채비율 55% 이상",
         pd.notna(leverage) and leverage >= 55,
         30,
         weights["Refinancing / Debt Service Risk"],
         format_pct_from_100(leverage),
         ">= 55.0%",
-        "Higher leverage reduces the equity cushion and increases sensitivity to cap-rate expansion and refinancing haircuts.",
+        "부채비율이 높으면 자기자본 완충력이 줄고 Cap rate 상승 및 차환 조건 악화에 더 민감해집니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "Leverage between 50% and 55%",
+        "부채비율 50% 이상 55% 미만",
         pd.notna(leverage) and 50 <= leverage < 55,
         15,
         weights["Refinancing / Debt Service Risk"],
         format_pct_from_100(leverage),
-        "50.0%–55.0%",
-        "Moderate leverage pressure; refinancing terms should be monitored.",
+        "50.0% 이상 55.0% 미만",
+        "중간 수준의 차입 부담이 있으므로 차환 조건과 담보여력을 모니터링해야 합니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "Interest coverage below 2.0x",
+        "이자 감당력 2.0배 미만",
         pd.notna(icr) and icr < 2.0,
         30,
         weights["Refinancing / Debt Service Risk"],
         format_ratio(icr),
         "< 2.0x",
-        "Weak interest coverage indicates limited debt-service headroom under rate shocks.",
+        "이자 감당력이 낮으면 금리 상승 시 차입금 이자 부담을 흡수할 여력이 제한됩니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "Interest coverage between 2.0x and 2.5x",
+        "이자 감당력 2.0배 이상 2.5배 미만",
         pd.notna(icr) and 2.0 <= icr < 2.5,
         20,
         weights["Refinancing / Debt Service Risk"],
         format_ratio(icr),
-        "2.0x–2.5x",
-        "Coverage is acceptable but exposed to refinancing spread widening or FFO downside.",
+        "2.0배 이상 2.5배 미만",
+        "현재는 감당 가능해도 차환 스프레드 확대나 FFO 하락에 노출됩니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "Debt weighted average maturity below 1.5 years",
+        "차입금 가중평균 만기 1.5년 미만",
         pd.notna(wam) and wam < 1.5,
         25,
         weights["Refinancing / Debt Service Risk"],
         format_years(wam),
-        "< 1.5 years",
-        "Short WAM creates near-term refinancing wall risk.",
+        "< 1.5년",
+        "만기가 짧으면 단기 차환 부담이 집중될 수 있습니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "Debt weighted average maturity between 1.5 and 2.0 years",
+        "차입금 가중평균 만기 1.5년 이상 2.0년 미만",
         pd.notna(wam) and 1.5 <= wam < 2.0,
         15,
         weights["Refinancing / Debt Service Risk"],
         format_years(wam),
-        "1.5–2.0 years",
-        "Medium WAM requires maturity ladder management.",
+        "1.5년 이상 2.0년 미만",
+        "만기 구조를 분산하고 차환 일정 관리를 강화해야 합니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "Fixed-rate debt ratio below 50%",
+        "고정금리 차입금 비중 50% 미만",
         pd.notna(fixed_pct) and fixed_pct < 50,
         15,
         weights["Refinancing / Debt Service Risk"],
         format_pct_from_100(fixed_pct),
         "< 50.0%",
-        "Low fixed-rate protection increases exposure to rate volatility.",
+        "고정금리 보호가 낮으면 시장금리 변동에 따른 이자비용 변동성이 커집니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "Average borrowing rate above 4.5%",
+        "평균 차입금리 4.5% 초과",
         pd.notna(avg_rate) and avg_rate > 4.5,
         10,
         weights["Refinancing / Debt Service Risk"],
         format_pct_from_100(avg_rate),
         "> 4.5%",
-        "Elevated funding cost can compress FFO and distribution capacity.",
+        "차입비용이 높으면 FFO와 배당 여력이 줄어들 수 있습니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "More than 25% of disclosed debt matures within one year",
+        "공시 차입금의 25% 초과가 1년 내 만기",
         pd.notna(near_term_share) and near_term_share > 25,
         20,
         weights["Refinancing / Debt Service Risk"],
         format_pct_from_100(near_term_share),
         "> 25.0%",
-        "A concentrated one-year maturity wall raises execution risk under volatile credit-market conditions.",
+        "1년 내 만기가 집중되면 신용시장 변동성이 큰 상황에서 차환 실행 위험이 커집니다.",
     )
 
     uplift = assets["value_uplift_pct"].mean()
@@ -325,35 +325,35 @@ def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.Data
     add_score_rule(
         rows,
         "Valuation / NAV Sensitivity Risk",
-        "Average asset cap rate below 4%",
+        "평균 자산 Cap rate 4% 미만",
         pd.notna(cap_rate_mean) and cap_rate_mean < 4.0,
         20,
         weights["Valuation / NAV Sensitivity Risk"],
         format_pct_from_100(cap_rate_mean),
         "< 4.0%",
-        "Low cap rates imply higher value duration and greater NAV sensitivity to yield expansion.",
+        "낮은 Cap rate는 가치 민감도가 높다는 뜻이며, 수익률 상승 시 NAV 하락 폭이 커질 수 있습니다.",
     )
     add_score_rule(
         rows,
         "Valuation / NAV Sensitivity Risk",
-        "Average valuation uplift above 20% vs acquisition price",
+        "취득가 대비 평균 평가상승률 20% 초과",
         pd.notna(uplift) and uplift > 20,
         15,
         weights["Valuation / NAV Sensitivity Risk"],
         format_pct_from_100(uplift),
         "> 20.0%",
-        "Large appraisal uplift should be supported by rent growth, tenant credit, or lower risk premium.",
+        "큰 평가상승은 임대료 상승, 임차인 신용도, 위험프리미엄 하락 등으로 설명되어야 합니다.",
     )
     add_score_rule(
         rows,
         "Valuation / NAV Sensitivity Risk",
-        "Office-concentrated portfolio above 65% of appraised value",
+        "오피스 자산 평가액 비중 65% 초과",
         pd.notna(office_share) and office_share > 65,
         10,
         weights["Valuation / NAV Sensitivity Risk"],
         format_pct_from_100(office_share),
         "> 65.0%",
-        "Office concentration increases exposure to submarket vacancy, leasing spreads, and cap-rate cycle risk.",
+        "오피스 집중도는 권역별 공실, 임대료 스프레드, Cap rate 사이클 위험에 대한 노출을 높입니다.",
     )
 
     derived_rent_count = assets["estimated_annual_rent_mn_krw"].astype(str).str.contains("derived", case=False, na=False).sum()
@@ -361,46 +361,46 @@ def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.Data
     add_score_rule(
         rows,
         "Disclosure / Data Basis Risk",
-        "Asset-level annual rent figures are derived rather than directly disclosed",
+        "자산별 연 임대수익이 직접 공시값이 아닌 추정치",
         derived_rent_count > 0,
         min(derived_rent_count * 10, 40),
         weights["Disclosure / Data Basis Risk"],
-        f"{derived_rent_count} asset(s)",
+        f"{derived_rent_count}개 자산",
         "> 0",
-        "Derived rent figures are useful proxies but need source-document reconciliation before formal valuation.",
+        "추정 임대수익은 예비 분석에는 유용하지만, 정식 검토 전 원천 공시자료와 대사해야 합니다.",
     )
     add_score_rule(
         rows,
         "Disclosure / Data Basis Risk",
-        "Assets lack explicit NLA / leasable area",
+        "임대가능면적 정보가 명시되지 않은 자산 존재",
         missing_nla_count > 0,
         min(missing_nla_count * 5, 25),
         weights["Disclosure / Data Basis Risk"],
-        f"{missing_nla_count} asset(s)",
+        f"{missing_nla_count}개 자산",
         "> 0",
-        "Missing NLA weakens rent-per-area, productivity, and comparability analysis.",
+        "임대가능면적이 없으면 면적당 임대료, 생산성, 비교가능성 분석이 약해집니다.",
     )
     add_score_rule(
         rows,
         "Disclosure / Data Basis Risk",
-        "Parent investment-report KPIs and consolidated K-IFRS figures are separate bases",
+        "투자보고서 KPI와 연결 K-IFRS 수치의 기준 차이",
         True,
         15,
         weights["Disclosure / Data Basis Risk"],
-        "Always applicable",
-        "Basis difference exists",
-        "Cross-basis ratios are screening signals only and require reconciliation before formal use.",
+        "항상 확인 필요",
+        "기준 차이 존재",
+        "서로 다른 기준의 비율은 예비 신호일 뿐이며 정식 사용 전 대사가 필요합니다.",
     )
 
     out = pd.DataFrame(rows)
     out["category_score"] = out.groupby("risk_category")["score_delta"].transform("sum").clip(upper=100)
     out["category_weighted_score"] = out.groupby("risk_category")["weighted_score_delta"].transform("sum")
-    out["trigger_status"] = out["triggered"].map({True: "Triggered", False: "Not triggered"})
+    out["trigger_status"] = out["triggered"].map({True: "해당", False: "미해당"})
     return out
 
 
 def build_asset_score_decomposition(asset_row: pd.Series) -> pd.DataFrame:
-    """Explain one asset-level risk score."""
+    """자산별 위험 점수 산정 원인을 설명합니다."""
     rows = []
 
     def add(driver, triggered, score_delta, current_value="", threshold="", interpretation=""):
@@ -414,56 +414,56 @@ def build_asset_score_decomposition(asset_row: pd.Series) -> pd.DataFrame:
         })
 
     add(
-        "Single tenant / master lease concentration",
+        "단일 임차인 또는 마스터리스 집중",
         str(asset_row.get("tenant_concentration_pct", "")).lower().find("100") >= 0 or str(asset_row.get("tenant_concentration_pct", "")).lower().find("master") >= 0,
         20,
         str(asset_row.get("tenant_concentration_pct", "N/A")),
-        "100% or master lease wording",
-        "Stable for strong tenants but still creates counterparty concentration.",
+        "100% 또는 마스터리스 문구",
+        "우량 임차인이라도 거래상대방 집중위험은 남습니다.",
     )
     add(
-        "Mixed / retail / gas-station asset type",
+        "복합·리테일·주유소 등 자산 유형",
         bool(pd.notna(asset_row.get("asset_type")) and re.search("mixed|retail|gas", str(asset_row.get("asset_type")), flags=re.IGNORECASE)),
         15,
         str(asset_row.get("asset_type", "N/A")),
-        "Contains mixed, retail, or gas",
-        "Non-office assets often require more bespoke lease and alternative-use diligence.",
+        "복합, 리테일, 주유소 포함",
+        "오피스가 아닌 자산은 임대차 조건과 대체사용 가능성을 별도로 확인할 필요가 있습니다.",
     )
     add(
-        "WALE below 3 years",
+        "WALE 3년 미만",
         pd.notna(asset_row.get("wale_yrs")) and asset_row["wale_yrs"] < 3,
         25,
         format_years(asset_row.get("wale_yrs")),
-        "< 3.0 years",
-        "Shorter remaining lease tenor raises rollover and rental reversion risk.",
+        "< 3.0년",
+        "잔여 임대차기간이 짧으면 갱신과 임대료 조정 위험이 커집니다.",
     )
     add(
-        "Cap rate below 4%",
+        "Cap rate 4% 미만",
         pd.notna(asset_row.get("cap_rate_pct_20251231")) and asset_row["cap_rate_pct_20251231"] < 4.0,
         15,
         format_pct_from_100(asset_row.get("cap_rate_pct_20251231")),
         "< 4.0%",
-        "Low cap rate implies higher duration and valuation sensitivity.",
+        "낮은 Cap rate는 가치 민감도가 높다는 신호입니다.",
     )
     add(
-        "Valuation uplift above 25%",
+        "평가상승률 25% 초과",
         pd.notna(asset_row.get("value_uplift_pct")) and asset_row["value_uplift_pct"] > 25,
         10,
         format_pct_from_100(asset_row.get("value_uplift_pct")),
         "> 25.0%",
-        "Large appraisal uplift should be traced to rent, cap-rate, or asset-quality evidence.",
+        "큰 평가상승은 임대료, Cap rate, 자산 품질 증거와 연결해 확인해야 합니다.",
     )
     add(
-        "Annual rent figure is derived",
+        "연 임대수익이 추정치",
         str(asset_row.get("estimated_annual_rent_mn_krw", "")).lower().find("derived") >= 0,
         15,
         str(asset_row.get("estimated_annual_rent_mn_krw", "N/A")),
-        "Contains derived note",
-        "Derived rent is a proxy and should be tied back to original disclosure or appraisal support.",
+        "derived 문구 포함",
+        "추정 임대수익은 원 공시자료 또는 평가보고서 근거와 대사해야 합니다.",
     )
 
     out = pd.DataFrame(rows)
-    out["trigger_status"] = out["triggered"].map({True: "Triggered", False: "Not triggered"})
+    out["trigger_status"] = out["triggered"].map({True: "해당", False: "미해당"})
     out["asset_risk_score_recomputed"] = min(float(out["score_delta"].sum()), 100.0)
     return out
 
@@ -597,13 +597,13 @@ def build_interactive_scenario_outputs(
     # Use disclosed interest coverage when possible because it ties directly to reported KPI basis.
     if pd.notna(base_ffo) and pd.notna(reported_icr) and reported_icr:
         base_interest = base_ffo / reported_icr
-        interest_basis = "reported ICR"
+        interest_basis = "공시 이자 감당력(ICR)"
     elif pd.notna(avg_rate_pct):
         base_interest = principal * avg_rate_pct / 100
-        interest_basis = "average borrowing rate"
+        interest_basis = "평균 차입금리"
     else:
         base_interest = pd.NA
-        interest_basis = "not available"
+        interest_basis = "확인 불가"
 
     affected_refi_principal = principal * refinancing_share_pct / 100
     affected_principal = floating + affected_refi_principal
@@ -731,10 +731,10 @@ def scenario_verdict(scenario: dict) -> tuple[str, str, str]:
             yellow_flags.append("순자산가치 하락폭이 8% 초과")
 
     if red_flags:
-        return "🔴 압박이 큼", "High", "; ".join(red_flags)
+        return "압박이 큼", "High", "; ".join(red_flags)
     if yellow_flags:
-        return "🟡 주의 필요", "Medium", "; ".join(yellow_flags)
-    return "🟢 현재 시나리오에서는 비교적 안정", "Low", "주요 경고 기준을 넘지 않았습니다."
+        return "주의 필요", "Medium", "; ".join(yellow_flags)
+    return "현재 시나리오에서는 비교적 안정", "Low", "주요 경고 기준을 넘지 않았습니다."
 
 
 def build_asset_concentration_table(assets: pd.DataFrame) -> pd.DataFrame:
@@ -764,23 +764,23 @@ def build_watchlist(asset_risk: pd.DataFrame, debt_schedule: pd.DataFrame, lates
     for _, row in asset_risk.iterrows():
         reasons = []
         if row.get("asset_risk_score", 0) >= 40:
-            reasons.append("asset score >= 40")
+            reasons.append("자산 위험점수 40 이상")
         if pd.notna(row.get("wale_yrs")) and row["wale_yrs"] < 2.0:
-            reasons.append("short WALE")
+            reasons.append("WALE 짧음")
         if pd.notna(row.get("cap_rate_pct_20251231")) and row["cap_rate_pct_20251231"] < 4.0:
-            reasons.append("low cap rate / valuation sensitivity")
+            reasons.append("낮은 Cap rate / 가치평가 민감도")
         if str(row.get("tenant_concentration_pct", "")).lower().find("100") >= 0:
-            reasons.append("single tenant / master lease concentration")
+            reasons.append("단일 임차인 또는 마스터리스 집중")
         if str(row.get("estimated_annual_rent_mn_krw", "")).lower().find("derived") >= 0:
-            reasons.append("rent figure derived from cap-rate label")
+            reasons.append("임대수익이 Cap rate 표시값에서 역산된 추정치")
 
         if reasons:
             rows.append({
                 "watch_item": row["asset_name"],
-                "category": "Asset / lease",
+                "category": "자산 / 임대차",
                 "priority_score": min(row.get("asset_risk_score", 0) + len(reasons) * 5, 100),
                 "why_it_matters": "; ".join(reasons),
-                "recommended_next_step": "Check original lease schedule, tenant credit, appraisal assumptions and renewal option economics.",
+                "recommended_next_step": "원 임대차 스케줄, 임차인 신용도, 평가가정, 갱신 옵션의 경제성을 확인합니다.",
                 "source_confidence": row.get("source_confidence", "unknown"),
             })
 
@@ -789,21 +789,21 @@ def build_watchlist(asset_risk: pd.DataFrame, debt_schedule: pd.DataFrame, lates
         by_year = near_term.groupby("maturity_year")["principal_mn_krw"].sum().reset_index()
         for _, row in by_year.iterrows():
             rows.append({
-                "watch_item": f"Debt maturities in {int(row['maturity_year'])}",
-                "category": "Debt / refinancing",
+                "watch_item": f"{int(row['maturity_year'])}년 차입금 만기",
+                "category": "차입금 / 차환",
                 "priority_score": min(row["principal_mn_krw"] / debt_schedule["principal_mn_krw"].sum() * 100 + 35, 100),
-                "why_it_matters": f"{row['principal_mn_krw']:,.0f} mn KRW matures within the near-term maturity window.",
-                "recommended_next_step": "Map facility-level maturity to collateral, funding source, spread step-up and refinancing base-rate scenario.",
+                "why_it_matters": f"단기 만기 구간에 {row['principal_mn_krw']:,.0f}백만원의 차입금 만기가 도래합니다.",
+                "recommended_next_step": "약정별 만기, 담보, 조달원, 스프레드 step-up, 차환 기준금리 Scenario를 연결해 확인합니다.",
                 "source_confidence": "high_disclosed_table",
             })
 
     if pd.notna(latest_kpi.get("interest_coverage_x")) and latest_kpi["interest_coverage_x"] < 2.5:
         rows.append({
-            "watch_item": "Interest coverage",
-            "category": "Debt service",
+            "watch_item": "이자 감당력",
+            "category": "차입금 상환능력",
             "priority_score": 75 if latest_kpi["interest_coverage_x"] < 2.0 else 60,
-            "why_it_matters": f"Reported interest coverage is {latest_kpi['interest_coverage_x']:.2f}x.",
-            "recommended_next_step": "Run FFO downside and refinancing spread sensitivity; compare with rating-agency tolerance bands.",
+            "why_it_matters": f"공시 이자 감당력은 {latest_kpi['interest_coverage_x']:.2f}배입니다.",
+            "recommended_next_step": "FFO 하락과 차환 스프레드 민감도를 계산하고 내부 허용수준과 비교합니다.",
             "source_confidence": latest_kpi.get("source_confidence", "high_disclosed_kpi"),
         })
 
@@ -816,25 +816,25 @@ def build_watchlist(asset_risk: pd.DataFrame, debt_schedule: pd.DataFrame, lates
 def build_due_diligence_questions(risk_scores: dict, latest_kpi: pd.Series) -> pd.DataFrame:
     rows = []
     question_bank = {
-        "Transaction / FDD": [
-            "Is disclosed FFO normalized for one-off acquisition, refinancing, disposition, or tenant transition items?",
-            "Which assets drive most of the portfolio value and rent, and are those cash flows backed by enforceable long-term leases?",
-            "Are related-party/master leases economically at market, or do they embed sponsor support?",
+        "거래 / FDD": [
+            "공시 FFO에 일회성 취득, 차환, 매각, 임차인 교체 효과가 포함되어 있나요?",
+            "포트폴리오 가치와 임대수익을 주도하는 자산은 무엇이며, 해당 현금흐름은 장기 임대차계약으로 뒷받침되나요?",
+            "특수관계자 또는 마스터리스 조건이 시장조건에 부합하나요, 아니면 스폰서 지원 효과가 포함되어 있나요?",
         ],
-        "Valuation": [
-            "Are asset cap rates consistent with current market evidence, not only acquisition-date or appraisal-date assumptions?",
-            "How much NAV sensitivity results from +50bp/+100bp cap-rate expansion by asset type?",
-            "Are appraisal uplifts supported by actual rent escalation, lower risk premium, or merely market cap-rate compression?",
+        "가치평가": [
+            "자산별 Cap rate가 취득일 또는 평가일 가정뿐 아니라 현재 시장 근거와도 일관되나요?",
+            "자산 유형별 Cap rate가 +50bp 또는 +100bp 상승할 때 NAV 민감도는 어느 정도인가요?",
+            "평가상승은 실제 임대료 상승, 위험프리미엄 하락, 또는 단순 시장 Cap rate 하락 중 무엇으로 설명되나요?",
         ],
-        "Restructuring / Credit": [
-            "What portion of debt must be refinanced before lease rollover or tenant renewal is resolved?",
-            "Does stressed FFO still cover interest after refinancing spread widening?",
-            "Are there collateral, DSCR, LTV, cash sweep, or rating triggers that could constrain distributions?",
+        "차환 / 신용": [
+            "임대차 갱신 또는 주요 임차인 이슈가 해소되기 전에 차환해야 하는 차입금 비중은 얼마인가요?",
+            "차환 스프레드가 확대된 뒤에도 스트레스 FFO로 이자를 감당할 수 있나요?",
+            "배당을 제한할 수 있는 담보, DSCR, LTV, cash sweep, 등급 trigger가 있나요?",
         ],
         "Assurance": [
-            "Are K-IFRS consolidated figures reconciled to statutory investment-report KPIs before being used in ratios?",
-            "Are fair-value assumptions, valuation uncertainty, and key external inputs disclosed sufficiently?",
-            "Do lease rollover, refinancing, or tenant-credit changes indicate impairment or fair-value review points?",
+            "K-IFRS 연결 재무제표 수치와 투자보고서 KPI가 비율 계산 전에 대사되었나요?",
+            "공정가치 가정, 평가 불확실성, 주요 외부 입력변수가 충분히 공시되었나요?",
+            "임대차 갱신, 차환, 임차인 신용도 변화가 손상 또는 공정가치 검토 포인트가 되나요?",
         ],
     }
     for perspective, questions in question_bank.items():

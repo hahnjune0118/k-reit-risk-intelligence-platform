@@ -107,8 +107,8 @@ def render_general_dashboard(
             hist_long["지표"] = hist_long["지표"].replace({
                 "기준금리_index": "기준금리",
                 "국고채 3년_index": "국고채 3년",
-                "순자산가치_또는_자본_index": "순자산가치/NAV proxy",
-                "현금흐름_또는_이익_index": "현금흐름/이익 proxy",
+                "순자산가치_또는_자본_index": "NAV(순자산가치) 추정치",
+                "현금흐름_또는_이익_index": "FFO/이익 추정치",
                 "시장가치_index": "시가총액",
                 "주가_index": "주가",
                 "P_NAV_index": "P/NAV",
@@ -134,7 +134,7 @@ def render_general_dashboard(
                 "기준금리": "기준금리",
                 "국고채 3년": "국고채 3년",
                 "회사채 AA- 3년": "회사채 AA- 3년",
-                "순자산가치_또는_자본": "NAV/자본(백만원)",
+                "순자산가치_또는_자본": "NAV(순자산가치)/자본(백만원)",
                 "현금흐름_또는_이익": "FFO/이익(백만원)",
                 "시장가치": "시가총액(백만원)",
                 "주가": "주가(원)",
@@ -432,6 +432,10 @@ def render_general_dashboard(
                 financials[["source_document", "source_confidence"]],
                 kpis[["source_document", "source_confidence"]],
             ], ignore_index=True).drop_duplicates()
+            source_conf = source_conf.rename(columns={
+                "source_document": "자료 문서",
+                "source_confidence": "자료 신뢰도",
+            })
             st.dataframe(source_conf, width="stretch", hide_index=True, height=170)
             st.caption(
                 "거시경제 지표: "
@@ -464,17 +468,17 @@ def render_general_dashboard(
                 "sk_reit_data_dictionary.csv",
             ],
             "purpose": [
-                "Financial trend and K-IFRS leverage",
-                "NAV, FFO, dividend, leverage and coverage KPIs",
-                "Asset valuation, lease and tenant exposure",
-                "Investment-report direct ownership details",
-                "Facility-level debt maturity and rate analysis",
-                "Aggregated refinancing wall",
-                "Next source collection roadmap",
-                "Definitions and basis-control notes",
+                "재무 추이와 K-IFRS 기준 부채비율 분석",
+                "NAV, FFO, 배당, 차입, 이자 감당력 KPI",
+                "자산 평가액, 임대차, 주요 임차인 정보",
+                "투자보고서 기준 직접 보유자산 세부정보",
+                "차입 약정별 만기와 금리 분석",
+                "연도별 차환 부담 요약",
+                "추가 수집이 필요한 자료 계획",
+                "컬럼 정의와 산식 기준 메모",
             ],
         })
-        st.dataframe(loaded, width="stretch", hide_index=True, height=170)
+        st.dataframe(loaded.rename(columns={"table": "파일명", "purpose": "사용 목적"}), width="stretch", hide_index=True, height=170)
 
     st.divider()
     st.caption(

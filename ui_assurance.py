@@ -35,10 +35,11 @@ def render_assurance_mode(
     scenario: dict,
     materiality_pct: float,
 ):
-    st.markdown("## A. Assurance 모드: 감사계획·RMM·KAM·내부회계 관점")
+    st.markdown("## A. Assurance: 감사위험 분석")
     st.caption(
-        "목적: 리츠회사 감사인이 기업과 기업환경의 이해, 위험평가절차, 통제테스트, 실증절차 순서로 "
-        "중요왜곡표시위험(RMM)과 KAM 후보, 내부회계관리제도 테스트 포인트를 문서화할 수 있게 합니다."
+        "이 화면은 리츠회사 감사계획 단계에서 어떤 자산과 계정을 중점적으로 봐야 하는지 판단하기 위한 참고 도구입니다. "
+        "기업과 기업환경의 이해, 위험평가절차, 통제테스트, 실증절차 순서로 RMM(중요왜곡표시위험), "
+        "KAM(핵심감사사항), 내부회계관리제도 핵심 통제 포인트를 정리합니다."
     )
 
     assurance_assets = build_assurance_asset_priority(asset_risk, scenario, materiality_pct)
@@ -65,11 +66,11 @@ def render_assurance_mode(
         a1, a2 = st.columns([1.15, 1.0])
         with a1:
             st.write("**감사 중점 자산 우선순위**")
-            st.caption("`시나리오가치변화_%`는 좌측 사이드바의 예상 거시경제 상황과 Cap rate 충격 가정에 따라 즉시 달라집니다.")
+            st.caption("`시나리오가치변화_%`는 좌측 사이드바의 예상 거시경제 상황과 Cap rate(자본환원율) 충격 가정에 따라 즉시 달라집니다.")
             st.dataframe(assurance_assets.head(8), width="stretch", hide_index=True, height=260)
         with a2:
             st.write("**RMM 요약 매핑**")
-            st.caption("투자부동산 공정가치 RMM은 선택 시나리오명과 Cap rate 충격을 함께 표시합니다.")
+            st.caption("투자부동산 공정가치 RMM은 선택 Scenario와 Cap rate 충격을 함께 표시합니다.")
             st.dataframe(rmm, width="stretch", hide_index=True, height=260)
 
         st.write("**계정·공시 및 경영진 주장별 RMM 체크리스트**")

@@ -1,73 +1,62 @@
 # K-REIT Risk Intelligence Platform
 
-K-REIT Risk Intelligence Platform is a Streamlit-based public portfolio application that links REIT disclosures, macroeconomic indicators, asset-level information, and official land price / assessed value data to support Tax and Assurance-oriented risk analysis.
+K-REIT Risk Intelligence Platform은 상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격/기준시가 데이터를 연결하여 감사위험과 보유세 부담을 분석하는 Streamlit 기반 공개 포트폴리오 애플리케이션입니다.
 
-Current stable public version: v11
+현재 안정 공개 버전: **v11 - Tax & Assurance 중심 버전**
 
-## Project Overview
+## 프로젝트 개요
 
-The platform organizes REIT financial disclosures, asset-level information, debt schedules, macro indicators, and official-price data into a practical workflow for accounting and consulting digital transformation use cases. It is designed as a public portfolio version focused on transparent source basis, reproducible calculations, and professional review checklists.
+이 프로젝트는 리츠 공시자료를 단순히 읽는 수준을 넘어, 재무·세무·감사 관점에서 함께 봐야 하는 항목을 한 화면에 연결하기 위해 만들었습니다. DART 공시, ECOS 거시경제 지표, 자산별 임대차 정보, 차입금 만기, 공시가격 데이터를 실무 검토 흐름에 맞게 재구성합니다.
 
-The app is a preliminary analytics and workflow-support tool. It does not provide an audit opinion, tax filing, legal advice, credit rating, investment recommendation, or formal valuation opinion.
+대상 사용자는 리츠 업무를 처음 접하는 회계사, 감사·세무·자문 업무 담당자, 그리고 회계/컨설팅 업무의 디지털 전환 사례를 검토하는 사용자입니다. 기본 회계 지식은 있다고 가정하지만, REIT, API, Streamlit, 부동산 가치평가 모델에는 익숙하지 않을 수 있다는 점을 고려해 설명을 구성했습니다.
 
-## Current v11 Scope
+이 앱은 예비 분석 및 업무 검토 지원 도구입니다. 감사의견, 세무신고서, 법률 자문, 투자추천, 신용등급, 정식 가치평가 의견을 제공하지 않습니다.
 
-v11 is named **Tax & Assurance Focus**. It refocuses the active public UI on stable modules:
+## v11 현재 범위
 
-1. General Info & Scenario
-2. Assurance
-3. Tax
-4. Methodology & Data Sources
+v11은 **Tax & Assurance 중심 버전**입니다. 공개 UI는 안정적으로 개발된 네 가지 화면에 집중합니다.
 
-The active public app disables Deals mode and active KRX API dependency. Future v12/v13 modules may include KRX-based market-implied valuation and Deals analysis after the data connection and valuation workflow are hardened.
+1. 일반 정보 및 시나리오
+2. Assurance: 감사위험 분석
+3. Tax: 보유세 분석
+4. 분석 방법론 및 데이터 출처
 
-## Active Modes
+현재 공개 버전에서는 Deal 분석 모드와 KRX API 기반 시장가격 분석을 비활성화했습니다. 관련 코드는 향후 v12/v13에서 재검토할 수 있도록 archive/roadmap 성격으로 남겨 두었습니다.
 
-### 1. General Info & Scenario
+## 주요 기능
 
-Reviews the baseline REIT risk profile, macro scenario assumptions, asset concentration, tenant exposure, debt maturity, NAV, FFO, interest coverage, and stress sensitivity.
+### 일반 정보 및 시나리오
 
-### 2. Assurance
+REIT의 NAV(순자산가치), FFO(반복적 영업현금흐름에 가까운 지표), LTV, 이자 감당력, 자산 집중도, 임차인 비중, 차입금 만기를 함께 검토합니다. 금리 상승, 중립, 경기 둔화 Scenario에 따라 FFO 하락 가정, Cap rate 상승 가정, NAV 민감도, 차입금 만기 부담을 확인할 수 있습니다.
 
-Translates scenario and disclosure indicators into audit planning, RMM mapping, KAM candidates, going-concern considerations, and internal-control response checklists.
+### Assurance: 감사위험 분석
 
-### 3. Tax
+리츠회사 감사계획 단계에서 어떤 자산과 계정을 중점적으로 봐야 하는지 판단하기 위한 화면입니다. RMM(중요왜곡표시위험), KAM(핵심감사사항), 투자부동산 공정가치 평가위험, 차입금 만기 및 계속기업 검토 신호, 임대수익 및 주요 임차인 집중위험, 내부회계관리제도 핵심 통제를 체크리스트 형태로 정리합니다.
 
-Uses official land price / assessed value data, CSV uploads, or proxy assumptions to estimate holding-tax pressure and FFO cash-outflow impact.
+### Tax: 보유세 분석
 
-### 4. Methodology & Data Sources
+공시가격/기준시가, 토지 시가표준액, 건물 시가표준액, 과세표준, 재산세, 도시지역분, 지방교육세를 연결해 최근 5년 보유세 추이와 지가 상승에 따른 보유세 부담 변화를 분석합니다. 본 보유세 계산은 신고 목적의 세액 산출이 아니라, 리츠 보유자산별 세금 부담의 방향성과 민감도를 파악하기 위한 예비 분석입니다.
 
-Explains data sources, calculation basis, source reliability, API key handling, limitations, and versioning conventions.
+### 분석 방법론 및 데이터 출처
 
-## Data Sources
+사용 데이터, 공시자료 기준, 추정값과 공시값의 구분, API 연결 방식, API Key 보안 관리, 한계 및 향후 개선 방향을 설명합니다.
 
-- DART: financial statements and recent disclosure lists
-- ECOS: macroeconomic indicators and interest-rate history
-- V-World / official land price API: official land price and assessed value inputs for Tax mode
-- Internal CSV files: bundled disclosure-based data for stable public demonstration
+## 사용 데이터
 
-## Security Note
+- **DART**: 재무제표와 최근 공시 목록
+- **ECOS**: 기준금리, 국고채, 회사채 등 거시경제 지표와 과거 금리 시계열
+- **V-World / 공시가격 API**: 공시가격, 개별공시지가, 기준시가 등 Tax 화면 입력값
+- **내부 CSV 파일**: 공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블
+- **사용자 업로드 CSV**: 공시가격/기준시가 또는 고지세액 자료를 추가로 검토할 때 사용
 
-API keys are handled through Streamlit Secrets, environment variables, or optional manual password inputs. API keys are not displayed in the UI and are never passed into widget default values. Debug and status outputs are sanitized before display.
-
-Supported Streamlit Cloud secret names:
-
-```toml
-ECOS_API_KEY = "..."
-DART_API_KEY = "..."
-REALTY_PRICE_API_KEY = "..."
-```
-
-`KRX_API_KEY` may be used by future archived modules, but it is not required for v11 public runtime.
-
-## Running Locally
+## 실행 방법
 
 ```powershell
 py -m pip install -r requirements.txt
 py -m streamlit run app.py
 ```
 
-Optional development checks:
+개발 중 점검 명령:
 
 ```powershell
 py -m pip install -r requirements-dev.txt
@@ -75,15 +64,50 @@ py -m compileall -q . -x "(\.git|\.venv|venv|__pycache__|\.cache|\.vscode)"
 py -m pytest -q
 ```
 
-## Versioning
+## Streamlit Cloud 배포 구조
 
-Future material feature updates should increment the version sequentially: v12, v13, etc. Keep the visible app version in `config.py` and the `VERSION` file aligned.
+- 진입점은 `app.py`입니다.
+- API Key는 Streamlit Cloud의 Secrets 또는 환경변수로 관리합니다.
+- 공개 UI에서는 ECOS, DART, V-World/API만 활성화되어 있습니다.
+- KRX API는 v11 공개 UI에서 사용하지 않으므로 `KRX_API_KEY`가 없어도 앱이 실행되어야 합니다.
 
-## Roadmap
+## API Key 보안 관리
 
-Future v12/v13 modules may include:
+API Key는 다음 우선순위로 로드합니다.
 
-- KRX-based market-implied valuation
-- Deals analysis and valuation backtesting
-- broader multi-REIT benchmarking
-- additional data-quality and reconciliation workflows
+1. 사용자가 password 입력창에 직접 입력한 값
+2. Streamlit Secrets
+3. 환경변수
+4. 빈 문자열
+
+API Key는 화면에 표시하지 않으며, widget의 기본값으로도 주입하지 않습니다. 디버그 문구, API 응답, 요청 파라미터를 화면에 표시해야 하는 경우에는 `api_manager.sanitize_secret_text()`로 마스킹합니다.
+
+Streamlit Cloud Secrets 예시:
+
+```toml
+ECOS_API_KEY = "..."
+DART_API_KEY = "..."
+REALTY_PRICE_API_KEY = "..."
+```
+
+## 현재 제외된 기능
+
+- Deal 분석 모드
+- KRX API 기반 시장가격 조회
+- 시장가격 기반 NAV 할인율 및 거래 관점 가치평가
+
+위 기능은 삭제한 것이 아니라 공개 v11 범위에서 비활성화한 상태입니다.
+
+## 향후 로드맵
+
+향후 v12/v13에서는 다음 기능을 검토할 수 있습니다.
+
+- KRX 기반 시장가격 및 NAV 할인율 분석
+- Deal 분석 및 거래 관점 가치평가
+- 여러 REIT 간 비교 분석
+- 공시자료, 고지서, API 자료의 자동 대사
+- 감사·세무 workflow별 산출물 자동화
+
+## 버전 관리
+
+중요 기능이 추가되는 경우 버전을 순차적으로 올립니다: v12, v13 등. `VERSION`, `CHANGELOG.md`, `config.py`의 화면 표시 버전을 함께 맞춥니다.

@@ -29,7 +29,7 @@ SCENARIO_RULES = {
         "ffo_haircut_pct": 2,
         "refinancing_share_pct": 30,
         "probability": 0.50,
-        "explain": "현재 금리·신용스프레드가 큰 충격 없이 유지되는 기본 상황입니다. Cap rate 충격은 보수적 screening 목적의 +10bp만 반영합니다.",
+        "explain": "현재 금리·신용스프레드가 큰 충격 없이 유지되는 기본 상황입니다. Cap rate 충격은 보수적 예비 검토 목적의 +10bp만 반영합니다.",
     },
     "불황: 금리 인하에도 신용위험 확대": {
         "policy_rate_change_bp": -25,
@@ -51,7 +51,7 @@ def _softmax(scores: dict[str, float]) -> dict[str, float]:
 
 
 def build_forecast_scenario_probabilities(macro: dict, forecast: dict | None = None) -> dict[str, float]:
-    """Turn forward-looking macro assumptions into simple scenario probabilities."""
+    """전망 입력값을 단순 Scenario 확률로 변환합니다."""
     forecast = {**DEFAULT_MACRO_FORECAST, **(forecast or {})}
     gdp = float(forecast.get("gdp_growth_2026_pct", DEFAULT_MACRO_FORECAST["gdp_growth_2026_pct"]))
     cpi = float(forecast.get("cpi_2026_pct", DEFAULT_MACRO_FORECAST["cpi_2026_pct"]))
@@ -101,8 +101,8 @@ def _weighted_rule(macro: dict, forecast: dict | None = None) -> dict:
 
 def macro_scenario_parameters(macro: dict, scenario_name: str, forecast: dict | None = None) -> dict:
     """
-    Convert ECOS-grounded macro baseline into REIT stress assumptions.
-    ECOS gives current/recent macro data. Forecast-weighted mode adds forward-looking assumptions.
+    ECOS 기준 거시경제 기초값을 REIT 스트레스 가정으로 변환합니다.
+    ECOS는 현재·최근 지표를 제공하고, 전망 기반 확률가중 모드는 사용자가 입력한 미래 전망치를 추가로 반영합니다.
     """
     if scenario_name == FORECAST_WEIGHTED_SCENARIO_NAME:
         rule = _weighted_rule(macro, forecast)
