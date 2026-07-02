@@ -7,6 +7,11 @@ from ui_methodology import render_methodology_page
 from ui_tax import render_tax_mode
 
 
+def _display_api_status(status: str) -> str:
+    sanitized = sanitize_secret_text(status)
+    return "API 연결 완료" if sanitized == "connected" else sanitized
+
+
 def render_professional_mode_section(
     selected_mode: str,
     asset_risk: pd.DataFrame,
@@ -73,8 +78,8 @@ def render_professional_page(
         st.caption(
             "거시경제 지표: "
             f"{sanitize_secret_text(macro_context['source'])} / "
-            f"과거 금리: {sanitize_secret_text(macro_history_status)} / "
-            f"DART: {sanitize_secret_text(dart_status)}"
+            f"과거 금리: {_display_api_status(macro_history_status)} / "
+            f"DART: {_display_api_status(dart_status)}"
         )
         st.write("자료 신뢰도 요약")
         source_conf = pd.concat([

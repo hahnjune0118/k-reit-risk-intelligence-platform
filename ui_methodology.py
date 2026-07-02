@@ -18,6 +18,11 @@ def _source_confidence_table(asset_risk, debt_schedule, financials, kpis) -> pd.
     })
 
 
+def _display_api_status(status: str) -> str:
+    sanitized = sanitize_secret_text(status)
+    return "API 연결 완료" if sanitized == "connected" else sanitized
+
+
 def render_methodology_page(
     macro_context,
     macro_history_status,
@@ -47,8 +52,8 @@ def render_methodology_page(
 
     st.markdown("### 사용 데이터")
     source_status = pd.DataFrame([
-        {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": sanitize_secret_text(dart_status)},
-        {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": sanitize_secret_text(macro_history_status)},
+        {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},
+        {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": _display_api_status(macro_history_status)},
         {"자료": "V-World / 공시가격 API", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "설정된 경우 사용 가능"},
         {"자료": "내부 CSV", "사용 목적": "공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블", "상태": "앱에 포함"},
     ])
@@ -66,8 +71,13 @@ def render_methodology_page(
 
     st.markdown("### API 연결 및 보안")
     st.write(
-        "API Key는 Streamlit Secrets, 환경변수, 또는 사용자가 직접 입력한 password 필드에서만 불러옵니다. "
+        "API Key는 Streamlit Secrets, 환경변수, 또는 개발자용 고급 설정의 세션 값에서만 불러옵니다. "
         "보안상 API Key는 화면에 표시하지 않으며, 디버그 문구와 API 응답도 표시 전 마스킹합니다."
+    )
+    st.info(
+        "본 공개 버전은 서버에 저장된 API Key를 사용하도록 설계되어 있습니다. 사용자는 별도의 API Key를 "
+        "발급하거나 입력할 필요가 없습니다. 보안상 API Key는 화면에 표시되지 않으며, 실시간 API 호출이 "
+        "실패할 경우 내장 예시 데이터로 자동 전환됩니다."
     )
 
     with st.expander("자료 신뢰도 요약", expanded=False):

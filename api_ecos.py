@@ -14,11 +14,11 @@ from formatting import _safe_float
 from api_manager import sanitize_secret_text
 
 
-@st.cache_data(ttl=60 * 60)
+@st.cache_data(ttl=60 * 60 * 6)
 def fetch_ecos_key_indicators(api_key: str) -> tuple[pd.DataFrame, str]:
-    """Fetch BOK ECOS 100 key indicators. Requires user's ECOS API key."""
+    """한국은행 ECOS 100대 통계지표를 조회합니다."""
     if not api_key:
-        return pd.DataFrame(), "ECOS API key not provided"
+        return pd.DataFrame(), "ECOS API Key가 없어 예시 데이터를 사용합니다."
 
     try:
         url = ECOS_KEY_INDICATOR_ENDPOINT.format(api_key=api_key.strip())
@@ -28,12 +28,12 @@ def fetch_ecos_key_indicators(api_key: str) -> tuple[pd.DataFrame, str]:
         root = payload.get("KeyStatisticList", {})
         rows = root.get("row", [])
         if not rows:
-            message = payload.get("RESULT", {}).get("MESSAGE", "No ECOS rows returned")
+            message = payload.get("RESULT", {}).get("MESSAGE", "ECOS 응답에 사용할 수 있는 행이 없습니다.")
             return pd.DataFrame(), sanitize_secret_text(message)
         df = pd.DataFrame(rows)
         return df, "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"ECOS fetch failed: {sanitize_secret_text(exc)}"
+        return pd.DataFrame(), f"ECOS 호출 실패: {sanitize_secret_text(exc)}"
 
 
 def macro_value_from_ecos(df: pd.DataFrame, indicator_name: str):
@@ -113,7 +113,7 @@ def build_macro_context(api_key: str) -> dict:
                 used_critical_fallback = True
 
     credit_spread = values["회사채수익률(3년, AA-)"] - values["국고채수익률(3년)"]
-    source = "한국은행 ECOS API" if status == "connected" and not used_critical_fallback else "fallback sample values / ECOS unavailable"
+    source = "한국은행 ECOS API" if status == "connected" and not used_critical_fallback else "예시 데이터 / ECOS 미연결"
     return {
         "raw": raw,
         "status": status,
@@ -132,7 +132,7 @@ def build_macro_context(api_key: str) -> dict:
 def fetch_ecos_stat_series(api_key: str, stat_code: str, cycle: str, item_code: str, start_date: str, end_date: str, count: int = 10000) -> tuple[pd.DataFrame, str]:
     """Fetch one ECOS time series with StatisticSearch."""
     if not api_key:
-        return pd.DataFrame(), "ECOS API key not provided"
+        return pd.DataFrame(), "ECOS API Key가 없어 예시 데이터를 사용합니다."
     try:
         url = ECOS_STAT_SEARCH_ENDPOINT.format(
             api_key=api_key.strip(),
@@ -149,7 +149,7 @@ def fetch_ecos_stat_series(api_key: str, stat_code: str, cycle: str, item_code: 
         root = payload.get("StatisticSearch", {})
         rows = root.get("row", [])
         if not rows:
-            msg = payload.get("RESULT", {}).get("MESSAGE", "No ECOS StatisticSearch rows returned")
+            msg = payload.get("RESULT", {}).get("MESSAGE", "ECOS 시계열 응답에 사용할 수 있는 행이 없습니다.")
             return pd.DataFrame(), sanitize_secret_text(msg)
         df = pd.DataFrame(rows)
         df["DATA_VALUE"] = pd.to_numeric(df.get("DATA_VALUE"), errors="coerce")
@@ -162,7 +162,7 @@ def fetch_ecos_stat_series(api_key: str, stat_code: str, cycle: str, item_code: 
             df["date"] = pd.to_datetime(df["TIME"], errors="coerce")
         return df.dropna(subset=["date", "DATA_VALUE"]), "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"ECOS StatisticSearch fetch failed: {sanitize_secret_text(exc)}"
+        return pd.DataFrame(), f"ECOS 시계열 호출 실패: {sanitize_secret_text(exc)}"
 
 
 def fallback_macro_annual_history() -> pd.DataFrame:
@@ -198,7 +198,7 @@ def build_ecos_annual_rate_history(api_key: str, years_back: int = 5) -> tuple[p
         annual = annual.rename(columns={"DATA_VALUE": label})
         pieces.append(annual)
     if not pieces:
-        return fallback_macro_annual_history(), "fallback sample values / ECOS historical series unavailable"
+        return fallback_macro_annual_history(), "예시 데이터 / ECOS 과거 금리 시계열 미연결"
     out = pieces[0]
     for p in pieces[1:]:
         out = out.merge(p, on="year", how="outer")

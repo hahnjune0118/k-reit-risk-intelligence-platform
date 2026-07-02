@@ -24,11 +24,11 @@ def _to_mn_krw_from_dart_amount(value):
         return pd.NA
 
 
-@st.cache_data(ttl=60 * 60 * 24)
+@st.cache_data(ttl=60 * 60 * 6)
 def fetch_dart_corp_code_table(api_key: str) -> tuple[pd.DataFrame, str]:
     """Download DART corporate-code ZIP and parse CORPCODE.xml."""
     if not api_key:
-        return pd.DataFrame(), "DART API key not provided"
+        return pd.DataFrame(), "DART API Key가 없어 예시 데이터를 사용합니다."
     try:
         response = requests.get(DART_CORP_CODE_ENDPOINT, params={"crtfc_key": api_key.strip()}, timeout=20)
         response.raise_for_status()
@@ -46,7 +46,7 @@ def fetch_dart_corp_code_table(api_key: str) -> tuple[pd.DataFrame, str]:
             })
         return pd.DataFrame(rows), "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"DART corporate code fetch failed: {sanitize_secret_text(exc)}"
+        return pd.DataFrame(), f"DART 고유번호 조회 실패: {sanitize_secret_text(exc)}"
 
 
 def resolve_dart_corp_code(api_key: str, stock_code: str = "395400", corp_name_keyword: str = "SK리츠") -> tuple[str, str, str]:
@@ -59,7 +59,7 @@ def resolve_dart_corp_code(api_key: str, stock_code: str = "395400", corp_name_k
     if matched.empty and corp_name_keyword:
         matched = corp_table[corp_table["corp_name"].astype(str).str.contains(corp_name_keyword, case=False, na=False)]
     if matched.empty:
-        return "", "", "No matching corporation found in DART corpCode.xml"
+        return "", "", "DART 고유번호 목록에서 일치하는 회사를 찾지 못했습니다."
     row = matched.iloc[0]
     return str(row["corp_code"]), str(row["corp_name"]), "connected"
 
@@ -95,7 +95,7 @@ def _sum_account_amounts(df: pd.DataFrame, patterns: list[str]):
 def fetch_dart_single_year_financials(api_key: str, corp_code: str, year: int, fs_div: str = "CFS") -> tuple[pd.DataFrame, str]:
     """Fetch one year's annual-report financial statement rows from OpenDART."""
     if not api_key or not corp_code:
-        return pd.DataFrame(), "DART API key or corp_code missing"
+        return pd.DataFrame(), "DART API Key 또는 회사 고유번호가 없어 예시 데이터를 사용합니다."
     params = {
         "crtfc_key": api_key.strip(),
         "corp_code": corp_code,
@@ -108,20 +108,20 @@ def fetch_dart_single_year_financials(api_key: str, corp_code: str, year: int, f
         response.raise_for_status()
         payload = response.json()
         if payload.get("status") != "000":
-            return pd.DataFrame(), sanitize_secret_text(payload.get("message", "DART returned non-000 status"))
+            return pd.DataFrame(), sanitize_secret_text(payload.get("message", "DART 재무제표 응답 상태가 정상(000)이 아닙니다."))
         rows = payload.get("list", [])
         if not rows:
-            return pd.DataFrame(), "No financial-statement rows returned"
+            return pd.DataFrame(), "DART 재무제표 응답에 사용할 수 있는 행이 없습니다."
         return pd.DataFrame(rows), "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"DART financial statement fetch failed: {sanitize_secret_text(exc)}"
+        return pd.DataFrame(), f"DART 재무제표 조회 실패: {sanitize_secret_text(exc)}"
 
 
 @st.cache_data(ttl=60 * 60 * 6)
 def fetch_dart_recent_report_list(api_key: str, corp_code: str, years_back: int = 5) -> tuple[pd.DataFrame, str]:
     """Fetch recent DART disclosure list and keep annual reports."""
     if not api_key or not corp_code:
-        return pd.DataFrame(), "DART API key or corp_code missing"
+        return pd.DataFrame(), "DART API Key 또는 회사 고유번호가 없어 예시 데이터를 사용합니다."
     end_date = datetime.today().strftime("%Y%m%d")
     start_date = (datetime.today() - timedelta(days=365 * years_back + 45)).strftime("%Y%m%d")
     params = {
@@ -137,22 +137,22 @@ def fetch_dart_recent_report_list(api_key: str, corp_code: str, years_back: int 
         response.raise_for_status()
         payload = response.json()
         if payload.get("status") != "000":
-            return pd.DataFrame(), sanitize_secret_text(payload.get("message", "DART disclosure list returned non-000 status"))
+            return pd.DataFrame(), sanitize_secret_text(payload.get("message", "DART 공시 목록 응답 상태가 정상(000)이 아닙니다."))
         rows = pd.DataFrame(payload.get("list", []))
         if rows.empty:
-            return rows, "No DART disclosure rows returned"
+            return rows, "DART 공시 목록 응답에 사용할 수 있는 행이 없습니다."
         if "report_nm" in rows.columns:
             rows = rows[rows["report_nm"].astype(str).str.contains("사업보고서", na=False)].copy()
         return rows, "connected"
     except Exception as exc:
-        return pd.DataFrame(), f"DART disclosure list fetch failed: {sanitize_secret_text(exc)}"
+        return pd.DataFrame(), f"DART 공시 목록 조회 실패: {sanitize_secret_text(exc)}"
 
 
 @st.cache_data(ttl=60 * 60 * 6)
 def fetch_dart_annual_financial_history(api_key: str, stock_code: str = "395400", corp_name_keyword: str = "SK리츠", years_back: int = 5) -> tuple[pd.DataFrame, pd.DataFrame, str]:
     """Fetch recent annual K-IFRS financials and annual-report list for one listed company."""
     if not api_key:
-        return pd.DataFrame(), pd.DataFrame(), "DART API key not provided"
+        return pd.DataFrame(), pd.DataFrame(), "DART API Key가 없어 예시 데이터를 사용합니다."
     corp_code, corp_name, status = resolve_dart_corp_code(api_key, stock_code, corp_name_keyword)
     if not corp_code:
         return pd.DataFrame(), pd.DataFrame(), status

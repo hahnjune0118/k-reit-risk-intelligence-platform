@@ -8,6 +8,11 @@ from api_manager import sanitize_secret_text
 from ui_common import compact_fig, fmt_metric_value, fmt_mn_to_bn, mode_specific_action_items
 
 
+def _display_api_status(status: str) -> str:
+    sanitized = sanitize_secret_text(status)
+    return "API 연결 완료" if sanitized == "connected" else sanitized
+
+
 def render_general_dashboard(
     verdict_level,
     verdict_text,
@@ -440,8 +445,8 @@ def render_general_dashboard(
             st.caption(
                 "거시경제 지표: "
                 f"{sanitize_secret_text(macro_context['source'])} / "
-                f"과거 금리: {sanitize_secret_text(macro_history_status)} / "
-                f"DART: {sanitize_secret_text(dart_status)}"
+                f"과거 금리: {_display_api_status(macro_history_status)} / "
+                f"DART: {_display_api_status(dart_status)}"
             )
         with s2:
             st.write("**추가 수집 자료 계획**")

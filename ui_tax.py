@@ -69,6 +69,8 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
     if "realty_price_api_key" not in st.session_state:
         st.session_state["realty_price_api_key"] = ""
     realty_conn = assumptions.get("realty_conn") or get_api_key("V-World", st.session_state.get("realty_price_api_key", ""))
+    if not realty_conn.configured:
+        st.warning("실시간 API Key가 없어 예시 데이터를 사용합니다.")
     with st.form("realty_price_api_form", clear_on_submit=True):
         c1, c2 = st.columns([0.95, 1.05])
         with c1:
@@ -105,6 +107,8 @@ def render_tax_mode(asset_risk: pd.DataFrame, scenario: dict, latest_kpi: pd.Ser
         official_price_history = api_price_history
         price_data_status = f"API 데이터 사용: {api_status}"
     else:
+        if realty_conn.configured:
+            st.warning("실시간 API 호출이 실패했거나 응답 데이터가 부족해 예시 데이터를 사용합니다.")
         official_price_history = build_proxy_official_price_history(
             asset_risk,
             years_back=5,

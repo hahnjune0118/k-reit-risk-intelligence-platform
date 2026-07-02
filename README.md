@@ -73,9 +73,11 @@ py -m pytest -q
 
 ## API Key 보안 관리
 
+공개 배포 버전은 Streamlit Secrets를 통해 서버 측에서 API Key를 관리합니다. 사용자는 별도의 API Key를 발급하거나 입력할 필요가 없습니다. API Key는 화면, GitHub 저장소, 로그, 디버그 출력에 표시되지 않도록 설계했습니다. 실시간 API 호출이 실패할 경우 예시 데이터로 자동 전환됩니다.
+
 API Key는 다음 우선순위로 로드합니다.
 
-1. 사용자가 password 입력창에 직접 입력한 값
+1. 개발자용 고급 설정에서 세션에 저장한 값
 2. Streamlit Secrets
 3. 환경변수
 4. 빈 문자열

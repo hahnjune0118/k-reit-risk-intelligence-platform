@@ -103,7 +103,7 @@ def _pick_first_numeric(row: dict, candidates: list[str]):
     return pd.NA
 
 
-@st.cache_data(ttl=60 * 60)
+@st.cache_data(ttl=60 * 60 * 24)
 def fetch_official_price_history_generic(api_key: str, endpoint: str, param_template: str, asset_name: str, address: str, pnu_or_code: str, start_year: int, end_year: int) -> tuple[pd.DataFrame, str]:
     """사용자가 입력한 endpoint와 파라미터 템플릿으로 공시가격 이력을 조회합니다.
 
@@ -111,7 +111,7 @@ def fetch_official_price_history_generic(api_key: str, endpoint: str, param_temp
     템플릿에서는 {year}, {asset_name}, {address}, {pnu}, {service_key} placeholder를 사용할 수 있습니다.
     """
     if not api_key or not endpoint:
-        return pd.DataFrame(), "API key 또는 endpoint가 입력되지 않았습니다."
+        return pd.DataFrame(), "실시간 API Key 또는 endpoint가 없어 예시 데이터를 사용합니다."
     import json
     collected = []
     try:

@@ -31,25 +31,25 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
             st.session_state[session_key] = ""
 
     st.sidebar.divider()
-    with st.sidebar.expander("고급 설정: 수동 API Key 입력", expanded=False):
+    with st.sidebar.expander("고급 설정: 개발자용 API Key 직접 입력", expanded=False):
         with st.form("manual_api_key_form", clear_on_submit=True):
             ecos_api_key_input = st.text_input(
                 "ECOS API Key",
                 value="",
                 type="password",
-                placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
+                placeholder="서버 Secrets가 없을 때만 직접 입력",
             )
             dart_api_key_input = st.text_input(
                 "DART API Key",
                 value="",
                 type="password",
-                placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
+                placeholder="서버 Secrets가 없을 때만 직접 입력",
             )
             realty_price_api_key_input = st.text_input(
                 "V-World / Realty Price API Key",
                 value="",
                 type="password",
-                placeholder="Secrets에 있으면 입력하지 않아도 됩니다.",
+                placeholder="서버 Secrets가 없을 때만 직접 입력",
             )
             apply_manual_keys = st.form_submit_button("수동 API Key 적용", width="stretch")
             clear_manual_keys = st.form_submit_button("수동 API Key 초기화", width="stretch")
@@ -82,22 +82,28 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
     dart_conn = get_api_key("DART", st.session_state.get("dart_api_key", ""))
     realty_conn = get_api_key("V-World", st.session_state.get("realty_price_api_key", ""))
     api_status_rows = [
-        {"상태": "ECOS API Key가 설정되어 있습니다." if ecos_conn.configured else "ECOS API Key가 설정되지 않았습니다."},
-        {"상태": "DART API Key가 설정되어 있습니다." if dart_conn.configured else "DART API Key가 설정되지 않았습니다."},
-        {"상태": "V-World API Key가 설정되어 있습니다." if realty_conn.configured else "V-World API Key가 설정되지 않았습니다."},
+        {"상태": "ECOS API: 서버 설정 완료" if ecos_conn.configured else "ECOS API: API Key가 설정되지 않았습니다. 예시 데이터로 실행됩니다."},
+        {"상태": "DART API: 서버 설정 완료" if dart_conn.configured else "DART API: API Key가 설정되지 않았습니다. 예시 데이터로 실행됩니다."},
+        {"상태": "V-World API: 서버 설정 완료" if realty_conn.configured else "V-World API: API Key가 설정되지 않았습니다. 예시 데이터로 실행됩니다."},
     ]
 
     st.sidebar.write("**API 연결 상태**")
+    st.sidebar.caption("API Key는 보안상 화면에 표시되지 않습니다.")
     st.sidebar.dataframe(
         pd.DataFrame(api_status_rows),
         hide_index=True,
         width="stretch",
         height=176,
     )
+    st.sidebar.info(
+        "본 공개 버전은 서버에 저장된 API Key를 사용하도록 설계되어 있습니다. 사용자는 별도의 API Key를 "
+        "발급하거나 입력할 필요가 없습니다. 보안상 API Key는 화면에 표시되지 않으며, 실시간 API 호출이 "
+        "실패할 경우 내장 예시 데이터로 자동 전환됩니다."
+    )
 
     st.sidebar.divider()
     st.sidebar.write("**한국은행 ECOS 연결**")
-    st.sidebar.caption("ECOS API Key는 Streamlit Secrets, 환경변수 또는 고급 설정의 수동 입력에서 불러옵니다.")
+    st.sidebar.caption("ECOS API Key는 서버 측 Streamlit Secrets 또는 환경변수에서 우선 불러옵니다.")
 
     macro_context = build_macro_context(ecos_conn.key)
 
@@ -105,9 +111,12 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         if macro_context["source"] == "한국은행 ECOS API":
             st.sidebar.success("ECOS API 연결 완료")
         else:
-            st.sidebar.warning("ECOS 연결은 되었지만 일부 지표명이 매칭되지 않아 예시값을 일부 사용합니다.")
+            st.sidebar.warning("실시간 API 호출 결과가 일부 부족해 예시 데이터를 함께 사용합니다.")
     else:
-        st.sidebar.warning("ECOS 미연결: 예시값으로 실행 중")
+        if ecos_conn.configured:
+            st.sidebar.warning("실시간 API 호출이 실패해 예시 데이터를 사용합니다.")
+        else:
+            st.sidebar.warning("실시간 API Key가 없어 예시 데이터를 사용합니다.")
         with st.sidebar.expander("ECOS 연결 상태 보기", expanded=False):
             st.write(sanitize_secret_text(macro_context.get("status", "unknown")))
 
@@ -121,7 +130,7 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
 
     st.sidebar.divider()
     st.sidebar.write("**금융감독원 DART 연결**")
-    st.sidebar.caption("DART 인증키를 입력하면 SK리츠의 최근 5개 사업연도 재무제표를 자동으로 불러와 시계열 분석에 사용합니다.")
+    st.sidebar.caption("DART API Key가 서버에 설정되어 있으면 최근 5개 사업연도 재무제표를 자동으로 불러오고, 없으면 내장 CSV를 사용합니다.")
 
     if "dart_stock_code" not in st.session_state:
         st.session_state["dart_stock_code"] = "395400"
@@ -149,12 +158,15 @@ def render_data_sidebar(kpis: pd.DataFrame, financials: pd.DataFrame, selected_u
         dart_stock_code,
         dart_company_keyword,
         years_back=5,
-    ) if dart_conn.key else (pd.DataFrame(), pd.DataFrame(), "DART 미연결: 로컬 CSV 기준으로 실행")
+    ) if dart_conn.key else (pd.DataFrame(), pd.DataFrame(), "실시간 API Key가 없어 예시 데이터를 사용합니다.")
 
     if dart_status == "connected":
         st.sidebar.success("DART API 연결 완료")
     else:
-        st.sidebar.warning("DART 미연결 또는 일부 자료 수집 실패")
+        if dart_conn.configured:
+            st.sidebar.warning("실시간 API 호출이 실패해 예시 데이터를 사용합니다.")
+        else:
+            st.sidebar.warning("실시간 API Key가 없어 예시 데이터를 사용합니다.")
         with st.sidebar.expander("DART 연결 상태 보기", expanded=False):
             st.write(sanitize_secret_text(dart_status))
 
