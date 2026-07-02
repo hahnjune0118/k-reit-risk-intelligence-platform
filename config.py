@@ -28,8 +28,7 @@ DART_LIST_ENDPOINT = "https://opendart.fss.or.kr/api/list.json"
 # Archived for future KRX-based Deals valuation module.
 KRX_KOSPI_DAILY_TRADE_ENDPOINT = "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd"
 
-# 한국부동산원 부동산공시가격 계열 API는 사용신청 서비스별 endpoint/파라미터가 다를 수 있어
-# 사용자가 실제 승인받은 endpoint와 파라미터 템플릿을 입력할 수 있도록 설계합니다.
+# 공시가격 계열 API는 승인 서비스별 조회 방식이 다를 수 있어 공개 UI에서는 예시 데이터 fallback을 기본으로 둡니다.
 REALTY_PRICE_API_ENDPOINT_DEFAULT = ""
 
 

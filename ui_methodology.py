@@ -51,11 +51,29 @@ def render_methodology_page(
         height=176,
     )
 
+    st.markdown("### 왜 상장리츠를 분석 대상으로 선택했나요?")
+    st.write(
+        "상장리츠는 다양한 업종 중에서도 수익 인식 구조가 비교적 단순한 편입니다. 주요 수익은 보유 부동산에서 "
+        "발생하는 임대료이며, 기본적으로 월 임대료와 임대기간을 바탕으로 이해할 수 있습니다."
+    )
+    st.write(
+        "또한 아직 현직 회계사가 아닌 개발자는 기업 내부 장부, 세부 임대차계약, 감사조서 등 비공개 자료를 "
+        "입수할 수 없기 때문에, 사업보고서와 분기보고서에 공개된 정보만으로도 분석 가능한 산업을 선택하는 것이 중요했습니다."
+    )
+    st.info(
+        "리츠는 자산 구성, 임대수익, 차입금, 공정가치 평가, 배당, 보유세 부담 등이 공시자료에 비교적 명확히 드러납니다. "
+        "따라서 공개자료 기반으로 실제 감사계획 및 세무 검토에 필요한 기초 정보를 구조화하기에 적합합니다."
+    )
+    st.caption(
+        "이 프로젝트는 실제 감사조서나 회사 내부자료를 대체하지 않습니다. 공개자료 기반으로 감사계획 단계의 "
+        "위험평가와 Tax/Assurance 검토 포인트를 자동화하는 것을 목표로 합니다."
+    )
+
     st.markdown("### 사용 데이터")
     source_status = pd.DataFrame([
         {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},
         {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": _display_api_status(macro_history_status)},
-        {"자료": "V-World / 공시가격 API", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "설정된 경우 사용 가능"},
+        {"자료": "V-World 공시가격 데이터", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "제한 시 예시 데이터 사용"},
         {"자료": "REIT Peer Snapshot", "사용 목적": "v12 Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
         {"자료": "Red Flag Rules", "사용 목적": "Assurance 및 Tax 위험수준 판단 기준", "상태": "앱에 포함"},
         {"자료": "내부 CSV", "사용 목적": "공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블", "상태": "앱에 포함"},
@@ -81,9 +99,9 @@ def render_methodology_page(
         rules = peer_context.get("red_flag_rules", {})
         st.dataframe(
             pd.DataFrame([
-                {"항목": "Peer 회사 수", "값": peer_metrics["company_name"].nunique() if not peer_metrics.empty and "company_name" in peer_metrics.columns else 0},
-                {"항목": "Assurance 규칙 수", "값": len(rules.get("assurance", []))},
-                {"항목": "Tax 규칙 수", "값": len(rules.get("tax", []))},
+                {"항목": "Peer 회사 수", "값": str(peer_metrics["company_name"].nunique() if not peer_metrics.empty and "company_name" in peer_metrics.columns else 0)},
+                {"항목": "Assurance 규칙 수", "값": str(len(rules.get("assurance", [])))},
+                {"항목": "Tax 규칙 수", "값": str(len(rules.get("tax", [])))},
                 {"항목": "자료 기준", "값": "Snapshot 기준 / sample_snapshot은 공식·감사 확정 데이터가 아닌 예시 데이터"},
             ]),
             hide_index=True,
@@ -96,6 +114,7 @@ def render_methodology_page(
         "이 앱은 정식 의견서가 아니라 예비 분석 및 업무 검토 지원 도구입니다. 공시 재무제표, KPI, 자산별 정보, "
         "차입금 만기, 거시경제 지표, 공시가격 입력값을 연결해 Scenario 결과와 실무 체크리스트를 생성합니다."
     )
+    st.caption("현재 공개 버전은 Snapshot 및 예시 데이터를 함께 사용합니다. 데이터 기준일은 각 표의 자료 기준 또는 이 방법론 페이지에서 확인할 수 있습니다.")
     st.write(
         "결과는 감사의견, 세무신고서, 법률 자문, 투자추천, 신용등급, 정식 가치평가 의견을 대체하지 않습니다. "
         "실무에 사용하려면 원천자료 대사와 전문가 검토가 필요합니다."

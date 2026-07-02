@@ -19,7 +19,10 @@ from config import REALTY_PRICE_API_ENDPOINT_DEFAULT
 from formatting import format_bn_krw, format_pct_from_100
 from api_manager import get_api_key, sanitize_secret_dataframe, sanitize_secret_text
 from ui_common import compact_fig
-from ui_peer import build_peer_metric_table, flags_to_dataframe, render_overall_risk_message, render_red_flag_cards
+from ui_peer import build_peer_metric_table, flags_to_tax_review_table, render_overall_risk_message, style_risk_review_table
+
+
+SHOW_DEVELOPER_API_INPUTS = os.getenv("SHOW_DEVELOPER_API_INPUTS", "false").lower() == "true"
 
 
 def _render_peer_tax_section(peer_context: dict | None):
@@ -49,33 +52,31 @@ def _render_peer_tax_section(peer_context: dict | None):
         },
     )
 
-    tab_flags, tab_metrics, tab_review = st.tabs(["Tax red flag 카드", "Peer 부담 비교", "검토 포인트와 요청자료"])
-    with tab_flags:
-        render_red_flag_cards(flags, "tax_review_points", "Tax advisory review points")
+    review_table = flags_to_tax_review_table(flags)
+    if review_table.empty:
+        st.info("표시할 Tax Red Flag가 없습니다.")
+    else:
+        st.write("**Tax 검토사항 및 요청자료**")
+        st.dataframe(
+            style_risk_review_table(review_table),
+            width="stretch",
+            hide_index=True,
+            height=300,
+            column_config={
+                "세무 위험영역": st.column_config.TextColumn("세무 위험영역", width="small"),
+                "위험수준": st.column_config.TextColumn("위험수준", width="small"),
+                "발생 근거": st.column_config.TextColumn("발생 근거", width="large"),
+                "Tax 검토사항": st.column_config.TextColumn("Tax 검토사항", width="large"),
+                "요청자료": st.column_config.TextColumn("요청자료", width="medium"),
+                "관련 지표": st.column_config.TextColumn("관련 지표", width="small"),
+            },
+        )
 
-    with tab_metrics:
+    with st.expander("Peer 부담 비교 보기", expanded=False):
         if metric_table.empty:
             st.info("Peer 보유세 부담 비교를 만들 수 있는 데이터가 부족합니다.")
         else:
             st.dataframe(metric_table, width="stretch", hide_index=True, height=240)
-
-    with tab_review:
-        table = flags_to_dataframe(flags, "tax_review_points")
-        if table.empty:
-            st.info("표시할 Tax Red Flag가 없습니다.")
-        else:
-            st.dataframe(table, width="stretch", hide_index=True, height=280)
-            review_points = sorted({item for flag in flags for item in flag.get("tax_review_points", [])})
-            evidence = sorted({item for flag in flags for item in flag.get("evidence_request", [])})
-            c1, c2 = st.columns(2)
-            with c1:
-                st.write("**Tax advisory review points**")
-                for item in review_points or ["데이터 부족"]:
-                    st.write(f"- {item}")
-            with c2:
-                st.write("**Requested document checklist**")
-                for item in evidence or ["데이터 부족"]:
-                    st.write(f"- {item}")
 
 
 def render_tax_mode(
@@ -125,29 +126,41 @@ def render_tax_mode(
             """
         )
 
-    st.write("**공시가격·기준시가 데이터 연결**")
-    st.caption("실제 API endpoint와 파라미터는 활용승인 받은 서비스별로 다를 수 있습니다. 승인받은 endpoint와 파라미터 템플릿을 입력하거나, CSV 업로드로 안정적으로 테스트할 수 있습니다.")
-
-    default_template = '{"format":"json", "pnu":"{pnu}", "stdrYear":"{year}", "pageNo":"1", "numOfRows":"50"}'
+    st.write("**공시가격·기준시가 데이터**")
     realty_conn = assumptions.get("realty_conn") or get_api_key("V-World")
-    if not realty_conn.configured:
-        st.warning("실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다.")
-    with st.form("realty_price_api_form", clear_on_submit=True):
-        c1, c2 = st.columns([0.95, 1.05])
-        with c1:
-            endpoint = st.text_input("공시가격 API endpoint", value=st.session_state.get("realty_price_endpoint", REALTY_PRICE_API_ENDPOINT_DEFAULT), placeholder="예: 활용승인 받은 공시가격/개별공시지가 조회 endpoint")
-            selected_api_asset = st.selectbox("API 테스트 자산", asset_risk["asset_name"].tolist(), index=0)
-            selected_row = asset_risk[asset_risk["asset_name"] == selected_api_asset].iloc[0]
-            pnu_or_code = st.text_input("PNU/법정동코드/물건식별자", value=st.session_state.get("realty_price_pnu_or_code", ""), help="승인받은 API가 PNU, 법정동코드, 주소검색 키 등을 요구하면 입력하세요.")
-        with c2:
-            param_template = st.text_area("API 파라미터 템플릿(JSON)", value=st.session_state.get("realty_price_param_template", default_template), height=135)
-            fetch_api = st.form_submit_button("선택 자산 공시가격 5년치 API 불러오기", width="stretch")
-    uploaded_price_csv = st.file_uploader("공시가격/기준시가 CSV 업로드", type=["csv"], key="official_price_csv_upload")
+    if realty_conn.configured:
+        st.success("공시가격 데이터 연결 준비 완료")
+    else:
+        st.warning("공시가격 실시간 조회가 제한되어 예시 데이터를 사용합니다.")
+    st.caption("공개 리뷰 버전은 서버 측 데이터 연결 또는 내장 예시 데이터를 사용합니다. 사용자가 별도의 인증값을 입력할 필요는 없습니다.")
+
+    fetch_api = False
+    endpoint = ""
+    param_template = ""
+    pnu_or_code = ""
+    selected_api_asset = asset_risk["asset_name"].iloc[0]
+    selected_row = asset_risk[asset_risk["asset_name"] == selected_api_asset].iloc[0]
+    if SHOW_DEVELOPER_API_INPUTS:
+        default_template = '{"format":"json", "pnu":"{pnu}", "stdrYear":"{year}", "pageNo":"1", "numOfRows":"50"}'
+        with st.expander("개발자용 공시가격 API 테스트", expanded=False):
+            st.caption("로컬 개발 환경에서만 사용하는 기술 설정입니다. 공개 배포 기본값에서는 표시되지 않습니다.")
+            with st.form("realty_price_api_form", clear_on_submit=True):
+                c1, c2 = st.columns([0.95, 1.05])
+                with c1:
+                    endpoint = st.text_input("공시가격 API endpoint", value=st.session_state.get("realty_price_endpoint", REALTY_PRICE_API_ENDPOINT_DEFAULT), placeholder="활용승인 받은 조회 endpoint")
+                    selected_api_asset = st.selectbox("API 테스트 자산", asset_risk["asset_name"].tolist(), index=0)
+                    selected_row = asset_risk[asset_risk["asset_name"] == selected_api_asset].iloc[0]
+                    pnu_or_code = st.text_input("PNU/법정동코드/물건식별자", value=st.session_state.get("realty_price_pnu_or_code", ""))
+                with c2:
+                    param_template = st.text_area("API 파라미터 템플릿(JSON)", value=st.session_state.get("realty_price_param_template", default_template), height=135)
+                    fetch_api = st.form_submit_button("선택 자산 공시가격 5년치 불러오기", width="stretch")
+    with st.expander("선택: 공시가격/기준시가 CSV 업로드", expanded=False):
+        uploaded_price_csv = st.file_uploader("공시가격/기준시가 CSV 업로드", type=["csv"], key="official_price_csv_upload")
 
     current_year = datetime.today().year
     start_year = current_year - 4
     api_price_history = st.session_state.get("realty_price_api_history", pd.DataFrame())
-    api_status = sanitize_secret_text(st.session_state.get("realty_price_api_status", "API 미사용"))
+    api_status = sanitize_secret_text(st.session_state.get("realty_price_api_status", "실시간 조회 미사용"))
     if fetch_api:
         st.session_state["realty_price_endpoint"] = endpoint.strip()
         st.session_state["realty_price_param_template"] = param_template
@@ -166,10 +179,12 @@ def render_tax_mode(
         price_data_status = "CSV 업로드 공시가격/기준시가 사용"
     elif api_price_history is not None and not api_price_history.empty:
         official_price_history = api_price_history
-        price_data_status = f"API 데이터 사용: {api_status}"
+        price_data_status = f"공시가격 실시간 조회 데이터 사용: {api_status}"
     else:
-        if realty_conn.configured:
-            st.warning("실시간 API 호출이 실패했거나 응답 데이터가 부족해 예시 데이터를 사용합니다.")
+        if fetch_api:
+            st.warning("공시가격 실시간 조회 결과가 부족해 예시 데이터를 사용합니다.")
+        elif not realty_conn.configured:
+            st.warning("공시가격 실시간 조회가 제한되어 예시 데이터를 사용합니다.")
         official_price_history = build_proxy_official_price_history(
             asset_risk,
             years_back=5,
@@ -178,7 +193,7 @@ def render_tax_mode(
             official_to_appraisal_ratio_pct=assumptions.get("official_to_appraisal_ratio_pct", 55.0),
             building_standard_ratio_pct=assumptions.get("building_standard_ratio_pct", 20.0),
         )
-        price_data_status = "공시가격 API/CSV 미연결: 평가액 기반 추정치(proxy) 사용 중"
+        price_data_status = "공시가격 예시 데이터 사용: 평가액 기반 추정치(proxy) 적용"
 
     official_price_history = sanitize_secret_dataframe(official_price_history)
 
@@ -201,7 +216,7 @@ def render_tax_mode(
 
     st.info(sanitize_secret_text(price_data_status))
     if tax_history is None or tax_history.empty:
-        st.warning("보유세 계산에 필요한 공시가격/기준시가 데이터가 부족합니다. API endpoint, 파라미터, CSV 컬럼을 확인하세요.")
+        st.warning("보유세 계산에 필요한 공시가격/기준시가 데이터가 부족합니다. 예시 데이터 또는 업로드 CSV의 자료 구조를 확인하세요.")
         return
 
     latest_year = int(tax_history["year"].max())
@@ -215,7 +230,7 @@ def render_tax_mode(
     m1.metric(f"{latest_year}E 보유세", format_bn_krw(latest_total_tax))
     m2.metric("5년 누적 증가율", format_pct_from_100(cumulative_increase))
     m3.metric("토지 과세표준", format_bn_krw(latest_tax_base))
-    m4.metric("자료 기준", "API/CSV" if "proxy" not in price_data_status else "추정치(proxy)")
+    m4.metric("자료 기준", "실시간/CSV" if "proxy" not in price_data_status else "추정치(proxy)")
 
     left, right = st.columns([1.15, 0.85])
     with left:

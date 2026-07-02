@@ -77,6 +77,69 @@ def flags_to_dataframe(flags: list[dict], response_field: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _join_list(value: list[str] | None) -> str:
+    return "\n".join(value or ["데이터 부족"])
+
+
+def _risk_review_label(level: str) -> str:
+    return risk_level_to_korean_label(level)
+
+
+def _risk_cell_style(value: str) -> str:
+    if value == "높음":
+        return "background-color: #fde2e2; color: #8a1f1f; font-weight: 600;"
+    if value == "주의":
+        return "background-color: #fff4ce; color: #6f4e00; font-weight: 600;"
+    if value == "정상":
+        return "background-color: #dff5e1; color: #145c2e; font-weight: 600;"
+    return "background-color: #eeeeee; color: #555555; font-weight: 600;"
+
+
+def style_risk_review_table(df: pd.DataFrame):
+    if df.empty or "위험수준" not in df.columns:
+        return df
+    styler = df.style
+    if hasattr(styler, "map"):
+        return styler.map(_risk_cell_style, subset=["위험수준"])
+    return styler.applymap(_risk_cell_style, subset=["위험수준"])
+
+
+def flags_to_assurance_review_table(flags: list[dict]) -> pd.DataFrame:
+    rows = []
+    for flag in flags:
+        level = flag.get("risk_level", "gray")
+        kam_indicator = {
+            "red": "검토 필요",
+            "yellow": "검토 권장",
+            "green": "낮음",
+            "gray": "데이터 부족",
+        }.get(level, "데이터 부족")
+        rows.append({
+            "위험영역": flag.get("label", ""),
+            "위험수준": _risk_review_label(level),
+            "발생 근거": flag.get("explanation_ko", "데이터 부족"),
+            "권장 감사절차": _join_list(flag.get("audit_response", [])),
+            "요청자료": _join_list(flag.get("evidence_request", [])),
+            "KAM 후보 검토": kam_indicator,
+        })
+    return pd.DataFrame(rows)
+
+
+def flags_to_tax_review_table(flags: list[dict]) -> pd.DataFrame:
+    rows = []
+    for flag in flags:
+        level = flag.get("risk_level", "gray")
+        rows.append({
+            "세무 위험영역": flag.get("label", ""),
+            "위험수준": _risk_review_label(level),
+            "발생 근거": flag.get("explanation_ko", "데이터 부족"),
+            "Tax 검토사항": _join_list(flag.get("tax_review_points", [])),
+            "요청자료": _join_list(flag.get("evidence_request", [])),
+            "관련 지표": format_peer_value(flag.get("metric", ""), flag.get("value")),
+        })
+    return pd.DataFrame(rows)
+
+
 def render_red_flag_cards(flags: list[dict], response_field: str, response_label: str, include_kam_indicator: bool = False):
     if not flags:
         st.info("Peer Benchmark를 계산할 수 있는 데이터가 부족합니다.")

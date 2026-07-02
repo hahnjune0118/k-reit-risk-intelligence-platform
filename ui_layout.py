@@ -11,6 +11,8 @@ PUBLIC_MODES = [
     "Methodology & Data Sources",
 ]
 
+SIDEBAR_SLOTS = {}
+
 
 def apply_page_config():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
@@ -31,15 +33,25 @@ def apply_page_config():
 
 
 def render_mode_selector():
-    st.sidebar.header("분석 모드")
-    selected_user_mode = st.sidebar.radio(
-        "화면 선택",
-        PUBLIC_MODES,
-        index=0,
-        format_func=lambda mode: PUBLIC_MODE_LABELS.get(mode, mode),
-    )
-    st.sidebar.caption("v12는 일반 정보, 감사위험 분석, 보유세 분석, 분석 방법론 화면에 Peer Benchmark와 Red Flag Engine을 더했습니다.")
+    st.sidebar.markdown(f"**{APP_TITLE}**")
+    st.sidebar.caption(APP_VERSION_LABEL)
     st.sidebar.divider()
+    SIDEBAR_SLOTS["scenario"] = st.sidebar.container()
+    SIDEBAR_SLOTS["company"] = st.sidebar.container()
+    SIDEBAR_SLOTS["mode"] = st.sidebar.container()
+    SIDEBAR_SLOTS["assumptions"] = st.sidebar.container()
+    SIDEBAR_SLOTS["data_status"] = st.sidebar.container()
+
+    with SIDEBAR_SLOTS["mode"]:
+        st.header("분석 모드")
+        selected_user_mode = st.radio(
+            "화면 선택",
+            PUBLIC_MODES,
+            index=0,
+            format_func=lambda mode: PUBLIC_MODE_LABELS.get(mode, mode),
+        )
+        st.caption("v12는 일반 정보, 감사위험 분석, 보유세 분석, 분석 방법론 화면에 Peer Benchmark와 Red Flag Engine을 더했습니다.")
+        st.divider()
     return selected_user_mode
 
 
@@ -56,8 +68,8 @@ def render_intro(selected_user_mode: str):
         st.markdown(
             """
             **목적**
-            이 도구는 상장리츠의 공시자료와 거시경제 지표, 자산별 정보, 공시가격 데이터를 연결하여
-            리츠의 재무·세무·감사 리스크를 한 화면에서 검토할 수 있도록 만든 분석 플랫폼입니다.
+            상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터를 연결하여
+            감사위험과 보유세 부담을 한 화면에서 검토할 수 있도록 만든 분석 플랫폼입니다.
 
             **왜 만들었나요?**
             DART 공시나 리츠 투자보고서를 각각 읽는 것만으로는 금리, 차입금 만기, 자산 평가,

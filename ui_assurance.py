@@ -10,7 +10,12 @@ from calculations_assurance import (
     build_rmm_assertion_checklist,
     build_rmm_mapping,
 )
-from ui_peer import build_peer_metric_table, flags_to_dataframe, render_overall_risk_message, render_red_flag_cards
+from ui_peer import (
+    build_peer_metric_table,
+    flags_to_assurance_review_table,
+    render_overall_risk_message,
+    style_risk_review_table,
+)
 
 
 def _stage_rows(workflow: pd.DataFrame, stages: list[str]) -> pd.DataFrame:
@@ -18,14 +23,58 @@ def _stage_rows(workflow: pd.DataFrame, stages: list[str]) -> pd.DataFrame:
 
 
 def _render_checklist(df: pd.DataFrame, key: str, height: int = 360):
-    disabled_cols = [col for col in df.columns if col != "완료"]
+    display = df.copy()
+    reference = pd.DataFrame()
+    if "기준서 근거" in display.columns:
+        reference_cols = [col for col in ["단계", "감사단계", "체크 항목", "기준서 근거"] if col in display.columns]
+        reference = display[reference_cols].drop_duplicates().reset_index(drop=True)
+        display = display.drop(columns=["기준서 근거"])
+    if "감사단계" in display.columns:
+        display = display.rename(columns={"감사단계": "단계"})
+    preferred_order = [col for col in ["완료", "단계", "우선순위", "체크 항목", "리츠 감사 포인트", "수행 절차", "증거/문서화"] if col in display.columns]
+    display = display[preferred_order + [col for col in display.columns if col not in preferred_order]]
+    disabled_cols = [col for col in display.columns if col != "완료"]
     st.data_editor(
-        df,
+        display,
         width="stretch",
         hide_index=True,
         height=height,
         disabled=disabled_cols,
         key=key,
+        column_config={
+            "완료": st.column_config.CheckboxColumn("완료", width="small"),
+            "단계": st.column_config.TextColumn("단계", width="small"),
+            "우선순위": st.column_config.TextColumn("우선", width="small"),
+            "체크 항목": st.column_config.TextColumn("체크 항목", width="medium"),
+            "리츠 감사 포인트": st.column_config.TextColumn("리츠 감사 포인트", width="medium"),
+            "수행 절차": st.column_config.TextColumn("수행 절차", width="large"),
+            "증거/문서화": st.column_config.TextColumn("증거/문서화", width="medium"),
+        },
+    )
+    if not reference.empty:
+        with st.expander("기준서 근거 보기", expanded=False):
+            if "감사단계" in reference.columns:
+                reference = reference.rename(columns={"감사단계": "단계"})
+            st.dataframe(
+                reference,
+                width="stretch",
+                hide_index=True,
+                height=160,
+                column_config={
+                    "단계": st.column_config.TextColumn("단계", width="small"),
+                    "체크 항목": st.column_config.TextColumn("체크 항목", width="large"),
+                    "기준서 근거": st.column_config.TextColumn("기준서 근거", width="small"),
+                },
+            )
+
+
+def _render_compact_dataframe(df: pd.DataFrame, height: int = 260, column_config: dict | None = None):
+    st.dataframe(
+        df,
+        width="stretch",
+        hide_index=True,
+        height=height,
+        column_config=column_config,
     )
 
 
@@ -57,33 +106,31 @@ def _render_peer_assurance_section(peer_context: dict | None):
         },
     )
 
-    tab_flags, tab_metrics, tab_response = st.tabs(["Red Flag 카드", "Peer metric table", "감사절차와 요청자료"])
-    with tab_flags:
-        render_red_flag_cards(flags, "audit_response", "권장 감사절차", include_kam_indicator=True)
+    review_table = flags_to_assurance_review_table(flags)
+    if review_table.empty:
+        st.info("표시할 Peer 기반 감사위험 Red Flag가 없습니다.")
+    else:
+        st.write("**감사절차 및 요청자료**")
+        st.dataframe(
+            style_risk_review_table(review_table),
+            width="stretch",
+            hide_index=True,
+            height=330,
+            column_config={
+                "위험영역": st.column_config.TextColumn("위험영역", width="small"),
+                "위험수준": st.column_config.TextColumn("위험수준", width="small"),
+                "발생 근거": st.column_config.TextColumn("발생 근거", width="medium"),
+                "권장 감사절차": st.column_config.TextColumn("권장 감사절차", width="large"),
+                "요청자료": st.column_config.TextColumn("요청자료", width="medium"),
+                "KAM 후보 검토": st.column_config.TextColumn("KAM 후보", width="small"),
+            },
+        )
 
-    with tab_metrics:
+    with st.expander("Peer metric table 보기", expanded=False):
         if metric_table.empty:
             st.info("Peer metric table을 만들 수 있는 데이터가 부족합니다.")
         else:
             st.dataframe(metric_table, width="stretch", hide_index=True, height=260)
-
-    with tab_response:
-        table = flags_to_dataframe(flags, "audit_response")
-        if table.empty:
-            st.info("표시할 Red Flag가 없습니다.")
-        else:
-            st.dataframe(table, width="stretch", hide_index=True, height=300)
-            procedures = sorted({item for flag in flags for item in flag.get("audit_response", [])})
-            evidence = sorted({item for flag in flags for item in flag.get("evidence_request", [])})
-            c1, c2 = st.columns(2)
-            with c1:
-                st.write("**Recommended audit procedures**")
-                for item in procedures or ["데이터 부족"]:
-                    st.write(f"- {item}")
-            with c2:
-                st.write("**Evidence request checklist**")
-                for item in evidence or ["데이터 부족"]:
-                    st.write(f"- {item}")
 
     st.info(
         "이 결과는 감사계획 단계에서 참고할 수 있는 위험 스크리닝 결과입니다. "
@@ -127,18 +174,50 @@ def render_assurance_mode(
         )
 
     with tab_rmm:
-        a1, a2 = st.columns([1.15, 1.0])
-        with a1:
-            st.write("**감사 중점 자산 우선순위**")
-            st.caption("`시나리오가치변화_%`는 좌측 사이드바의 예상 거시경제 상황과 Cap rate(자본환원율) 충격 가정에 따라 즉시 달라집니다.")
-            st.dataframe(assurance_assets.head(8), width="stretch", hide_index=True, height=260)
-        with a2:
-            st.write("**RMM 요약 매핑**")
-            st.caption("투자부동산 공정가치 RMM은 선택 Scenario와 Cap rate 충격을 함께 표시합니다.")
-            st.dataframe(rmm, width="stretch", hide_index=True, height=260)
+        st.write("**감사 중점 자산 우선순위**")
+        st.caption("`시나리오가치변화_%`는 좌측 사이드바의 예상 거시경제 상황과 Cap rate(자본환원율) 충격 가정에 따라 즉시 달라집니다.")
+        _render_compact_dataframe(
+            assurance_assets.head(8),
+            height=260,
+            column_config={
+                "자산": st.column_config.TextColumn("자산", width="medium"),
+                "평가액_백만원": st.column_config.NumberColumn("평가액", width="small"),
+                "평가액비중_%": st.column_config.NumberColumn("비중", width="small", format="%.1f%%"),
+                "시나리오가치변화_%": st.column_config.NumberColumn("가치변화", width="small", format="%.1f%%"),
+                "감사 우선순위": st.column_config.TextColumn("우선순위", width="small"),
+                "중점검토사유": st.column_config.TextColumn("중점검토사유", width="large"),
+                "가치변화 산정 메모": st.column_config.TextColumn("가치변화 메모", width="medium"),
+            },
+        )
+
+        st.write("**RMM 요약 매핑**")
+        st.caption("투자부동산 공정가치 RMM은 선택 Scenario와 Cap rate 충격을 함께 표시합니다.")
+        _render_compact_dataframe(
+            rmm,
+            height=260,
+            column_config={
+                "감사영역": st.column_config.TextColumn("감사영역", width="small"),
+                "RMM 신호": st.column_config.TextColumn("RMM 신호", width="large"),
+                "왜 중요한가": st.column_config.TextColumn("중요성", width="medium"),
+                "권장 감사절차": st.column_config.TextColumn("권장 감사절차", width="large"),
+            },
+        )
 
         st.write("**계정·공시 및 경영진 주장별 RMM 체크리스트**")
-        st.dataframe(rmm_assertions, width="stretch", hide_index=True, height=320)
+        _render_compact_dataframe(
+            rmm_assertions,
+            height=320,
+            column_config={
+                "계정/공시": st.column_config.TextColumn("계정/공시", width="small"),
+                "경영진 주장": st.column_config.TextColumn("주장", width="small"),
+                "RMM 판단": st.column_config.TextColumn("판단", width="small"),
+                "위험 신호": st.column_config.TextColumn("위험 신호", width="medium"),
+                "위험평가절차": st.column_config.TextColumn("위험평가절차", width="large"),
+                "통제테스트 판단": st.column_config.TextColumn("통제테스트", width="medium"),
+                "실증절차": st.column_config.TextColumn("실증절차", width="large"),
+                "KAM 연계": st.column_config.TextColumn("KAM", width="small"),
+            },
+        )
 
     with tab_response:
         st.write("**통제테스트 및 실증절차 체크리스트**")
@@ -152,17 +231,24 @@ def render_assurance_mode(
         st.dataframe(icfr, width="stretch", hide_index=True, height=220)
 
     with tab_report:
-        b1, b2 = st.columns([1.0, 1.05])
-        with b1:
-            st.write("**KAM 후보와 감사보고서 고려사항**")
-            st.dataframe(kam, width="stretch", hide_index=True, height=230)
-        with b2:
-            st.write("**보고·KAM·커뮤니케이션 체크리스트**")
-            _render_checklist(
-                _stage_rows(workflow, ["보고·KAM·커뮤니케이션"]),
-                "assurance_reporting_checklist",
-                height=230,
-            )
+        st.write("**KAM 후보와 감사보고서 고려사항**")
+        _render_compact_dataframe(
+            kam,
+            height=230,
+            column_config={
+                "후보": st.column_config.TextColumn("후보", width="medium"),
+                "선정 신호": st.column_config.TextColumn("신호", width="small"),
+                "중점 고려사항": st.column_config.TextColumn("중점 고려사항", width="large"),
+                "KAM/감사보고서 문구 방향": st.column_config.TextColumn("보고서 고려사항", width="large"),
+            },
+        )
+
+        st.write("**보고·KAM·커뮤니케이션 체크리스트**")
+        _render_checklist(
+            _stage_rows(workflow, ["보고·KAM·커뮤니케이션"]),
+            "assurance_reporting_checklist",
+            height=230,
+        )
 
         st.write("**감사 작업문서 인덱스**")
         st.dataframe(workpaper_index, width="stretch", hide_index=True, height=300)
