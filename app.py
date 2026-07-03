@@ -52,12 +52,15 @@ asset_risk = build_asset_risk_table(assets)
 concentration_table = build_asset_concentration_table(asset_risk)
 tenant_exposure = build_tenant_exposure_table(asset_risk)
 
-sidebar_state = render_data_sidebar(kpis, financials, selected_user_mode, peer_metrics)
+sidebar_state = render_data_sidebar(kpis, financials, selected_user_mode, peer_metrics, peer_snapshot)
 selected_period = sidebar_state["selected_period"]
 latest_kpi = sidebar_state["latest_kpi"]
 latest_fin = sidebar_state["latest_fin"]
 target_company = sidebar_state["target_company"]
 peer_group = sidebar_state["peer_group"]
+selected_company_profile = sidebar_state["selected_company_profile"]
+recent_5y_financials = sidebar_state["recent_5y_financials"]
+recent_5y_status = sidebar_state["recent_5y_status"]
 ecos_conn = sidebar_state.get("ecos_conn") or get_api_key("ECOS")
 macro_context = sidebar_state["macro_context"]
 dart_history = sidebar_state["dart_history"]
@@ -69,6 +72,25 @@ refinancing_share_pct = sidebar_state["refinancing_share_pct"]
 ffo_haircut_pct = sidebar_state["ffo_haircut_pct"]
 cap_rate_shock_bp = sidebar_state["cap_rate_shock_bp"]
 professional_assumptions = sidebar_state["professional_assumptions"]
+
+if recent_5y_financials is not None and not recent_5y_financials.empty:
+    selected_latest_fin = recent_5y_financials.sort_values("year").iloc[-1]
+    latest_kpi = latest_kpi.copy()
+    latest_fin = latest_fin.copy()
+    if pd.notna(selected_latest_fin.get("ffo_proxy", pd.NA)):
+        latest_kpi["ffo_mn_krw"] = selected_latest_fin.get("ffo_proxy")
+    if pd.notna(selected_latest_fin.get("nav", pd.NA)):
+        latest_kpi["nav_mn_krw"] = selected_latest_fin.get("nav")
+    if pd.notna(selected_latest_fin.get("total_assets", pd.NA)):
+        latest_fin["total_assets_mn_krw"] = selected_latest_fin.get("total_assets")
+    if pd.notna(selected_latest_fin.get("investment_property", pd.NA)):
+        latest_fin["investment_property_mn_krw"] = selected_latest_fin.get("investment_property")
+    if pd.notna(selected_latest_fin.get("borrowings_total", pd.NA)):
+        latest_fin["interest_bearing_debt_mn_krw"] = selected_latest_fin.get("borrowings_total")
+    total_assets_for_ltv = pd.to_numeric(pd.Series([selected_latest_fin.get("total_assets", pd.NA)]), errors="coerce").iloc[0]
+    borrowings_for_ltv = pd.to_numeric(pd.Series([selected_latest_fin.get("borrowings_total", pd.NA)]), errors="coerce").iloc[0]
+    if pd.notna(total_assets_for_ltv) and total_assets_for_ltv:
+        latest_kpi["leverage_pct"] = borrowings_for_ltv / total_assets_for_ltv * 100
 
 risk_scores, total_risk, risk_level, risk_flags = calculate_reit_level_risk(latest_kpi, debt_schedule, asset_risk)
 risk_decomposition = build_reit_score_decomposition(latest_kpi, debt_schedule, asset_risk)
@@ -87,7 +109,7 @@ scenario = build_interactive_scenario_outputs(
 )
 verdict_text, verdict_level, verdict_reason = scenario_verdict(scenario)
 macro_history, macro_history_status = build_ecos_annual_rate_history(ecos_conn.key, years_back=5)
-historical_panel = build_historical_panel(financials, kpis, macro_history, dart_history)
+historical_panel = build_historical_panel(financials, kpis, macro_history, recent_5y_financials)
 market_snapshot = {"available": False}
 market_gap = pd.DataFrame()
 market_gap_narrative = ""
@@ -100,6 +122,9 @@ peer_summary = summarize_peer_position(peer_metrics, target_company)
 peer_context = {
     "target_company": target_company,
     "peer_group": peer_group,
+    "selected_company_profile": selected_company_profile,
+    "recent_5y_financials": recent_5y_financials,
+    "recent_5y_status": recent_5y_status,
     "peer_snapshot": peer_snapshot,
     "peer_metrics": peer_metrics,
     "peer_summary": peer_summary,

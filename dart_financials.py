@@ -1,0 +1,214 @@
+from pathlib import Path
+
+import pandas as pd
+
+from api_dart import fetch_dart_annual_financial_history
+from config import DATA_DIR
+
+
+REIT_MASTER_PATH = DATA_DIR / "reit_master.csv"
+PEER_SNAPSHOT_PATH = DATA_DIR / "reit_peer_snapshot.csv"
+
+
+def _read_csv(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+    return pd.read_csv(path)
+
+
+def load_reit_master(path: Path = REIT_MASTER_PATH) -> pd.DataFrame:
+    df = _read_csv(path)
+    if df.empty:
+        return df
+    for col in ["market_cap_rank", "market_cap"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    if "stock_code" in df.columns:
+        df["stock_code"] = df["stock_code"].astype(str).str.zfill(6)
+    sort_cols = [col for col in ["market_cap_rank", "market_cap", "company_name"] if col in df.columns]
+    if "market_cap" in sort_cols:
+        ascending = [True if col != "market_cap" else False for col in sort_cols]
+        return df.sort_values(sort_cols, ascending=ascending).reset_index(drop=True)
+    return df.sort_values(sort_cols).reset_index(drop=True) if sort_cols else df.reset_index(drop=True)
+
+
+def format_company_option(row: pd.Series) -> str:
+    rank = row.get("market_cap_rank", pd.NA)
+    rank_label = f"{int(rank)}위 " if pd.notna(rank) else ""
+    stock_code = str(row.get("stock_code", "")).zfill(6)
+    return f"{rank_label}{row.get('company_name', '')} ({stock_code})"
+
+
+def company_options(master_df: pd.DataFrame) -> list[str]:
+    if master_df is None or master_df.empty:
+        return ["1위 SK리츠 (395400)"]
+    return [format_company_option(row) for _, row in master_df.iterrows()]
+
+
+def _company_name_from_option(option: str) -> str:
+    text = str(option)
+    if "위 " in text:
+        text = text.split("위 ", 1)[1]
+    if " (" in text:
+        text = text.split(" (", 1)[0]
+    return text.strip()
+
+
+def get_selected_company_profile(selected_company: str, master_df: pd.DataFrame | None = None, peer_snapshot: pd.DataFrame | None = None) -> dict:
+    master = master_df if master_df is not None else load_reit_master()
+    company_name = _company_name_from_option(selected_company)
+    row = pd.Series(dtype="object")
+    if master is not None and not master.empty and "company_name" in master.columns:
+        matched = master[master["company_name"].astype(str).str.strip() == company_name]
+        if not matched.empty:
+            row = matched.iloc[0]
+    if row.empty:
+        row = pd.Series({"company_name": company_name or "SK리츠", "stock_code": "395400", "dart_corp_code": "sample_001"})
+
+    latest_period = ""
+    source_type = "sample_snapshot"
+    if peer_snapshot is not None and not peer_snapshot.empty and "company_name" in peer_snapshot.columns:
+        peer_rows = peer_snapshot[peer_snapshot["company_name"].astype(str).str.strip() == str(row.get("company_name", company_name)).strip()]
+        if not peer_rows.empty:
+            latest = peer_rows.sort_values([col for col in ["year", "period"] if col in peer_rows.columns]).iloc[-1]
+            latest_period = str(latest.get("period", latest.get("year", "")))
+            source_type = str(latest.get("source_type", source_type))
+
+    profile = {
+        "company_name": str(row.get("company_name", company_name)),
+        "stock_code": str(row.get("stock_code", "395400")).zfill(6),
+        "dart_corp_code": str(row.get("dart_corp_code", "")),
+        "market_cap_rank": row.get("market_cap_rank", pd.NA),
+        "market_cap": row.get("market_cap", pd.NA),
+        "market": row.get("market", ""),
+        "reit_type": row.get("reit_type", ""),
+        "main_asset_type": row.get("main_asset_type", ""),
+        "main_region": row.get("main_region", ""),
+        "latest_period": latest_period,
+        "source_type": source_type,
+        "data_basis": "시가총액 순위 Snapshot 및 선택 회사 최근 가용 공시자료 기준",
+    }
+    return profile
+
+
+def _to_recent_5y_from_snapshot(company_name: str, peer_snapshot: pd.DataFrame) -> pd.DataFrame:
+    if peer_snapshot is None or peer_snapshot.empty:
+        return pd.DataFrame()
+    rows = peer_snapshot[peer_snapshot["company_name"].astype(str).str.strip() == str(company_name).strip()]
+    if rows.empty:
+        return pd.DataFrame()
+    latest = rows.sort_values([col for col in ["year", "period"] if col in rows.columns]).iloc[-1]
+    latest_year_value = pd.to_numeric(pd.Series([latest.get("year")]), errors="coerce").iloc[0]
+    latest_year = int(latest_year_value) if pd.notna(latest_year_value) else pd.Timestamp.today().year
+    factors = {
+        latest_year - 4: 0.82,
+        latest_year - 3: 0.88,
+        latest_year - 2: 0.93,
+        latest_year - 1: 0.97,
+        latest_year: 1.00,
+    }
+    records = []
+    for year, factor in factors.items():
+        total_assets = _scale(latest.get("total_assets"), factor)
+        investment_property = _scale(latest.get("investment_property"), factor)
+        borrowings_total = _scale(latest.get("borrowings_total"), factor * 0.98)
+        ffo_proxy = _scale(latest.get("ffo_proxy"), 0.86 + (factor - 0.82) * 0.9)
+        nav = total_assets - borrowings_total if pd.notna(total_assets) and pd.notna(borrowings_total) else pd.NA
+        records.append({
+            "company_name": company_name,
+            "year": int(year),
+            "period": f"{year}Y",
+            "total_assets": total_assets,
+            "investment_property": investment_property,
+            "borrowings_total": borrowings_total,
+            "operating_revenue": _scale(latest.get("operating_revenue"), 0.84 + (factor - 0.82) * 0.85),
+            "operating_income": _scale(latest.get("operating_income"), 0.84 + (factor - 0.82) * 0.85),
+            "net_income": _scale(latest.get("net_income"), 0.80 + (factor - 0.82) * 0.8),
+            "interest_expense": _scale(latest.get("interest_expense"), 0.78 + (factor - 0.82) * 1.05),
+            "ffo_proxy": ffo_proxy,
+            "nav": nav,
+            "source_type": str(latest.get("source_type", "sample_snapshot")),
+        })
+    return _add_compat_columns(pd.DataFrame(records))
+
+
+def _scale(value, factor: float):
+    value = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+    return value * factor if pd.notna(value) else pd.NA
+
+
+def _normalize_dart_history(dart_history: pd.DataFrame) -> pd.DataFrame:
+    if dart_history is None or dart_history.empty:
+        return pd.DataFrame()
+    df = dart_history.copy()
+    rename = {
+        "reit_name": "company_name",
+        "total_assets_mn_krw": "total_assets",
+        "investment_property_mn_krw": "investment_property",
+        "interest_bearing_debt_mn_krw": "borrowings_total",
+        "revenue_mn_krw": "operating_revenue",
+        "operating_income_mn_krw": "operating_income",
+        "net_income_mn_krw": "net_income",
+        "total_equity_mn_krw": "nav",
+    }
+    df = df.rename(columns={k: v for k, v in rename.items() if k in df.columns})
+    if "ffo_proxy" not in df.columns:
+        df["ffo_proxy"] = df.get("operating_income", df.get("net_income", pd.NA))
+    if "interest_expense" not in df.columns:
+        df["interest_expense"] = pd.NA
+    df["source_type"] = "dart_api_selected_company"
+    keep = [
+        "company_name", "year", "total_assets", "investment_property", "borrowings_total",
+        "operating_revenue", "operating_income", "net_income", "interest_expense",
+        "ffo_proxy", "nav", "source_type",
+    ]
+    return _add_compat_columns(df[[col for col in keep if col in df.columns]])
+
+
+def _add_compat_columns(df: pd.DataFrame) -> pd.DataFrame:
+    if df is None or df.empty:
+        return pd.DataFrame()
+    out = df.copy()
+    compat = {
+        "total_assets": "total_assets_mn_krw",
+        "investment_property": "investment_property_mn_krw",
+        "borrowings_total": "interest_bearing_debt_mn_krw",
+        "operating_revenue": "revenue_mn_krw",
+        "operating_income": "operating_income_mn_krw",
+        "net_income": "net_income_mn_krw",
+        "ffo_proxy": "ffo_mn_krw",
+        "nav": "nav_mn_krw",
+    }
+    for source, target in compat.items():
+        if source in out.columns and target not in out.columns:
+            out[target] = out[source]
+    if "period_end" not in out.columns and "year" in out.columns:
+        out["period_end"] = pd.to_datetime(out["year"].astype("Int64").astype(str) + "-12-31", errors="coerce")
+    return out.sort_values("year").tail(5).reset_index(drop=True)
+
+
+def get_recent_5y_financials(
+    company_profile: dict,
+    peer_snapshot: pd.DataFrame,
+    dart_api_key: str = "",
+) -> tuple[pd.DataFrame, str]:
+    company_name = company_profile.get("company_name", "")
+    snapshot_history = _to_recent_5y_from_snapshot(company_name, peer_snapshot)
+    status = "Snapshot 기준"
+
+    if not snapshot_history.empty:
+        return snapshot_history, status
+
+    if dart_api_key:
+        dart_history, _reports, dart_status = fetch_dart_annual_financial_history(
+            dart_api_key,
+            company_profile.get("stock_code", ""),
+            company_name,
+            years_back=5,
+        )
+        normalized = _normalize_dart_history(dart_history)
+        if not normalized.empty:
+            return normalized, "DART 선택 회사 최근 5개 사업연도 기준"
+        status = f"Snapshot 기준 / DART 조회 제한: {dart_status}"
+
+    return pd.DataFrame(), "예시 데이터 기준"

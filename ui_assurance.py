@@ -91,7 +91,7 @@ def _render_peer_assurance_section(peer_context: dict | None):
         "감사계획 단계에서 참고할 수 있는 위험 스크리닝 결과입니다. "
         "최종 판단은 감사인과 전문가의 검토가 필요합니다."
     )
-    render_overall_risk_message("Overall Assurance risk summary", flags)
+    render_overall_risk_message("Assurance 감사위험 요약", flags)
 
     metric_table = build_peer_metric_table(
         peer_metrics,
@@ -126,9 +126,9 @@ def _render_peer_assurance_section(peer_context: dict | None):
             },
         )
 
-    with st.expander("Peer metric table 보기", expanded=False):
+    with st.expander("Peer 지표 비교표 보기", expanded=False):
         if metric_table.empty:
-            st.info("Peer metric table을 만들 수 있는 데이터가 부족합니다.")
+            st.info("Peer 지표 비교표를 만들 수 있는 데이터가 부족합니다.")
         else:
             st.dataframe(metric_table, width="stretch", hide_index=True, height=260)
 

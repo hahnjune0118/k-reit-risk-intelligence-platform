@@ -40,10 +40,12 @@ Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 
 
 ### 일반 정보 및 시나리오
 
-- 분석 대상 리츠 선택
+- 시가총액 순위 Snapshot 기준 분석 대상 리츠 선택
+- 선택 회사의 종목코드와 DART corp_code 자동 연결
 - 주요 재무·자산 정보 요약
 - 거시경제 시나리오와 리스크 요약
 - FFO, NAV, Cap rate, 차입금 만기 부담 등 핵심 지표 확인
+- 최근 5년 금리와 리츠 주요 지표를 실제 이자율(%)과 금액(억원) 표로 구분 표시
 
 ### Peer Benchmark
 
@@ -90,6 +92,8 @@ Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 
 - **Peer benchmark snapshot data**: v12 Peer Benchmark와 Red Flag Engine의 입력 데이터
 
 `source_type = "sample_snapshot"`인 데이터는 공개 포트폴리오 검토용 예시 데이터입니다. 감사된 자료나 공식 확정 자료로 과도하게 해석하지 않도록 UI와 문서에서 구분합니다.
+
+공개 앱은 시작 시 모든 상장리츠의 DART 자료를 실시간 호출하지 않습니다. 사용자가 사이드바에서 분석 대상회사를 선택하면 해당 회사의 Snapshot 기반 최근 5년 흐름을 우선 사용하고, Snapshot이 부족한 경우에만 선택 회사의 DART 자료를 보조적으로 사용할 수 있도록 설계했습니다.
 
 ## 6. API Key 및 보안
 
@@ -162,6 +166,7 @@ py scripts\refresh_reit_peer_snapshot.py
 - `app.py`: Streamlit 진입점 및 화면 orchestration
 - `config.py`: 버전, 화면 라벨, endpoint 상수
 - `api_manager.py`: API 인증값 로딩 및 마스킹
+- `dart_financials.py`: 분석 대상회사 마스터, 종목코드/DART corp_code 연결, 최근 5년 재무 흐름 로딩
 - `calculations_peer.py`: Peer metric 및 percentile 계산
 - `red_flag_engine.py`: Assurance/Tax Red Flag 평가
 - `ui_assurance.py`: 감사위험 분석 화면

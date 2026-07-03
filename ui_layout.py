@@ -36,9 +36,9 @@ def render_mode_selector():
     st.sidebar.markdown(f"**{APP_TITLE}**")
     st.sidebar.caption(APP_VERSION_LABEL)
     st.sidebar.divider()
-    SIDEBAR_SLOTS["scenario"] = st.sidebar.container()
-    SIDEBAR_SLOTS["company"] = st.sidebar.container()
     SIDEBAR_SLOTS["mode"] = st.sidebar.container()
+    SIDEBAR_SLOTS["company"] = st.sidebar.container()
+    SIDEBAR_SLOTS["scenario"] = st.sidebar.container()
     SIDEBAR_SLOTS["assumptions"] = st.sidebar.container()
     SIDEBAR_SLOTS["data_status"] = st.sidebar.container()
 

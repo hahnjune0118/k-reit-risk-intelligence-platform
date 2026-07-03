@@ -12,6 +12,12 @@ from api_dart import (
 from api_ecos import build_macro_context, fetch_ecos_key_indicators
 from api_manager import get_api_key, sanitize_secret_text
 from calculations_scenario import DEFAULT_MACRO_FORECAST, FORECAST_WEIGHTED_SCENARIO_NAME, macro_scenario_parameters
+from dart_financials import (
+    company_options,
+    get_recent_5y_financials,
+    get_selected_company_profile,
+    load_reit_master,
+)
 from ui_layout import SIDEBAR_SLOTS
 
 
@@ -84,7 +90,7 @@ def _sidebar_slot(name: str):
 
 def _render_data_status(macro_context: dict, dart_status: str, ecos_conn, dart_conn, realty_conn):
     macro_ready = bool(ecos_conn.configured and macro_context.get("source") == "한국은행 ECOS API")
-    dart_ready = bool(dart_conn.configured and dart_status == "connected")
+    dart_ready = bool(dart_status == "connected" or str(dart_status).startswith("Snapshot 기준"))
     realty_ready = bool(realty_conn.configured)
 
     st.divider()
@@ -116,6 +122,7 @@ def render_data_sidebar(
     financials: pd.DataFrame,
     selected_user_mode: str,
     peer_metrics: pd.DataFrame | None = None,
+    peer_snapshot: pd.DataFrame | None = None,
 ) -> dict:
     selected_period, latest_kpi, latest_fin = _latest_period_context(kpis, financials)
 
@@ -186,23 +193,39 @@ def render_data_sidebar(
         st.divider()
 
     with _sidebar_slot("company"):
-        st.write("**분석 대상 회사**")
-        if peer_metrics is not None and not peer_metrics.empty and "company_name" in peer_metrics.columns:
-            company_options = peer_metrics["company_name"].dropna().astype(str).drop_duplicates().sort_values().tolist()
-        else:
-            company_options = ["SK리츠"]
-        default_company = "SK리츠" if "SK리츠" in company_options else company_options[0]
-        target_company = st.selectbox(
-            "대상 리츠",
-            company_options,
-            index=company_options.index(default_company),
-            help="v12 Peer Benchmark와 Red Flag Engine에서 비교할 대상 리츠를 선택합니다.",
-        )
-        peer_group = st.selectbox("Peer Group", ["전체 상장리츠"], index=0)
+        st.write("**분석 대상회사**")
+        st.caption("시가총액 순위 Snapshot 기준 정렬")
+        reit_master = load_reit_master()
+        options = company_options(reit_master)
+        if "selected_company_option" not in st.session_state:
+            st.session_state["selected_company_option"] = options[0]
+        with st.form("selected_company_form", clear_on_submit=False):
+            selected_company_option = st.selectbox(
+                "분석 대상회사",
+                options,
+                index=options.index(st.session_state["selected_company_option"]) if st.session_state["selected_company_option"] in options else 0,
+                help="시가총액 순위 Snapshot을 기준으로 정렬한 상장리츠 목록입니다.",
+            )
+            run_analysis = st.form_submit_button("분석 실행", width="stretch")
+        if run_analysis or st.session_state.get("selected_company_option") not in options:
+            st.session_state["selected_company_option"] = selected_company_option
+        target_company_option = st.session_state.get("selected_company_option", selected_company_option)
+        company_profile = get_selected_company_profile(target_company_option, reit_master, peer_snapshot)
+        target_company = company_profile["company_name"]
+        peer_group = "전체 상장리츠"
+        recent_5y_financials, recent_5y_status = get_recent_5y_financials(company_profile, peer_snapshot, dart_conn.key)
+        st.session_state["selected_company"] = target_company
+        st.session_state["selected_stock_code"] = company_profile.get("stock_code", "")
+        st.session_state["selected_dart_corp_code"] = company_profile.get("dart_corp_code", "")
+        st.session_state["selected_company_profile"] = company_profile
+        st.session_state["recent_5y_financials"] = recent_5y_financials
+        rank = company_profile.get("market_cap_rank", pd.NA)
+        rank_text = f"{int(rank)}위" if pd.notna(rank) else "순위 정보 없음"
+        st.caption(f"{company_profile.get('stock_code', '')} / {rank_text} / {company_profile.get('main_asset_type', '')}")
         st.divider()
 
     with _sidebar_slot("assumptions"):
-        st.write("**모드별 가정값**")
+        st.write("**분석 가정**")
         professional_assumptions = {"realty_conn": realty_conn}
         if selected_user_mode == "Assurance":
             professional_assumptions["assurance_materiality_pct"] = st.slider(
@@ -234,36 +257,9 @@ def render_data_sidebar(
                 professional_assumptions["official_to_appraisal_ratio_pct"] = st.slider("토지 공시가격/감정가 추정치(proxy)", 10.0, 90.0, 55.0, 5.0)
                 professional_assumptions["building_standard_ratio_pct"] = st.slider("건물 기준시가/감정가 추정치(proxy)", 0.0, 60.0, 20.0, 5.0)
 
-    if "dart_stock_code" not in st.session_state:
-        st.session_state["dart_stock_code"] = "395400"
-    if "dart_company_keyword" not in st.session_state:
-        st.session_state["dart_company_keyword"] = "SK리츠"
-
-    with _sidebar_slot("data_status"):
-        with st.expander("공시 데이터 조회 기준", expanded=False):
-            with st.form("dart_config_form", clear_on_submit=False):
-                dart_stock_code_input = st.text_input("종목코드", value=st.session_state.get("dart_stock_code", "395400"))
-                dart_company_keyword_input = st.text_input("회사명 검색어", value=st.session_state.get("dart_company_keyword", "SK리츠"))
-                submitted_dart_key = st.form_submit_button("최근 5년 재무제표 불러오기", width="stretch")
-            if submitted_dart_key:
-                st.session_state["dart_stock_code"] = dart_stock_code_input.strip()
-                st.session_state["dart_company_keyword"] = dart_company_keyword_input.strip()
-                fetch_dart_corp_code_table.clear()
-                fetch_dart_single_year_financials.clear()
-                fetch_dart_annual_financial_history.clear()
-                fetch_dart_recent_report_list.clear()
-
-    dart_stock_code = st.session_state.get("dart_stock_code", "395400")
-    dart_company_keyword = st.session_state.get("dart_company_keyword", "SK리츠")
-    if dart_conn.key:
-        dart_history, dart_reports, dart_status = fetch_dart_annual_financial_history(
-            dart_conn.key,
-            dart_stock_code,
-            dart_company_keyword,
-            years_back=5,
-        )
-    else:
-        dart_history, dart_reports, dart_status = pd.DataFrame(), pd.DataFrame(), "실시간 데이터 연결이 제한되어 예시 데이터를 사용합니다."
+    dart_history = recent_5y_financials
+    dart_reports = pd.DataFrame()
+    dart_status = "connected" if str(recent_5y_status).startswith("DART 선택 회사") else recent_5y_status
 
     market_history = pd.DataFrame()
     market_status = "시장가격 데이터 모듈은 향후 버전을 위해 비활성화되어 있습니다."
@@ -281,6 +277,9 @@ def render_data_sidebar(
         "latest_fin": latest_fin,
         "target_company": target_company,
         "peer_group": peer_group,
+        "selected_company_profile": company_profile,
+        "recent_5y_financials": recent_5y_financials,
+        "recent_5y_status": recent_5y_status,
         "ecos_conn": ecos_conn,
         "dart_conn": dart_conn,
         "realty_conn": realty_conn,

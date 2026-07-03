@@ -14,6 +14,60 @@ def _display_api_status(status: str) -> str:
     return "API 연결 완료" if sanitized == "connected" else sanitized
 
 
+def _fmt_pct(value) -> str:
+    if pd.isna(value):
+        return "N/A"
+    return f"{float(value):.2f}%"
+
+
+def _fmt_100mn_from_mn(value) -> str:
+    if pd.isna(value):
+        return "N/A"
+    return f"{float(value) / 100:,.0f}"
+
+
+def _numeric_series(df: pd.DataFrame, *candidates: str) -> pd.Series:
+    for col in candidates:
+        if col in df.columns:
+            return pd.to_numeric(df[col], errors="coerce")
+    return pd.Series(pd.NA, index=df.index, dtype="Float64")
+
+
+def _trend_interpretation(row: pd.Series) -> str:
+    rate = pd.to_numeric(row.get("기준금리(%)"), errors="coerce")
+    ffo = pd.to_numeric(row.get("FFO(억원)"), errors="coerce")
+    debt = pd.to_numeric(row.get("차입금(억원)"), errors="coerce")
+    if pd.notna(rate) and rate >= 3.0 and pd.notna(debt) and debt > 0:
+        return "금리 부담과 차입금 구조를 함께 확인"
+    if pd.notna(ffo) and ffo <= 0:
+        return "FFO 또는 이익 지표 보완 필요"
+    return "특이 신호 제한적"
+
+
+def build_five_year_trend_display(historical_panel: pd.DataFrame) -> pd.DataFrame:
+    if historical_panel is None or historical_panel.empty:
+        return pd.DataFrame()
+    df = historical_panel.sort_values("year").tail(5).copy()
+    out = pd.DataFrame()
+    out["연도"] = df["year"].astype("Int64").astype(str)
+    out["기준금리(%)"] = _numeric_series(df, "기준금리")
+    out["국고채 3년(%)"] = _numeric_series(df, "국고채 3년")
+    out["회사채 AA- 3년(%)"] = _numeric_series(df, "회사채 AA- 3년")
+    out["NAV(억원)"] = _numeric_series(df, "순자산가치_또는_자본", "nav_mn_krw", "nav") / 100
+    out["FFO(억원)"] = _numeric_series(df, "현금흐름_또는_이익", "ffo_mn_krw", "ffo_proxy") / 100
+    out["총자산(억원)"] = _numeric_series(df, "total_assets_mn_krw", "total_assets") / 100
+    out["차입금(억원)"] = _numeric_series(df, "interest_bearing_debt_mn_krw", "borrowings_total") / 100
+    out["이자비용(억원)"] = _numeric_series(df, "interest_expense", "interest_expense_mn_krw") / 100
+    out["주요 해석"] = out.apply(_trend_interpretation, axis=1)
+
+    display = out.copy()
+    for col in ["기준금리(%)", "국고채 3년(%)", "회사채 AA- 3년(%)"]:
+        display[col] = display[col].map(_fmt_pct)
+    for col in ["NAV(억원)", "FFO(억원)", "총자산(억원)", "차입금(억원)", "이자비용(억원)"]:
+        display[col] = display[col].map(lambda value: f"{value:,.0f}" if pd.notna(value) else "N/A")
+    return display
+
+
 def _render_peer_benchmark_overview(peer_context: dict | None):
     if not peer_context:
         return
@@ -108,7 +162,23 @@ def render_general_dashboard(
     dart_reports,
     peer_context=None,
 ):
+    company_profile = (peer_context or {}).get("selected_company_profile", {})
+    recent_5y_status = (peer_context or {}).get("recent_5y_status", "")
     st.markdown("## 1. 한눈에 보는 결론")
+
+    if company_profile:
+        rank = company_profile.get("market_cap_rank", pd.NA)
+        rank_text = f"{int(rank)}위" if pd.notna(rank) else "N/A"
+        summary = pd.DataFrame([
+            {"항목": "회사명", "내용": company_profile.get("company_name", "")},
+            {"항목": "종목코드", "내용": company_profile.get("stock_code", "")},
+            {"항목": "DART corp_code", "내용": company_profile.get("dart_corp_code", "")},
+            {"항목": "시가총액 순위", "내용": rank_text},
+            {"항목": "데이터 기준", "내용": recent_5y_status or company_profile.get("data_basis", "")},
+        ])
+        st.write("**선택 회사 요약**")
+        st.dataframe(summary, width="stretch", hide_index=True, height=190)
+        st.caption("선택 회사의 최근 가용 공시자료 및 Snapshot 데이터를 기준으로 분석합니다.")
 
     if verdict_level == "High":
         st.error(f"{verdict_text} — {verdict_reason}")
@@ -160,58 +230,22 @@ def render_general_dashboard(
         st.dataframe(kpi_display, width="stretch", hide_index=True, height=245)
 
     st.markdown("---")
-    st.markdown("## 3. 최근 5년 흐름: 금리와 리츠 지표가 같이 어떻게 움직였나")
+    st.markdown("## 3. 최근 5년 흐름: 금리와 리츠 주요 지표")
     st.caption(
-        "DART API가 연결되면 최근 5개 사업연도 재무제표를 사용하고, 연결되지 않으면 현재 프로젝트의 로컬 공시 CSV를 사용합니다. "
-        "ECOS API가 연결되면 기준금리·시장금리 시계열을 사용합니다."
+        "선택 회사의 최근 5년 재무 흐름은 Snapshot 데이터를 우선 사용하고, Snapshot이 부족할 때만 선택 회사 DART 자료를 보조적으로 사용합니다. "
+        "거시경제 시계열은 ECOS 연결 또는 내장 예시 데이터를 통해 함께 표시합니다."
+    )
+    st.caption(
+        "금리 지표와 리츠 재무지표는 단위와 해석 기준이 다르기 때문에 하나의 축으로 지수화하여 비교하면 오해가 발생할 수 있습니다. "
+        "따라서 본 화면에서는 기준금리·국고채·회사채 금리는 실제 이자율(%)로, NAV·FFO·총자산·차입금 등은 실제 금액(억원)으로 구분하여 표시합니다."
     )
 
-    h_left, h_right = st.columns([1.2, 1.0])
-
-    with h_left:
-        index_cols = [c for c in ["기준금리_index", "국고채 3년_index", "순자산가치_또는_자본_index", "현금흐름_또는_이익_index", "시장가치_index", "주가_index", "P_NAV_index"] if c in historical_panel.columns]
-        hist_long = historical_panel[["year"] + index_cols].melt("year", var_name="지표", value_name="지수") if index_cols else pd.DataFrame()
-        if not hist_long.empty:
-            hist_long["지표"] = hist_long["지표"].replace({
-                "기준금리_index": "기준금리",
-                "국고채 3년_index": "국고채 3년",
-                "순자산가치_또는_자본_index": "NAV(순자산가치) 추정치",
-                "현금흐름_또는_이익_index": "FFO/이익 추정치",
-                "시장가치_index": "시가총액",
-                "주가_index": "주가",
-                "P_NAV_index": "P/NAV",
-            })
-            fig_hist_index = px.line(
-                hist_long.dropna(),
-                x="year",
-                y="지수",
-                color="지표",
-                markers=True,
-                title="최근 5년 금리와 리츠 핵심지표 비교, 첫해=100",
-            )
-            st.plotly_chart(compact_fig(fig_hist_index, 255), width="stretch")
-        else:
-            st.info("시계열 지표를 만들 수 있는 데이터가 아직 부족합니다.")
-
-    with h_right:
-        hist_display_cols = [c for c in ["year", "기준금리", "국고채 3년", "회사채 AA- 3년", "순자산가치_또는_자본", "현금흐름_또는_이익", "시장가치", "주가", "P_NAV", "NAV_할인율", "부채비율_LTV추정"] if c in historical_panel.columns]
-        hist_display = historical_panel[hist_display_cols].copy() if hist_display_cols else pd.DataFrame()
-        if not hist_display.empty:
-            rename_hist = {
-                "year": "연도",
-                "기준금리": "기준금리",
-                "국고채 3년": "국고채 3년",
-                "회사채 AA- 3년": "회사채 AA- 3년",
-                "순자산가치_또는_자본": "NAV(순자산가치)/자본(백만원)",
-                "현금흐름_또는_이익": "FFO/이익(백만원)",
-                "시장가치": "시가총액(백만원)",
-                "주가": "주가(원)",
-                "P_NAV": "P/NAV",
-                "NAV_할인율": "NAV 할인율(%)",
-                "부채비율_LTV추정": "부채비율 추정",
-            }
-            st.write("**연도별 핵심 데이터**")
-            st.dataframe(hist_display.rename(columns=rename_hist), width="stretch", hide_index=True, height=250)
+    trend_display = build_five_year_trend_display(historical_panel)
+    if trend_display.empty:
+        st.info("최근 5년 흐름 표를 만들 수 있는 데이터가 아직 부족합니다.")
+    else:
+        st.write("**최근 5년 흐름: 금리와 리츠 주요 지표**")
+        st.dataframe(trend_display, width="stretch", hide_index=True, height=250)
 
     if all(c in historical_panel.columns for c in ["기준금리_변화_bp", "순자산가치_변화율", "현금흐름_변화율"]):
         reaction = historical_panel[["year", "기준금리_변화_bp", "순자산가치_변화율", "현금흐름_변화율"]].dropna().copy()

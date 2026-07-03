@@ -11,6 +11,9 @@
 - 공개 리뷰 환경에서 실시간 API 연결이 제한될 경우 예시 데이터로 전환되도록 설계
 - 상장리츠를 분석 대상으로 선택한 방법론적 이유를 UI와 문서에 추가
 - 사이드바에서 공시 기준일 선택기를 제거하고 시나리오 선택을 우선 배치
+- 사이드바 workflow를 분석 모드, 분석 대상회사, 시나리오, 데이터 연결 상태 순서로 정리
+- 분석 대상회사를 시가총액 순위 Snapshot 기준으로 정렬하고 종목코드/DART corp_code를 자동 연결
+- 최근 5년 흐름을 금리와 재무지표의 실제값 표로 표시하도록 개선
 - Assurance와 Tax Red Flag 표시를 단일 실무형 요청자료 표로 통합
 - Deals 및 KRX 기반 시장가치 분석 비활성화 유지
 - 저장소 문서를 README, Roadmap, Architecture, Reviewer Guide, v12 Feature Summary 중심으로 재구성

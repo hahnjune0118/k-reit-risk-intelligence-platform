@@ -1,9 +1,9 @@
-company_name,stock_code,dart_corp_code,market,reit_type,main_asset_type,main_region,note
-SK리츠,395400,sample_001,KOSPI,위탁관리리츠,Office,Seoul,sample master data for public portfolio review
-롯데리츠,330590,sample_002,KOSPI,위탁관리리츠,Retail,Nationwide,sample master data for public portfolio review
-ESR켄달스퀘어리츠,365550,sample_003,KOSPI,위탁관리리츠,Logistics,Greater Seoul,sample master data for public portfolio review
-제이알글로벌리츠,348950,sample_004,KOSPI,위탁관리리츠,Office,Overseas,sample master data for public portfolio review
-신한알파리츠,293940,sample_005,KOSPI,위탁관리리츠,Office,Seoul,sample master data for public portfolio review
-코람코라이프인프라리츠,357120,sample_006,KOSPI,위탁관리리츠,Retail / Infra,Nationwide,sample master data for public portfolio review
-이지스밸류리츠,334890,sample_007,KOSPI,위탁관리리츠,Office,Seoul,sample master data for public portfolio review
-NH올원리츠,400760,sample_008,KOSPI,위탁관리리츠,Diversified,Nationwide,sample master data for public portfolio review
+company_name,stock_code,dart_corp_code,market_cap_rank,market_cap,market,reit_type,main_asset_type,main_region,note
+SK리츠,395400,sample_001,1,980000,KOSPI,위탁관리리츠,Office,Seoul,시가총액 순위 Snapshot 기준 예시 데이터
+ESR켄달스퀘어리츠,365550,sample_003,2,950000,KOSPI,위탁관리리츠,Logistics,Greater Seoul,시가총액 순위 Snapshot 기준 예시 데이터
+롯데리츠,330590,sample_002,3,780000,KOSPI,위탁관리리츠,Retail,Nationwide,시가총액 순위 Snapshot 기준 예시 데이터
+제이알글로벌리츠,348950,sample_004,4,640000,KOSPI,위탁관리리츠,Office,Overseas,시가총액 순위 Snapshot 기준 예시 데이터
+신한알파리츠,293940,sample_005,5,590000,KOSPI,위탁관리리츠,Office,Seoul,시가총액 순위 Snapshot 기준 예시 데이터
+코람코라이프인프라리츠,357120,sample_006,6,470000,KOSPI,위탁관리리츠,Retail / Infra,Nationwide,시가총액 순위 Snapshot 기준 예시 데이터
+NH올원리츠,400760,sample_008,7,320000,KOSPI,위탁관리리츠,Diversified,Nationwide,시가총액 순위 Snapshot 기준 예시 데이터
+이지스밸류리츠,334890,sample_007,8,300000,KOSPI,위탁관리리츠,Office,Seoul,시가총액 순위 Snapshot 기준 예시 데이터

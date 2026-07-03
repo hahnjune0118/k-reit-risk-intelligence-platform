@@ -69,6 +69,17 @@ def render_methodology_page(
         "위험평가와 Tax/Assurance 검토 포인트를 자동화하는 것을 목표로 합니다."
     )
 
+    st.markdown("### v12 분석 workflow")
+    st.write(
+        "v12 공개 화면은 좌측 사이드바에서 **분석 모드 → 분석 대상회사 → 시나리오** 순서로 검토하도록 구성했습니다. "
+        "분석 대상회사는 시가총액 순위 Snapshot을 기준으로 정렬되며, 회사를 선택하면 종목코드와 DART corp_code, "
+        "최근 5년 재무 흐름의 기준 데이터가 자동으로 연결됩니다."
+    )
+    st.info(
+        "공개 배포 버전은 앱 실행 시 모든 상장리츠의 DART 자료를 실시간 호출하지 않고, 선택 회사 및 Snapshot 데이터를 "
+        "중심으로 분석합니다. 공시자료가 갱신되면 별도 수집 로직을 통해 Snapshot을 업데이트할 수 있도록 설계했습니다."
+    )
+
     st.markdown("### 사용 데이터")
     source_status = pd.DataFrame([
         {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},

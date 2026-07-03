@@ -24,6 +24,7 @@ from calculations_tax import (
     build_reit_tax_workflow_checklist,
     build_tax_risk_register,
 )
+from dart_financials import company_options, get_recent_5y_financials, get_selected_company_profile, load_reit_master
 from data_loader import load_data
 from red_flag_engine import build_assurance_red_flags, build_tax_red_flags, load_red_flag_rules
 
@@ -211,3 +212,27 @@ def test_v12_peer_metric_missing_value_is_gray():
     }
 
     assert classify_metric_risk(pd.NA, pd.NA, rule) == "gray"
+
+
+def test_v12_company_selector_uses_market_cap_rank_snapshot():
+    master = load_reit_master()
+    options = company_options(master)
+
+    assert options[0].startswith("1위 ")
+    assert "(395400)" in options[0]
+    assert master["market_cap_rank"].is_monotonic_increasing
+
+
+def test_v12_selected_company_profile_and_recent_5y_snapshot_are_built():
+    master = load_reit_master()
+    snapshot = load_peer_snapshot()
+    profile = get_selected_company_profile("1위 SK리츠 (395400)", master, snapshot)
+    recent_5y, status = get_recent_5y_financials(profile, snapshot, "")
+
+    assert profile["company_name"] == "SK리츠"
+    assert profile["stock_code"] == "395400"
+    assert profile["market_cap_rank"] == 1
+    assert status == "Snapshot 기준"
+    assert recent_5y.shape[0] == 5
+    assert recent_5y["year"].is_monotonic_increasing
+    assert {"total_assets", "investment_property", "borrowings_total", "ffo_proxy", "nav", "source_type"}.issubset(recent_5y.columns)
