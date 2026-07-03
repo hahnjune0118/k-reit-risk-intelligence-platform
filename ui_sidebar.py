@@ -24,6 +24,17 @@ from ui_layout import SIDEBAR_SLOTS
 SHOW_DEVELOPER_API_INPUTS = os.getenv("SHOW_DEVELOPER_API_INPUTS", "false").lower() == "true"
 
 
+def _ensure_sidebar_session_defaults():
+    defaults = {
+        "analysis_run_id": 0,
+        "selected_company_assets": pd.DataFrame(),
+        "selected_company_tax_data": pd.DataFrame(),
+    }
+    for key, default_value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = default_value
+
+
 def _latest_period_context(kpis: pd.DataFrame, financials: pd.DataFrame) -> tuple[str, pd.Series, pd.Series]:
     selected_period = kpis.sort_values("period_end", ascending=False)["period_end"].dt.strftime("%Y-%m-%d").iloc[0]
     latest_kpi = kpis[kpis["period_end"].dt.strftime("%Y-%m-%d") == selected_period].iloc[0]
@@ -92,6 +103,11 @@ def _render_data_status(macro_context: dict, dart_status: str, ecos_conn, dart_c
     macro_ready = bool(ecos_conn.configured and macro_context.get("source") == "한국은행 ECOS API")
     dart_ready = bool(dart_status == "connected" or str(dart_status).startswith("Snapshot 기준"))
     realty_ready = bool(realty_conn.configured)
+    data_connection_status = {
+        "macro_ready": macro_ready,
+        "dart_ready": dart_ready,
+        "realty_ready": realty_ready,
+    }
 
     st.divider()
     st.write("**데이터 연결 상태**")
@@ -115,6 +131,7 @@ def _render_data_status(macro_context: dict, dart_status: str, ecos_conn, dart_c
             st.caption(f"거시경제 데이터: {sanitize_secret_text(macro_context.get('status', '예시 데이터 사용'))}")
         if dart_status != "connected":
             st.caption(f"공시 데이터: {sanitize_secret_text(dart_status)}")
+    return data_connection_status
 
 
 def render_data_sidebar(
@@ -124,6 +141,7 @@ def render_data_sidebar(
     peer_metrics: pd.DataFrame | None = None,
     peer_snapshot: pd.DataFrame | None = None,
 ) -> dict:
+    _ensure_sidebar_session_defaults()
     selected_period, latest_kpi, latest_fin = _latest_period_context(kpis, financials)
 
     manual_ecos_value, manual_dart_value, manual_realty_value = _render_developer_api_inputs()
@@ -199,8 +217,6 @@ def render_data_sidebar(
         options = company_options(reit_master)
         if "selected_company_option" not in st.session_state:
             st.session_state["selected_company_option"] = options[0]
-        if "analysis_run_id" not in st.session_state:
-            st.session_state["analysis_run_id"] = 0
         with st.form("selected_company_form", clear_on_submit=False):
             selected_company_option = st.selectbox(
                 "분석 대상회사",
@@ -281,22 +297,32 @@ def render_data_sidebar(
     market_status = "시장가격 데이터 모듈은 향후 버전을 위해 비활성화되어 있습니다."
 
     with _sidebar_slot("data_status"):
-        _render_data_status(macro_context, dart_status, ecos_conn, dart_conn, realty_conn)
+        data_connection_status = _render_data_status(macro_context, dart_status, ecos_conn, dart_conn, realty_conn)
         st.caption(
             "ECOS는 현재·과거 지표를 제공합니다. 전망 기반 확률가중 모드는 별도 전망 입력값을 사용해 "
             "호황·중립·불황 확률을 산정한 뒤 리츠 스트레스 값으로 변환합니다."
         )
 
     return {
+        "mode": selected_user_mode,
+        "selected_mode": selected_user_mode,
         "selected_period": selected_period,
         "latest_kpi": latest_kpi,
         "latest_fin": latest_fin,
+        "selected_company": target_company,
         "target_company": target_company,
+        "selected_stock_code": company_profile.get("stock_code", ""),
+        "selected_dart_corp_code": company_profile.get("dart_corp_code", ""),
         "peer_group": peer_group,
         "selected_company_profile": company_profile,
         "recent_5y_financials": recent_5y_financials,
         "recent_5y_status": recent_5y_status,
+        "selected_company_assets": st.session_state.get("selected_company_assets", pd.DataFrame()),
+        "selected_company_tax_data": st.session_state.get("selected_company_tax_data", pd.DataFrame()),
+        "selected_scenario": macro_scenario.get("selected_scenario", selected_macro_scenario),
+        "scenario": macro_scenario,
         "analysis_run_id": st.session_state.get("analysis_run_id", 0),
+        "data_connection_status": data_connection_status,
         "ecos_conn": ecos_conn,
         "dart_conn": dart_conn,
         "realty_conn": realty_conn,

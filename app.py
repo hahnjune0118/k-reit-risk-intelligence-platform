@@ -151,6 +151,17 @@ peer_metrics = calculate_peer_metrics(peer_snapshot)
 red_flag_rules = load_red_flag_rules()
 
 sidebar_state = render_data_sidebar(kpis, financials, selected_user_mode, peer_metrics, peer_snapshot)
+if "analysis_run_id" not in st.session_state:
+    st.session_state["analysis_run_id"] = 0
+sidebar_state = {
+    "mode": selected_user_mode,
+    "selected_mode": selected_user_mode,
+    "analysis_run_id": st.session_state.get("analysis_run_id", 0),
+    "selected_company_assets": st.session_state.get("selected_company_assets", pd.DataFrame()),
+    "selected_company_tax_data": st.session_state.get("selected_company_tax_data", pd.DataFrame()),
+    "data_connection_status": {},
+    **sidebar_state,
+}
 selected_period = sidebar_state["selected_period"]
 latest_kpi = sidebar_state["latest_kpi"]
 latest_fin = sidebar_state["latest_fin"]
@@ -159,11 +170,12 @@ peer_group = sidebar_state["peer_group"]
 selected_company_profile = sidebar_state["selected_company_profile"]
 recent_5y_financials = sidebar_state["recent_5y_financials"]
 recent_5y_status = sidebar_state["recent_5y_status"]
-analysis_run_id = sidebar_state["analysis_run_id"]
+analysis_run_id = int(sidebar_state.get("analysis_run_id") or st.session_state.get("analysis_run_id", 0) or 0)
+sidebar_state["analysis_run_id"] = analysis_run_id
 ecos_conn = sidebar_state.get("ecos_conn") or get_api_key("ECOS")
 macro_context = sidebar_state["macro_context"]
-dart_history = sidebar_state["dart_history"]
-dart_reports = sidebar_state["dart_reports"]
+dart_history = sidebar_state.get("dart_history", pd.DataFrame())
+dart_reports = sidebar_state.get("dart_reports", pd.DataFrame())
 dart_status = sidebar_state["dart_status"]
 macro_scenario = sidebar_state["macro_scenario"]
 rate_shock_bp = sidebar_state["rate_shock_bp"]

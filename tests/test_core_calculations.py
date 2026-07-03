@@ -1,4 +1,6 @@
+import ast
 from io import BytesIO
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -29,6 +31,35 @@ from calculations_tax import (
 from dart_financials import company_options, get_recent_5y_financials, get_selected_company_profile, load_reit_master
 from data_loader import load_data
 from red_flag_engine import build_assurance_red_flags, build_tax_red_flags, load_red_flag_rules
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _sidebar_state_direct_keys() -> set[str]:
+    tree = ast.parse((PROJECT_ROOT / "app.py").read_text(encoding="utf-8"))
+    keys = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Subscript):
+            continue
+        if not isinstance(node.value, ast.Name) or node.value.id != "sidebar_state":
+            continue
+        if isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, str):
+            keys.add(node.slice.value)
+    return keys
+
+
+def _render_data_sidebar_return_keys() -> set[str]:
+    tree = ast.parse((PROJECT_ROOT / "ui_sidebar.py").read_text(encoding="utf-8"))
+    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "render_data_sidebar")
+    keys = set()
+    for node in ast.walk(function):
+        if not isinstance(node, ast.Return) or not isinstance(node.value, ast.Dict):
+            continue
+        for key in node.value.keys:
+            if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                keys.add(key.value)
+    return keys
 
 
 def _base_case():
@@ -260,3 +291,26 @@ def test_v12_empty_company_asset_detail_does_not_reuse_sample_assets():
     assert build_tenant_exposure_table(empty_assets).empty
     assert scenario["asset_sensitivity"].empty
     assert pd.isna(scenario["nav_change_pct"])
+
+
+def test_v12_sidebar_state_contract_covers_app_direct_access_keys():
+    app_direct_keys = _sidebar_state_direct_keys()
+    sidebar_return_keys = _render_data_sidebar_return_keys()
+    required_contract_keys = {
+        "mode",
+        "selected_mode",
+        "selected_company",
+        "selected_stock_code",
+        "selected_dart_corp_code",
+        "selected_company_profile",
+        "recent_5y_financials",
+        "selected_company_assets",
+        "selected_company_tax_data",
+        "selected_scenario",
+        "scenario",
+        "analysis_run_id",
+        "data_connection_status",
+    }
+
+    assert app_direct_keys.issubset(sidebar_return_keys)
+    assert required_contract_keys.issubset(sidebar_return_keys)
