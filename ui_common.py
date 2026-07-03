@@ -99,6 +99,20 @@ def compact_fig(fig, height=245):
     return fig
 
 
+def render_selected_company_header(peer_context: dict | None):
+    if not peer_context:
+        return
+    profile = peer_context.get("selected_company_profile", {}) or {}
+    company_name = profile.get("company_name") or peer_context.get("target_company", "선택 리츠")
+    stock_code = profile.get("stock_code", "")
+    data_basis = peer_context.get("detail_data_basis") or peer_context.get("recent_5y_status", "Snapshot 기준")
+    label = f"현재 분석 대상: {company_name}"
+    if stock_code:
+        label = f"{label} ({stock_code})"
+    st.caption(f"**{label}**")
+    st.caption(f"데이터 기준: {data_basis}")
+
+
 def fmt_mn_to_bn(value):
     if _is_na(value):
         return "N/A"

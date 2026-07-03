@@ -12,8 +12,10 @@ from calculations_assurance import (
 )
 from calculations_peer import calculate_peer_metrics, classify_metric_risk, load_peer_snapshot, summarize_peer_position
 from calculations_risk import (
+    build_asset_concentration_table,
     build_asset_risk_table,
     build_interactive_scenario_outputs,
+    build_tenant_exposure_table,
     calculate_reit_level_risk,
 )
 from calculations_scenario import FORECAST_WEIGHTED_SCENARIO_NAME, macro_scenario_parameters
@@ -236,3 +238,25 @@ def test_v12_selected_company_profile_and_recent_5y_snapshot_are_built():
     assert recent_5y.shape[0] == 5
     assert recent_5y["year"].is_monotonic_increasing
     assert {"total_assets", "investment_property", "borrowings_total", "ffo_proxy", "nav", "source_type"}.issubset(recent_5y.columns)
+
+
+def test_v12_empty_company_asset_detail_does_not_reuse_sample_assets():
+    bundle, _, latest_kpi, _ = _base_case()
+    empty_assets = build_asset_risk_table(bundle["assets"].iloc[0:0].copy())
+    empty_debt = bundle["debt_schedule"].iloc[0:0].copy()
+
+    scenario = build_interactive_scenario_outputs(
+        latest_kpi,
+        empty_debt,
+        empty_assets,
+        rate_shock_bp=50,
+        refinancing_share_pct=25,
+        ffo_haircut_pct=5,
+        cap_rate_shock_bp=50,
+    )
+
+    assert empty_assets.empty
+    assert build_asset_concentration_table(empty_assets).empty
+    assert build_tenant_exposure_table(empty_assets).empty
+    assert scenario["asset_sensitivity"].empty
+    assert pd.isna(scenario["nav_change_pct"])

@@ -18,7 +18,7 @@ from calculations_tax import (
 from config import REALTY_PRICE_API_ENDPOINT_DEFAULT
 from formatting import format_bn_krw, format_pct_from_100
 from api_manager import get_api_key, sanitize_secret_dataframe, sanitize_secret_text
-from ui_common import compact_fig
+from ui_common import compact_fig, render_selected_company_header
 from ui_peer import build_peer_metric_table, flags_to_tax_review_table, render_overall_risk_message, style_risk_review_table
 
 
@@ -76,7 +76,19 @@ def _render_peer_tax_section(peer_context: dict | None):
         if metric_table.empty:
             st.info("Peer 보유세 부담 비교를 만들 수 있는 데이터가 부족합니다.")
         else:
-            st.dataframe(metric_table, width="stretch", hide_index=True, height=240)
+            st.dataframe(
+                metric_table,
+                width="stretch",
+                hide_index=True,
+                height=240,
+                column_config={
+                    "지표": st.column_config.TextColumn("지표", width="medium"),
+                    "선택 리츠": st.column_config.TextColumn("선택 리츠", width="small"),
+                    "Peer 중앙값": st.column_config.TextColumn("Peer 중앙값", width="small"),
+                    "Peer 평균": st.column_config.TextColumn("Peer 평균", width="small"),
+                    "Peer 위치": st.column_config.TextColumn("Peer 위치", width="small"),
+                },
+            )
 
 
 def render_tax_mode(
@@ -87,11 +99,13 @@ def render_tax_mode(
     peer_context: dict | None = None,
 ):
     st.markdown("## T. Tax: 보유세 분석")
+    render_selected_company_header(peer_context)
     st.caption(
         "이 화면은 리츠 보유자산의 공시가격/기준시가, 토지·건물 시가표준액, 과세표준, 재산세, "
         "도시지역분, 지방교육세를 연결해 보유세 부담과 FFO 현금 유출 영향을 예비 분석합니다."
     )
     assumptions = assumptions or {}
+    run_id = (peer_context or {}).get("analysis_run_id", 0)
 
     with st.expander("보유세 계산 산식, 과세표준, 세율 보기", expanded=False):
         st.markdown(
@@ -133,6 +147,14 @@ def render_tax_mode(
     else:
         st.warning("공시가격 실시간 조회가 제한되어 예시 데이터를 사용합니다.")
     st.caption("공개 리뷰 버전은 서버 측 데이터 연결 또는 내장 예시 데이터를 사용합니다. 사용자가 별도의 인증값을 입력할 필요는 없습니다.")
+
+    if asset_risk is None or asset_risk.empty:
+        st.warning(
+            "현재 공개 버전에서는 해당 회사의 자산별 상세 보유세 데이터가 부족합니다. "
+            "회사 전체 Peer 지표와 재무 Snapshot 중심으로 표시합니다."
+        )
+        _render_peer_tax_section(peer_context)
+        return
 
     fetch_api = False
     endpoint = ""
@@ -212,6 +234,7 @@ def render_tax_mode(
         apply_tax_burden_cap=assumptions.get("apply_tax_burden_cap", False),
         tax_burden_cap_pct=assumptions.get("tax_burden_cap_pct", 150.0),
     )
+    st.session_state["selected_company_tax_data"] = tax_history.copy()
     annual_summary = summarize_holding_tax_history(tax_history)
 
     st.info(sanitize_secret_text(price_data_status))
@@ -280,13 +303,21 @@ def render_tax_mode(
     })
     asset_display = latest_asset_tax[[
         "asset_name", "location", "official_land_price_per_sqm_krw", "토지_시가표준액_백만원", "토지_과세표준_백만원",
-        "건물_시가표준액_백만원", "재산세본세_백만원", "도시지역분_백만원", "지방교육세_백만원", "보유세_추정_백만원", "보유세_5년누적증가_%", "official_price_source"
+        "건물_시가표준액_백만원", "재산세본세_백만원", "도시지역분_백만원", "지방교육세_백만원", "보유세_추정_백만원", "보유세_5년누적증가_%"
     ]].rename(columns={
         "asset_name": "자산",
         "location": "주소/권역",
         "official_land_price_per_sqm_krw": "개별공시지가_원_m2",
-        "official_price_source": "공시가격_자료출처",
     })
+    source_detail_cols = [col for col in ["asset_name", "year", "location", "official_price_source"] if col in latest_asset_tax.columns]
+    source_detail = latest_asset_tax[source_detail_cols].copy()
+    source_detail = source_detail.rename(columns={
+        "asset_name": "자산",
+        "year": "기준연도",
+        "location": "식별자/주소",
+        "official_price_source": "공시가격 자료 출처",
+    })
+    source_detail["비고"] = "공개 버전의 예비 분석용 원천 표시"
 
     tab_cash, tab_workflow, tab_detail, tab_data = st.tabs(
         ["FFO 현금유출 스트레스", "세무업무 자동화", "보유세 상세 분석", "원천 데이터"]
@@ -302,7 +333,17 @@ def render_tax_mode(
         else:
             c1, c2 = st.columns([1.05, 0.95])
             with c1:
-                st.dataframe(cash_flow_scenarios, width="stretch", hide_index=True, height=250)
+                st.dataframe(
+                    cash_flow_scenarios,
+                    width="stretch",
+                    hide_index=True,
+                    height=250,
+                    column_config={
+                        "시나리오": st.column_config.TextColumn("시나리오", width="small"),
+                        "판단": st.column_config.TextColumn("판단", width="small"),
+                        "해석": st.column_config.TextColumn("해석", width="large"),
+                    },
+                )
             with c2:
                 fig_cash = px.bar(
                     cash_flow_scenarios,
@@ -322,21 +363,95 @@ def render_tax_mode(
             hide_index=True,
             height=360,
             disabled=disabled_cols,
-            key="reit_tax_workflow_checklist",
+            key=f"reit_tax_workflow_checklist_{run_id}",
+            column_config={
+                "완료": st.column_config.CheckboxColumn("완료", width="small"),
+                "업무영역": st.column_config.TextColumn("업무영역", width="small"),
+                "우선순위": st.column_config.TextColumn("우선", width="small"),
+                "자동화 툴": st.column_config.TextColumn("자동화 툴", width="medium"),
+                "리츠 실무 체크": st.column_config.TextColumn("리츠 실무 체크", width="large"),
+                "데이터 입력": st.column_config.TextColumn("데이터 입력", width="medium"),
+                "자동 산출물": st.column_config.TextColumn("자동 산출물", width="medium"),
+            },
         )
 
         st.write("**세무 리스크·환급기회 레지스터**")
-        st.dataframe(tax_risk_register, width="stretch", hide_index=True, height=260)
+        st.dataframe(
+            tax_risk_register,
+            width="stretch",
+            hide_index=True,
+            height=260,
+            column_config={
+                "리스크/기회": st.column_config.TextColumn("리스크/기회", width="medium"),
+                "등급": st.column_config.TextColumn("등급", width="small"),
+                "신호": st.column_config.TextColumn("신호", width="medium"),
+                "영향": st.column_config.TextColumn("영향", width="large"),
+                "권장 자동화": st.column_config.TextColumn("권장 자동화", width="large"),
+            },
+        )
 
         st.write("**Tax Technology 자동화 과제 목록**")
-        st.dataframe(tax_automation_backlog, width="stretch", hide_index=True, height=240)
+        st.dataframe(
+            tax_automation_backlog,
+            width="stretch",
+            hide_index=True,
+            height=240,
+            column_config={
+                "순서": st.column_config.TextColumn("순서", width="small"),
+                "자동화 과제": st.column_config.TextColumn("자동화 과제", width="medium"),
+                "구현 내용": st.column_config.TextColumn("구현 내용", width="large"),
+                "기대효과": st.column_config.TextColumn("기대효과", width="large"),
+            },
+        )
 
     with tab_detail:
         st.write("**연도별 보유세 증가 분석**")
-        st.dataframe(annual_display, width="stretch", hide_index=True, height=190)
+        st.dataframe(
+            annual_display,
+            width="stretch",
+            hide_index=True,
+            height=190,
+            column_config={
+                "연도": st.column_config.TextColumn("연도", width="small"),
+                "보유세_전년대비_%": st.column_config.NumberColumn("전년대비", width="small", format="%.1f%%"),
+                "보유세_누적증가_%": st.column_config.NumberColumn("누적증가", width="small", format="%.1f%%"),
+            },
+        )
 
         st.write("**자산별 최신 보유세와 증가율**")
-        st.dataframe(asset_display.head(12), width="stretch", hide_index=True, height=260)
+        st.dataframe(
+            asset_display.head(12),
+            width="stretch",
+            hide_index=True,
+            height=260,
+            column_config={
+                "자산": st.column_config.TextColumn("자산", width="medium"),
+                "주소/권역": st.column_config.TextColumn("주소/권역", width="small"),
+                "개별공시지가_원_m2": st.column_config.NumberColumn("공시지가", width="small", format="%.0f"),
+                "토지_시가표준액_백만원": st.column_config.NumberColumn("토지 시가표준액", width="small", format="%.0f"),
+                "토지_과세표준_백만원": st.column_config.NumberColumn("토지 과표", width="small", format="%.0f"),
+                "건물_시가표준액_백만원": st.column_config.NumberColumn("건물 시가표준액", width="small", format="%.0f"),
+                "재산세본세_백만원": st.column_config.NumberColumn("재산세", width="small", format="%.1f"),
+                "도시지역분_백만원": st.column_config.NumberColumn("도시지역분", width="small", format="%.1f"),
+                "지방교육세_백만원": st.column_config.NumberColumn("지방교육세", width="small", format="%.1f"),
+                "보유세_추정_백만원": st.column_config.NumberColumn("추정 보유세", width="small", format="%.1f"),
+                "보유세_5년누적증가_%": st.column_config.NumberColumn("5년 증가", width="small", format="%.1f%%"),
+            },
+        )
+        with st.expander("공시가격 자료 출처 보기", expanded=False):
+            st.dataframe(
+                source_detail,
+                width="stretch",
+                hide_index=True,
+                height=180,
+                column_config={
+                    "자산": st.column_config.TextColumn("자산", width="medium"),
+                    "기준연도": st.column_config.TextColumn("연도", width="small"),
+                    "공시가격 자료 출처": st.column_config.TextColumn("자료 출처", width="large"),
+                    "식별자/주소": st.column_config.TextColumn("식별자/주소", width="medium"),
+                    "비고": st.column_config.TextColumn("비고", width="medium"),
+                },
+            )
 
     with tab_data:
         st.write("**공시가격/기준시가 원천 데이터**")

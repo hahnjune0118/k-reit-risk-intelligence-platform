@@ -199,6 +199,8 @@ def render_data_sidebar(
         options = company_options(reit_master)
         if "selected_company_option" not in st.session_state:
             st.session_state["selected_company_option"] = options[0]
+        if "analysis_run_id" not in st.session_state:
+            st.session_state["analysis_run_id"] = 0
         with st.form("selected_company_form", clear_on_submit=False):
             selected_company_option = st.selectbox(
                 "분석 대상회사",
@@ -207,7 +209,19 @@ def render_data_sidebar(
                 help="시가총액 순위 Snapshot을 기준으로 정렬한 상장리츠 목록입니다.",
             )
             run_analysis = st.form_submit_button("분석 실행", width="stretch")
-        if run_analysis or st.session_state.get("selected_company_option") not in options:
+        previous_company_option = st.session_state.get("selected_company_option")
+        if run_analysis:
+            if selected_company_option != previous_company_option:
+                for stale_key in [
+                    "realty_price_api_history",
+                    "realty_price_api_status",
+                    "selected_company_assets",
+                    "selected_company_tax_data",
+                ]:
+                    st.session_state.pop(stale_key, None)
+            st.session_state["selected_company_option"] = selected_company_option
+            st.session_state["analysis_run_id"] = int(st.session_state.get("analysis_run_id", 0)) + 1
+        elif st.session_state.get("selected_company_option") not in options:
             st.session_state["selected_company_option"] = selected_company_option
         target_company_option = st.session_state.get("selected_company_option", selected_company_option)
         company_profile = get_selected_company_profile(target_company_option, reit_master, peer_snapshot)
@@ -222,6 +236,8 @@ def render_data_sidebar(
         rank = company_profile.get("market_cap_rank", pd.NA)
         rank_text = f"{int(rank)}위" if pd.notna(rank) else "순위 정보 없음"
         st.caption(f"{company_profile.get('stock_code', '')} / {rank_text} / {company_profile.get('main_asset_type', '')}")
+        if run_analysis:
+            st.success(f"분석 대상이 {target_company}(으)로 업데이트되었습니다.")
         st.divider()
 
     with _sidebar_slot("assumptions"):
@@ -280,6 +296,7 @@ def render_data_sidebar(
         "selected_company_profile": company_profile,
         "recent_5y_financials": recent_5y_financials,
         "recent_5y_status": recent_5y_status,
+        "analysis_run_id": st.session_state.get("analysis_run_id", 0),
         "ecos_conn": ecos_conn,
         "dart_conn": dart_conn,
         "realty_conn": realty_conn,

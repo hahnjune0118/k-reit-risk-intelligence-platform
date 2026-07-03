@@ -3,6 +3,7 @@ import streamlit as st
 
 from api_manager import sanitize_secret_text
 from config import APP_VERSION_LABEL
+from ui_common import render_selected_company_header
 
 
 def _source_confidence_table(asset_risk, debt_schedule, financials, kpis) -> pd.DataFrame:
@@ -36,6 +37,7 @@ def render_methodology_page(
     peer_context=None,
 ):
     st.markdown("## 분석 방법론 및 데이터 출처")
+    render_selected_company_header(peer_context)
     st.caption(f"현재 안정 공개 버전: {APP_VERSION_LABEL}")
 
     st.markdown("### v12 현재 범위")
@@ -104,6 +106,10 @@ def render_methodology_page(
     st.info(
         "앱 실행 시 모든 상장리츠의 DART API를 실시간 호출하지 않습니다. 공개 배포 버전에서는 빠른 실행과 안정성을 위해 "
         "Snapshot 데이터를 기본으로 사용하고, 필요 시 별도 수집 스크립트로 갱신할 수 있도록 설계했습니다."
+    )
+    st.caption(
+        "공개 배포 버전에서는 회사별 상세 자산·보유세 데이터의 가용성이 서로 다를 수 있습니다. 상세 데이터가 부족한 회사는 "
+        "Peer Benchmark 및 재무 Snapshot 중심으로 분석하며, 자산별 세부 분석은 데이터가 확보된 범위 내에서만 표시합니다."
     )
     if peer_context:
         peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())

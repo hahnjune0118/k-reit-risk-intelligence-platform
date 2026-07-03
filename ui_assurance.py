@@ -16,6 +16,7 @@ from ui_peer import (
     render_overall_risk_message,
     style_risk_review_table,
 )
+from ui_common import render_selected_company_header
 
 
 def _stage_rows(workflow: pd.DataFrame, stages: list[str]) -> pd.DataFrame:
@@ -147,11 +148,18 @@ def render_assurance_mode(
     peer_context: dict | None = None,
 ):
     st.markdown("## A. Assurance: 감사위험 분석")
+    render_selected_company_header(peer_context)
     st.caption(
         "이 화면은 리츠회사 감사계획 단계에서 어떤 자산과 계정을 중점적으로 봐야 하는지 판단하기 위한 참고 도구입니다. "
         "기업과 기업환경의 이해, 위험평가절차, 통제테스트, 실증절차 순서로 RMM(중요왜곡표시위험), "
         "KAM(핵심감사사항), 내부회계관리제도 핵심 통제 포인트를 정리합니다."
     )
+    if peer_context and not peer_context.get("detail_data_available", True):
+        st.warning(
+            "해당 회사의 자산별 상세 데이터가 부족하여 Peer Benchmark와 재무 Snapshot 중심으로 표시합니다. "
+            "자산별 감사 중점 우선순위는 상세 자산 데이터가 확보되는 범위 내에서만 표시됩니다."
+        )
+    run_id = (peer_context or {}).get("analysis_run_id", 0)
 
     assurance_assets = build_assurance_asset_priority(asset_risk, scenario, materiality_pct)
     rmm = build_rmm_mapping(latest_kpi, debt_schedule, scenario, assurance_assets)
@@ -169,26 +177,33 @@ def render_assurance_mode(
         st.write("**기업과 기업환경의 이해 및 위험평가절차 체크리스트**")
         _render_checklist(
             _stage_rows(workflow, ["기업과 기업환경 이해", "위험평가절차"]),
-            "assurance_planning_checklist",
+            f"assurance_planning_checklist_{run_id}",
             height=480,
         )
 
     with tab_rmm:
         st.write("**감사 중점 자산 우선순위**")
         st.caption("`시나리오가치변화_%`는 좌측 사이드바의 예상 거시경제 상황과 Cap rate(자본환원율) 충격 가정에 따라 즉시 달라집니다.")
-        _render_compact_dataframe(
-            assurance_assets.head(8),
-            height=260,
-            column_config={
-                "자산": st.column_config.TextColumn("자산", width="medium"),
-                "평가액_백만원": st.column_config.NumberColumn("평가액", width="small"),
-                "평가액비중_%": st.column_config.NumberColumn("비중", width="small", format="%.1f%%"),
-                "시나리오가치변화_%": st.column_config.NumberColumn("가치변화", width="small", format="%.1f%%"),
-                "감사 우선순위": st.column_config.TextColumn("우선순위", width="small"),
-                "중점검토사유": st.column_config.TextColumn("중점검토사유", width="large"),
-                "가치변화 산정 메모": st.column_config.TextColumn("가치변화 메모", width="medium"),
-            },
-        )
+        if assurance_assets.empty:
+            st.info("선택 회사의 자산별 상세 데이터가 부족하여 감사 중점 자산 우선순위 표를 표시하지 않습니다.")
+        else:
+            _render_compact_dataframe(
+                assurance_assets.head(8),
+                height=260,
+                column_config={
+                    "자산": st.column_config.TextColumn("자산", width="medium"),
+                    "평가액_백만원": st.column_config.NumberColumn("평가액", width="small"),
+                    "평가액비중_%": st.column_config.NumberColumn("비중", width="small", format="%.1f%%"),
+                    "Cap_rate_%": st.column_config.NumberColumn("Cap rate", width="small", format="%.1f%%"),
+                    "남은임대기간_년": st.column_config.NumberColumn("WALE", width="small", format="%.1f"),
+                    "주요임차인": st.column_config.TextColumn("임차인", width="small"),
+                    "시나리오가치변화_%": st.column_config.NumberColumn("가치변화", width="small", format="%.1f%%"),
+                    "감사중점점수": st.column_config.NumberColumn("점수", width="small", format="%.0f"),
+                    "감사 우선순위": st.column_config.TextColumn("우선", width="small"),
+                    "중점검토사유": st.column_config.TextColumn("중점검토사유", width="large"),
+                    "가치변화 산정 메모": st.column_config.TextColumn("가치변화 메모", width="medium"),
+                },
+            )
 
         st.write("**RMM 요약 매핑**")
         st.caption("투자부동산 공정가치 RMM은 선택 Scenario와 Cap rate 충격을 함께 표시합니다.")
@@ -223,7 +238,7 @@ def render_assurance_mode(
         st.write("**통제테스트 및 실증절차 체크리스트**")
         _render_checklist(
             _stage_rows(workflow, ["통제테스트", "실증절차"]),
-            "assurance_response_checklist",
+            f"assurance_response_checklist_{run_id}",
             height=500,
         )
 
@@ -246,7 +261,7 @@ def render_assurance_mode(
         st.write("**보고·KAM·커뮤니케이션 체크리스트**")
         _render_checklist(
             _stage_rows(workflow, ["보고·KAM·커뮤니케이션"]),
-            "assurance_reporting_checklist",
+            f"assurance_reporting_checklist_{run_id}",
             height=230,
         )
 

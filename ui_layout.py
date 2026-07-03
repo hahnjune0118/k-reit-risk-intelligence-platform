@@ -25,6 +25,18 @@ def apply_page_config():
         div[data-testid="stMetricLabel"] {font-size: 0.78rem;}
         div[data-testid="stMetricValue"] {font-size: 1.25rem;}
         div[data-testid="stDataFrame"] {font-size: 0.82rem;}
+        section[data-testid="stSidebar"] div[data-baseweb="select"],
+        section[data-testid="stSidebar"] div[data-baseweb="select"] *,
+        div[data-baseweb="popover"] [role="listbox"],
+        div[data-baseweb="popover"] [role="option"],
+        div[data-baseweb="popover"] [role="option"] * {
+            opacity: 1 !important;
+            color: var(--text-color) !important;
+            -webkit-text-fill-color: var(--text-color) !important;
+        }
+        div[data-baseweb="popover"] [role="option"][aria-selected="true"] {
+            font-weight: 600 !important;
+        }
         h2, h3 {margin-top: 0.35rem;}
         </style>
         """,

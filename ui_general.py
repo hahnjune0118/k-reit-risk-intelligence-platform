@@ -5,7 +5,7 @@ import streamlit as st
 from calculations_scenario import korean_metric_label, korean_risk_label
 from formatting import format_pct_from_100, format_ratio, format_score, format_trn_krw_from_mn
 from api_manager import sanitize_secret_text
-from ui_common import compact_fig, fmt_metric_value, fmt_mn_to_bn, mode_specific_action_items
+from ui_common import compact_fig, fmt_metric_value, fmt_mn_to_bn, mode_specific_action_items, render_selected_company_header
 from ui_peer import build_peer_metric_table, format_peer_percentile, format_peer_value, render_overall_risk_message
 
 
@@ -165,6 +165,7 @@ def render_general_dashboard(
     company_profile = (peer_context or {}).get("selected_company_profile", {})
     recent_5y_status = (peer_context or {}).get("recent_5y_status", "")
     st.markdown("## 1. 한눈에 보는 결론")
+    render_selected_company_header(peer_context)
 
     if company_profile:
         rank = company_profile.get("market_cap_rank", pd.NA)
@@ -377,105 +378,114 @@ def render_general_dashboard(
     st.markdown("---")
     st.markdown("## 5. 자산·임차인·임대 안정성")
 
-    total_appraised = asset_risk["appraised_value_mn_krw_20251231"].sum()
-    office_value = asset_risk[asset_risk["asset_type"].str.contains("office", case=False, na=False)]["appraised_value_mn_krw_20251231"].sum()
-    top_asset = concentration_table.sort_values("appraised_value_mn_krw_20251231", ascending=False).iloc[0]
-    top3_share = concentration_table.head(3)["portfolio_value_share_pct"].sum()
-    hhi = concentration_table["hhi_component"].sum()
-
-    p1, p2, p3, p4 = st.columns(4)
-    p1.metric("부동산 평가액", format_trn_krw_from_mn(total_appraised))
-    p2.metric("상위 3개 자산 비중", format_pct_from_100(top3_share))
-    p3.metric("최대 자산 비중", format_pct_from_100(top_asset["portfolio_value_share_pct"]))
-    p4.metric("자산 집중도", f"{hhi:.3f}")
-
-    c_left, c_mid, c_right = st.columns([1.0, 1.0, 1.0])
-
-    with c_left:
-        top_assets = concentration_table[[
-            "asset_name",
-            "appraised_value_mn_krw_20251231",
-            "portfolio_value_share_pct",
-            "major_tenant",
-            "wale_yrs",
-            "cap_rate_pct_20251231",
-            "asset_risk_score",
-        ]].head(7).copy()
-        top_assets = top_assets.rename(columns={
-            "asset_name": "자산",
-            "appraised_value_mn_krw_20251231": "평가액_백만원",
-            "portfolio_value_share_pct": "포트폴리오_비중_%",
-            "major_tenant": "주요_임차인",
-            "wale_yrs": "남은_임대기간_년",
-            "cap_rate_pct_20251231": "Cap_rate_%",
-            "asset_risk_score": "위험점수",
-        })
-        st.write("**핵심 자산**")
-        st.dataframe(top_assets, width="stretch", hide_index=True, height=245)
-
-    with c_mid:
-        tenant_simple = tenant_exposure[["major_tenant", "tenant_credit", "portfolio_value_share_pct"]].head(7).copy()
-        tenant_simple = tenant_simple.rename(columns={
-            "major_tenant": "임차인",
-            "tenant_credit": "신용도",
-            "portfolio_value_share_pct": "포트폴리오_비중_%",
-        })
-        st.write("**주요 임차인 비중**")
-        st.dataframe(tenant_simple, width="stretch", hide_index=True, height=245)
-
-    with c_right:
-        fig_wale = px.bar(
-            asset_risk.sort_values("wale_yrs", ascending=True).dropna(subset=["wale_yrs"]),
-            x="wale_yrs",
-            y="asset_name",
-            orientation="h",
-            title="자산별 남은 임대기간",
-            text="wale_yrs",
+    if asset_risk.empty or concentration_table.empty:
+        st.warning(
+            "선택 회사의 자산별 상세 데이터가 부족하여 자산·임차인 상세 섹션은 표시하지 않습니다. "
+            "회사 전체 Peer Benchmark와 재무 Snapshot을 기준으로 해석하세요."
         )
-        fig_wale.update_traces(texttemplate="%{text:.1f}y", textposition="outside", cliponaxis=False)
-        st.plotly_chart(compact_fig(fig_wale, 245), width="stretch")
+    else:
+        total_appraised = asset_risk["appraised_value_mn_krw_20251231"].sum()
+        office_value = asset_risk[asset_risk["asset_type"].str.contains("office", case=False, na=False)]["appraised_value_mn_krw_20251231"].sum()
+        top_asset = concentration_table.sort_values("appraised_value_mn_krw_20251231", ascending=False).iloc[0]
+        top3_share = concentration_table.head(3)["portfolio_value_share_pct"].sum()
+        hhi = concentration_table["hhi_component"].sum()
+
+        p1, p2, p3, p4 = st.columns(4)
+        p1.metric("부동산 평가액", format_trn_krw_from_mn(total_appraised))
+        p2.metric("상위 3개 자산 비중", format_pct_from_100(top3_share))
+        p3.metric("최대 자산 비중", format_pct_from_100(top_asset["portfolio_value_share_pct"]))
+        p4.metric("자산 집중도", f"{hhi:.3f}")
+
+        c_left, c_mid, c_right = st.columns([1.0, 1.0, 1.0])
+
+        with c_left:
+            top_assets = concentration_table[[
+                "asset_name",
+                "appraised_value_mn_krw_20251231",
+                "portfolio_value_share_pct",
+                "major_tenant",
+                "wale_yrs",
+                "cap_rate_pct_20251231",
+                "asset_risk_score",
+            ]].head(7).copy()
+            top_assets = top_assets.rename(columns={
+                "asset_name": "자산",
+                "appraised_value_mn_krw_20251231": "평가액_백만원",
+                "portfolio_value_share_pct": "포트폴리오_비중_%",
+                "major_tenant": "주요_임차인",
+                "wale_yrs": "남은_임대기간_년",
+                "cap_rate_pct_20251231": "Cap_rate_%",
+                "asset_risk_score": "위험점수",
+            })
+            st.write("**핵심 자산**")
+            st.dataframe(top_assets, width="stretch", hide_index=True, height=245)
+
+        with c_mid:
+            tenant_simple = tenant_exposure[["major_tenant", "tenant_credit", "portfolio_value_share_pct"]].head(7).copy()
+            tenant_simple = tenant_simple.rename(columns={
+                "major_tenant": "임차인",
+                "tenant_credit": "신용도",
+                "portfolio_value_share_pct": "포트폴리오_비중_%",
+            })
+            st.write("**주요 임차인 비중**")
+            st.dataframe(tenant_simple, width="stretch", hide_index=True, height=245)
+
+        with c_right:
+            fig_wale = px.bar(
+                asset_risk.sort_values("wale_yrs", ascending=True).dropna(subset=["wale_yrs"]),
+                x="wale_yrs",
+                y="asset_name",
+                orientation="h",
+                title="자산별 남은 임대기간",
+                text="wale_yrs",
+            )
+            fig_wale.update_traces(texttemplate="%{text:.1f}y", textposition="outside", cliponaxis=False)
+            st.plotly_chart(compact_fig(fig_wale, 245), width="stretch")
 
     st.markdown("---")
     st.markdown("## 6. 부채 만기와 차환 부담")
 
-    total_principal = debt_schedule["principal_mn_krw"].sum()
-    fixed_principal = debt_schedule[debt_schedule["rate_type"] == "고정"]["principal_mn_krw"].sum()
-    floating_principal = debt_schedule[debt_schedule["rate_type"] == "변동"]["principal_mn_krw"].sum()
-    near_1y = debt_schedule[debt_schedule["days_to_maturity"].between(0, 365, inclusive="both")]["principal_mn_krw"].sum()
+    if debt_schedule.empty or debt_summary.empty:
+        st.warning("선택 회사의 차입금 만기 상세 데이터가 부족하여 만기 wall 상세표를 표시하지 않습니다.")
+    else:
+        total_principal = debt_schedule["principal_mn_krw"].sum()
+        fixed_principal = debt_schedule[debt_schedule["rate_type"] == "고정"]["principal_mn_krw"].sum()
+        floating_principal = debt_schedule[debt_schedule["rate_type"] == "변동"]["principal_mn_krw"].sum()
+        near_1y = debt_schedule[debt_schedule["days_to_maturity"].between(0, 365, inclusive="both")]["principal_mn_krw"].sum()
 
-    b1, b2, b3, b4 = st.columns(4)
-    b1.metric("공시 차입금", format_trn_krw_from_mn(total_principal))
-    b2.metric("고정금리 비중", format_pct_from_100(fixed_principal / total_principal * 100 if total_principal else pd.NA))
-    b3.metric("변동금리 비중", format_pct_from_100(floating_principal / total_principal * 100 if total_principal else pd.NA))
-    b4.metric("1년 내 만기", format_pct_from_100(near_1y / total_principal * 100 if total_principal else pd.NA))
+        b1, b2, b3, b4 = st.columns(4)
+        b1.metric("공시 차입금", format_trn_krw_from_mn(total_principal))
+        b2.metric("고정금리 비중", format_pct_from_100(fixed_principal / total_principal * 100 if total_principal else pd.NA))
+        b3.metric("변동금리 비중", format_pct_from_100(floating_principal / total_principal * 100 if total_principal else pd.NA))
+        b4.metric("1년 내 만기", format_pct_from_100(near_1y / total_principal * 100 if total_principal else pd.NA))
 
-    d_left, d_right = st.columns([1.15, 0.85])
+        d_left, d_right = st.columns([1.15, 0.85])
 
-    with d_left:
-        debt_by_year = debt_summary.groupby("maturity_year", as_index=False).agg(
-            principal_mn_krw=("principal_mn_krw", "sum"),
-            weighted_avg_all_in_rate_pct=("weighted_avg_all_in_rate_pct", "mean"),
-            number_of_facilities=("number_of_facilities", "sum"),
-        )
-        fig_wall = px.bar(
-            debt_by_year.sort_values("maturity_year"),
-            x="maturity_year",
-            y="principal_mn_krw",
-            title="연도별 부채 만기",
-            text="principal_mn_krw",
-        )
-        fig_wall.update_traces(texttemplate="%{text:,.0f}", textposition="outside", cliponaxis=False)
-        st.plotly_chart(compact_fig(fig_wall, 250), width="stretch")
+        with d_left:
+            debt_by_year = debt_summary.groupby("maturity_year", as_index=False).agg(
+                principal_mn_krw=("principal_mn_krw", "sum"),
+                weighted_avg_all_in_rate_pct=("weighted_avg_all_in_rate_pct", "mean"),
+                number_of_facilities=("number_of_facilities", "sum"),
+            )
+            fig_wall = px.bar(
+                debt_by_year.sort_values("maturity_year"),
+                x="maturity_year",
+                y="principal_mn_krw",
+                title="연도별 부채 만기",
+                text="principal_mn_krw",
+            )
+            fig_wall.update_traces(texttemplate="%{text:,.0f}", textposition="outside", cliponaxis=False)
+            st.plotly_chart(compact_fig(fig_wall, 250), width="stretch")
 
-    with d_right:
-        debt_simple = debt_by_year.rename(columns={
-            "maturity_year": "만기연도",
-            "principal_mn_krw": "원금_백만원",
-            "weighted_avg_all_in_rate_pct": "평균금리_%",
-            "number_of_facilities": "건수",
-        })
-        st.write("**만기 요약**")
-        st.dataframe(debt_simple, width="stretch", hide_index=True, height=250)
+        with d_right:
+            debt_simple = debt_by_year.rename(columns={
+                "maturity_year": "만기연도",
+                "principal_mn_krw": "원금_백만원",
+                "weighted_avg_all_in_rate_pct": "평균금리_%",
+                "number_of_facilities": "건수",
+            })
+            st.write("**만기 요약**")
+            st.dataframe(debt_simple, width="stretch", hide_index=True, height=250)
 
     st.markdown("---")
     st.markdown("## 7. 부동산 가치와 순자산가치 변화")
@@ -488,37 +498,40 @@ def render_general_dashboard(
     v4.metric("배당 후 남는 여력", fmt_mn_to_bn(scenario["dividend_cushion"]))
 
     asset_sens = scenario["asset_sensitivity"].copy().sort_values("value_change_pct")
-    val_left, val_right = st.columns([1.15, 0.85])
+    if asset_sens.empty:
+        st.info("선택 회사의 자산별 Cap rate 및 평가액 데이터가 부족하여 자산가치 변화 표를 표시하지 않습니다.")
+    else:
+        val_left, val_right = st.columns([1.15, 0.85])
 
-    with val_left:
-        fig_nav = px.bar(
-            asset_sens,
-            x="value_change_pct",
-            y="asset_name",
-            orientation="h",
-            title=f"자산별 가치 변화: Cap rate +{cap_rate_shock_bp}bp",
-            text="value_change_pct",
-        )
-        fig_nav.update_traces(texttemplate="%{text:.1f}%", textposition="outside", cliponaxis=False)
-        st.plotly_chart(compact_fig(fig_nav, 270), width="stretch")
+        with val_left:
+            fig_nav = px.bar(
+                asset_sens,
+                x="value_change_pct",
+                y="asset_name",
+                orientation="h",
+                title=f"자산별 가치 변화: Cap rate +{cap_rate_shock_bp}bp",
+                text="value_change_pct",
+            )
+            fig_nav.update_traces(texttemplate="%{text:.1f}%", textposition="outside", cliponaxis=False)
+            st.plotly_chart(compact_fig(fig_nav, 270), width="stretch")
 
-    with val_right:
-        sens_simple = asset_sens[[
-            "asset_name",
-            "cap_rate_pct_20251231",
-            "appraised_value_mn_krw_20251231",
-            "value_under_cap_rate_shock_mn_krw",
-            "value_change_pct",
-        ]].copy()
-        sens_simple = sens_simple.rename(columns={
-            "asset_name": "자산",
-            "cap_rate_pct_20251231": "현재_Cap_rate_%",
-            "appraised_value_mn_krw_20251231": "현재가치_백만원",
-            "value_under_cap_rate_shock_mn_krw": "시나리오후_가치_백만원",
-            "value_change_pct": "가치변화_%",
-        })
-        st.write("**자산가치 변화 표**")
-        st.dataframe(sens_simple, width="stretch", hide_index=True, height=270)
+        with val_right:
+            sens_simple = asset_sens[[
+                "asset_name",
+                "cap_rate_pct_20251231",
+                "appraised_value_mn_krw_20251231",
+                "value_under_cap_rate_shock_mn_krw",
+                "value_change_pct",
+            ]].copy()
+            sens_simple = sens_simple.rename(columns={
+                "asset_name": "자산",
+                "cap_rate_pct_20251231": "현재_Cap_rate_%",
+                "appraised_value_mn_krw_20251231": "현재가치_백만원",
+                "value_under_cap_rate_shock_mn_krw": "시나리오후_가치_백만원",
+                "value_change_pct": "가치변화_%",
+            })
+            st.write("**자산가치 변화 표**")
+            st.dataframe(sens_simple, width="stretch", hide_index=True, height=270)
 
     st.markdown("---")
     st.markdown("## 8. 자료 출처와 계산 기준")

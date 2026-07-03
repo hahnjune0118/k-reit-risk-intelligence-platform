@@ -470,6 +470,10 @@ def build_asset_score_decomposition(asset_row: pd.Series) -> pd.DataFrame:
 
 def build_asset_risk_table(assets: pd.DataFrame) -> pd.DataFrame:
     df = assets.copy()
+    if df.empty:
+        df["asset_risk_score"] = pd.Series(dtype="float64")
+        df["asset_risk_level"] = pd.Series(dtype="object")
+        return df
     df["asset_risk_score"] = 0
 
     # High tenant concentration is stable when credit is strong but concentration still matters for DD.
@@ -618,40 +622,61 @@ def build_interactive_scenario_outputs(
     stressed_payout = common_dividend / stressed_ffo * 100 if pd.notna(common_dividend) and pd.notna(stressed_ffo) and stressed_ffo > 0 else pd.NA
     dividend_cushion = stressed_ffo - common_dividend if pd.notna(common_dividend) and pd.notna(stressed_ffo) else pd.NA
 
-    asset_sensitivity = assets[[
+    asset_cols = [
         "asset_name",
         "asset_type",
         "appraised_value_mn_krw_20251231",
         "cap_rate_pct_20251231",
         "source_confidence",
-    ]].copy()
-    asset_sensitivity["current_noi_proxy_mn_krw"] = (
-        asset_sensitivity["appraised_value_mn_krw_20251231"]
-        * asset_sensitivity["cap_rate_pct_20251231"]
-        / 100
-    )
-    asset_sensitivity["stressed_cap_rate_pct"] = asset_sensitivity["cap_rate_pct_20251231"] + cap_rate_shock_bp / 100
-    asset_sensitivity["value_under_cap_rate_shock_mn_krw"] = (
-        asset_sensitivity["current_noi_proxy_mn_krw"]
-        / (asset_sensitivity["stressed_cap_rate_pct"] / 100)
-    )
-    asset_sensitivity["value_change_mn_krw"] = (
-        asset_sensitivity["value_under_cap_rate_shock_mn_krw"]
-        - asset_sensitivity["appraised_value_mn_krw_20251231"]
-    )
-    asset_sensitivity["value_change_pct"] = (
-        asset_sensitivity["value_change_mn_krw"]
-        / asset_sensitivity["appraised_value_mn_krw_20251231"]
-        * 100
-    )
+    ]
+    asset_sensitivity = assets[[col for col in asset_cols if col in assets.columns]].copy()
+    for col in asset_cols:
+        if col not in asset_sensitivity.columns:
+            asset_sensitivity[col] = pd.Series(dtype="object")
 
-    total_appraised_value = asset_sensitivity["appraised_value_mn_krw_20251231"].sum()
-    total_value_change = asset_sensitivity["value_change_mn_krw"].sum()
-    stressed_asset_value = total_appraised_value + total_value_change
-    stressed_nav = base_nav + total_value_change if pd.notna(base_nav) else pd.NA
-    nav_change_pct = total_value_change / base_nav * 100 if pd.notna(base_nav) and base_nav else pd.NA
-    base_ltv_proxy = principal / total_appraised_value * 100 if total_appraised_value else pd.NA
-    stressed_ltv_proxy = principal / stressed_asset_value * 100 if stressed_asset_value else pd.NA
+    if asset_sensitivity.empty:
+        for col in [
+            "current_noi_proxy_mn_krw",
+            "stressed_cap_rate_pct",
+            "value_under_cap_rate_shock_mn_krw",
+            "value_change_mn_krw",
+            "value_change_pct",
+        ]:
+            asset_sensitivity[col] = pd.Series(dtype="float64")
+        total_appraised_value = pd.NA
+        total_value_change = pd.NA
+        stressed_nav = pd.NA
+        nav_change_pct = pd.NA
+        base_ltv_proxy = latest_kpi.get("leverage_pct", pd.NA)
+        stressed_ltv_proxy = pd.NA
+    else:
+        asset_sensitivity["current_noi_proxy_mn_krw"] = (
+            asset_sensitivity["appraised_value_mn_krw_20251231"]
+            * asset_sensitivity["cap_rate_pct_20251231"]
+            / 100
+        )
+        asset_sensitivity["stressed_cap_rate_pct"] = asset_sensitivity["cap_rate_pct_20251231"] + cap_rate_shock_bp / 100
+        asset_sensitivity["value_under_cap_rate_shock_mn_krw"] = (
+            asset_sensitivity["current_noi_proxy_mn_krw"]
+            / (asset_sensitivity["stressed_cap_rate_pct"] / 100)
+        )
+        asset_sensitivity["value_change_mn_krw"] = (
+            asset_sensitivity["value_under_cap_rate_shock_mn_krw"]
+            - asset_sensitivity["appraised_value_mn_krw_20251231"]
+        )
+        asset_sensitivity["value_change_pct"] = (
+            asset_sensitivity["value_change_mn_krw"]
+            / asset_sensitivity["appraised_value_mn_krw_20251231"]
+            * 100
+        )
+
+        total_appraised_value = asset_sensitivity["appraised_value_mn_krw_20251231"].sum()
+        total_value_change = asset_sensitivity["value_change_mn_krw"].sum()
+        stressed_asset_value = total_appraised_value + total_value_change
+        stressed_nav = base_nav + total_value_change if pd.notna(base_nav) else pd.NA
+        nav_change_pct = total_value_change / base_nav * 100 if pd.notna(base_nav) and base_nav else pd.NA
+        base_ltv_proxy = principal / total_appraised_value * 100 if total_appraised_value else latest_kpi.get("leverage_pct", pd.NA)
+        stressed_ltv_proxy = principal / stressed_asset_value * 100 if stressed_asset_value else pd.NA
 
     ffo_bridge = pd.DataFrame([
         {"step": "현재 현금흐름", "mn_krw": base_ffo, "display_order": 1},
@@ -739,6 +764,8 @@ def scenario_verdict(scenario: dict) -> tuple[str, str, str]:
 
 def build_asset_concentration_table(assets: pd.DataFrame) -> pd.DataFrame:
     df = assets.copy()
+    if df.empty:
+        return df
     total_value = df["appraised_value_mn_krw_20251231"].sum()
     df["portfolio_value_share_pct"] = df["appraised_value_mn_krw_20251231"] / total_value * 100
     df["hhi_component"] = (df["portfolio_value_share_pct"] / 100) ** 2
@@ -748,6 +775,8 @@ def build_asset_concentration_table(assets: pd.DataFrame) -> pd.DataFrame:
 
 def build_tenant_exposure_table(assets: pd.DataFrame) -> pd.DataFrame:
     df = assets.copy()
+    if df.empty:
+        return pd.DataFrame(columns=["major_tenant", "tenant_credit", "appraised_value_mn_krw_20251231", "portfolio_value_share_pct"])
     total_value = df["appraised_value_mn_krw_20251231"].sum()
     tenant = (
         df.groupby(["major_tenant", "tenant_credit"], dropna=False)["appraised_value_mn_krw_20251231"]

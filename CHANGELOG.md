@@ -15,6 +15,9 @@
 - 분석 대상회사를 시가총액 순위 Snapshot 기준으로 정렬하고 종목코드/DART corp_code를 자동 연결
 - 최근 5년 흐름을 금리와 재무지표의 실제값 표로 표시하도록 개선
 - Assurance와 Tax Red Flag 표시를 단일 실무형 요청자료 표로 통합
+- 분석 대상회사 변경 시 Assurance, Tax, Peer Benchmark가 같은 선택 회사 상태로 갱신되도록 개선
+- 회사별 상세 자산·보유세 데이터가 부족한 경우 SK리츠 샘플 데이터를 재사용하지 않고 데이터 부족 및 Peer Snapshot 중심 화면으로 표시
+- Assurance와 Tax의 주요 표를 compact column layout으로 조정하고 공시가격 자료 출처를 보조 expander로 이동
 - Deals 및 KRX 기반 시장가치 분석 비활성화 유지
 - 저장소 문서를 README, Roadmap, Architecture, Reviewer Guide, v12 Feature Summary 중심으로 재구성
 
