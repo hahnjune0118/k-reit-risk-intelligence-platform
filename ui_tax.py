@@ -28,7 +28,7 @@ from config import REALTY_PRICE_API_ENDPOINT_DEFAULT
 from formatting import format_bn_krw, format_pct_from_100
 from api_manager import get_api_key, sanitize_secret_dataframe, sanitize_secret_text
 from tax_data_loader import build_company_tax_dataset, build_tax_history_from_company_tax_data, get_tax_source_status
-from ui_common import compact_fig, render_selected_company_header
+from ui_common import compact_fig, render_data_scope_banner, render_selected_company_header
 from ui_peer import build_peer_metric_table, flags_to_tax_review_table, render_overall_risk_message, style_risk_review_table
 
 
@@ -158,6 +158,7 @@ def render_tax_mode(
 ):
     st.markdown("## T. Tax: 보유세 분석")
     render_selected_company_header(peer_context)
+    render_data_scope_banner(peer_context)
     st.caption(
         "이 화면은 리츠 보유자산의 공시가격/기준시가, 토지·건물 시가표준액, 과세표준, 재산세, "
         "도시지역분, 지방교육세를 연결해 보유세 부담과 FFO 현금 유출 영향을 예비 분석합니다."
@@ -314,6 +315,7 @@ def render_tax_mode(
         st.warning("보유세 계산에 필요한 공시가격/기준시가 데이터가 부족합니다. 예시 데이터 또는 업로드 CSV의 자료 구조를 확인하세요.")
         return
 
+    st.markdown("### Tax Summary")
     latest_year = int(tax_history["year"].max())
     first_year = int(tax_history["year"].min())
     latest_total_tax = annual_summary.loc[annual_summary["year"] == latest_year, "보유세_추정_백만원"].iloc[0]
@@ -340,16 +342,19 @@ def render_tax_mode(
         st.plotly_chart(compact_fig(fig_tax_trend, 260), width="stretch")
     with right:
         latest_asset_tax = tax_history[tax_history["year"] == latest_year].copy().sort_values("보유세_추정_백만원", ascending=False)
+        tax_chart_title = f"{latest_year}E 자산별 보유세" if has_detailed_asset_data else f"{latest_year}E 회사 전체 보유세 추정"
         fig_asset_tax = px.bar(
             latest_asset_tax.head(8),
             x="보유세_추정_백만원",
             y="asset_name",
             orientation="h",
-            title=f"{latest_year}E 자산별 보유세",
+            title=tax_chart_title,
             text="보유세_추정_백만원",
         )
         fig_asset_tax.update_traces(texttemplate="%{text:,.0f}", textposition="outside", cliponaxis=False)
         st.plotly_chart(compact_fig(fig_asset_tax, 260), width="stretch")
+        if not has_detailed_asset_data:
+            st.caption("자산별 상세자료가 제한된 회사는 회사 전체 추정 row를 사용합니다.")
 
     _render_peer_tax_section(peer_context)
 

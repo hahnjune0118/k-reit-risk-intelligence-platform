@@ -10,6 +10,9 @@ from api_real_estate_board import parse_official_price_upload
 from calculations_assurance import (
     build_assurance_asset_priority,
     build_audit_workflow_checklist,
+    build_company_level_asset_tenant_proxy,
+    build_company_level_refinancing_proxy,
+    build_company_level_valuation_proxy,
     build_rmm_assertion_checklist,
 )
 from calculations_peer import calculate_peer_metrics, classify_metric_risk, load_peer_snapshot, summarize_peer_position
@@ -38,6 +41,7 @@ from calculations_tax_review_pack import (
 )
 from dart_financials import company_options, get_recent_5y_financials, get_selected_company_profile, load_reit_master
 from data_loader import load_data
+from data_availability import get_company_data_availability, has_asset_level_data, has_tax_asset_data
 from red_flag_engine import build_assurance_red_flags, build_tax_red_flags, load_red_flag_rules
 from tax_data_loader import (
     build_company_tax_dataset,
@@ -368,3 +372,47 @@ def test_v13_non_sk_tax_review_pack_uses_snapshot_estimate_without_sample_assets
     assert not request_list.empty
     assert "Tax Review Memo 초안" in memo
     assert "ESR켄달스퀘어리츠" in memo
+    assert "회사 전체 Snapshot 기반 추정값" in memo
+    assert request_list["관련 이슈"].str.contains("자산별 상세자료 부족 보완", na=False).any()
+
+
+def test_v13_data_availability_marks_non_sk_as_company_level_fallback():
+    master = load_reit_master()
+    peer_snapshot = load_peer_snapshot()
+    sk_profile = get_selected_company_profile("1위 SK리츠 (395400)", master, peer_snapshot)
+    esr_profile = get_selected_company_profile("2위 ESR켄달스퀘어리츠 (365550)", master, peer_snapshot)
+
+    sk_availability = get_company_data_availability(sk_profile["company_name"], sk_profile, peer_snapshot)
+    esr_availability = get_company_data_availability(esr_profile["company_name"], esr_profile, peer_snapshot)
+
+    assert has_asset_level_data(sk_profile["company_name"], sk_profile) is True
+    assert has_tax_asset_data(sk_profile["company_name"], sk_profile) is True
+    assert has_asset_level_data(esr_profile["company_name"], esr_profile) is False
+    assert has_tax_asset_data(esr_profile["company_name"], esr_profile) is False
+    assert sk_availability["asset_level_real_estate_available"] is True
+    assert esr_availability["asset_level_real_estate_available"] is False
+    assert "회사 전체 Snapshot" in esr_availability["scope_label"]
+    assert "재사용하지 않습니다" in esr_availability["source_note"]
+
+
+def test_v13_assurance_company_level_proxy_tables_render_for_non_sk():
+    master = load_reit_master()
+    peer_snapshot = load_peer_snapshot()
+    metrics = calculate_peer_metrics(peer_snapshot)
+    profile = get_selected_company_profile("2위 ESR켄달스퀘어리츠 (365550)", master, peer_snapshot)
+    recent_5y, _ = get_recent_5y_financials(profile, peer_snapshot, "")
+    row = metrics[metrics["company_name"] == profile["company_name"]].iloc[-1]
+    availability = get_company_data_availability(profile["company_name"], profile, peer_snapshot)
+
+    asset_proxy = build_company_level_asset_tenant_proxy(row, recent_5y, availability["scope_label"])
+    debt_proxy = build_company_level_refinancing_proxy(row, recent_5y, availability["scope_label"])
+    valuation_proxy = build_company_level_valuation_proxy(row, availability, availability["scope_label"])
+
+    for table in [asset_proxy, debt_proxy, valuation_proxy]:
+        assert not table.empty
+        assert {"구분", "지표", "값", "위험수준", "주요 해석", "데이터 기준"}.issubset(table.columns)
+        assert table["데이터 기준"].str.contains("회사 전체 Snapshot", na=False).any()
+
+    assert asset_proxy["지표"].str.contains("투자부동산 / 총자산", na=False).any()
+    assert debt_proxy["지표"].str.contains("유동성 차입금 / 총차입금", na=False).any()
+    assert valuation_proxy["지표"].str.contains("valuation detail availability", na=False).any()

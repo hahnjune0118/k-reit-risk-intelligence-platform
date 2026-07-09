@@ -80,11 +80,19 @@ def estimate_company_holding_tax_from_peer_snapshot(company_name: str, peer_snap
 
     investment_property = pd.to_numeric(pd.Series([row.get("investment_property", pd.NA)]), errors="coerce").iloc[0]
     official_price = pd.to_numeric(pd.Series([row.get("official_price_total", pd.NA)]), errors="coerce").iloc[0]
-    if pd.isna(official_price) and pd.notna(investment_property):
-        official_price = investment_property * 0.55
     estimated_tax = pd.to_numeric(pd.Series([row.get("estimated_holding_tax", pd.NA)]), errors="coerce").iloc[0]
+    source_type = "peer_snapshot_estimate"
+    source_note = "자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정"
     if pd.isna(estimated_tax) and pd.notna(official_price):
         estimated_tax = official_price * 0.011
+        source_type = "official_price_estimate"
+        source_note = "보유세 직접 추정값이 부족하여 공시가격 총액 기반 보수적 proxy 적용"
+    if pd.isna(official_price) and pd.notna(investment_property):
+        official_price = investment_property * 0.55
+        if pd.isna(estimated_tax):
+            estimated_tax = official_price * 0.011
+        source_type = "investment_property_estimate"
+        source_note = "공시가격과 자산별 상세자료가 부족하여 투자부동산 장부금액 기반 proxy 적용"
     ffo = pd.to_numeric(pd.Series([row.get("ffo_proxy", pd.NA)]), errors="coerce").iloc[0]
 
     return pd.DataFrame([
@@ -101,8 +109,8 @@ def estimate_company_holding_tax_from_peer_snapshot(company_name: str, peer_snap
             "estimated_holding_tax": estimated_tax,
             "official_price_growth_5y": 10.0,
             "holding_tax_to_ffo": estimated_tax / ffo if pd.notna(estimated_tax) and pd.notna(ffo) and ffo else pd.NA,
-            "source_type": "peer_snapshot_estimate",
-            "source_note": "자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정",
+            "source_type": source_type,
+            "source_note": source_note,
             "latest_year": row.get("year", pd.NA),
         }
     ])
@@ -129,7 +137,8 @@ def get_tax_source_status(company_name: str, company_tax_data: pd.DataFrame) -> 
     source_types = ", ".join(sorted(company_tax_data["source_type"].dropna().astype(str).unique()))
     latest_year = company_tax_data["latest_year"].dropna().max() if "latest_year" in company_tax_data.columns else pd.NA
     year_text = f"{int(latest_year)}년" if pd.notna(latest_year) else "연도 미확인"
-    if "peer_snapshot_estimate" in source_types or "sample_estimate" in source_types:
+    estimate_types = {"peer_snapshot_estimate", "sample_estimate", "official_price_estimate", "investment_property_estimate"}
+    if any(source_type in source_types for source_type in estimate_types):
         return f"{year_text} / {source_types} / 회사 전체 Snapshot 기반 예시 추정"
     if "data_missing" in source_types:
         return f"{year_text} / 데이터 부족"

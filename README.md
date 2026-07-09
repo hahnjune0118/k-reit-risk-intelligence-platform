@@ -54,6 +54,7 @@ Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 
 - Peer 대비 차입부담, 이자비용 부담, 배당 부담, 보유세 부담 비교
 - Snapshot 데이터를 사용하여 공개 링크에서도 안정적으로 실행
 - 분석 대상회사를 바꾸면 General, Assurance, Tax 화면이 같은 회사 상태로 함께 갱신
+- 자산별 상세자료가 부족한 회사는 회사 전체 Snapshot 기반 proxy 지표로 표시
 
 ### Assurance: 감사위험 분석
 
@@ -64,6 +65,7 @@ Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 
 - RMM(중요왜곡표시위험) 관점의 Red Flag
 - KAM(핵심감사사항) 후보 검토 신호
 - 감사절차 및 요청자료 추천
+- 자산별 임차인·Cap rate·만기 wall이 부족한 회사의 회사 단위 proxy 분석
 
 ### Tax: 보유세 분석
 
@@ -76,6 +78,7 @@ Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 
 - FFO 현금유출 스트레스
 - Tax 요청자료 리스트 자동 생성
 - Tax Review Memo 초안 다운로드
+- 모든 상장리츠에 대해 회사 전체 Snapshot 기반 Tax Review Pack 생성
 
 ### 분석 방법론 및 데이터 출처
 
@@ -103,6 +106,8 @@ Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 
 공개 앱은 시작 시 모든 상장리츠의 DART 자료를 실시간 호출하지 않습니다. 사용자가 사이드바에서 분석 대상회사를 선택하면 해당 회사의 Snapshot 기반 최근 5년 흐름을 우선 사용하고, Snapshot이 부족한 경우에만 선택 회사의 DART 자료를 보조적으로 사용할 수 있도록 설계했습니다.
 
 회사별 상세 자산·보유세 데이터의 가용성은 서로 다를 수 있습니다. 상세 데이터가 부족한 회사는 다른 회사의 자산 샘플을 재사용하지 않고, 회사 전체 Snapshot 기반 예시 추정값을 사용해 Tax Review Pack을 생성합니다. 이 값은 신고 목적 세액이 아니라 예비 검토용 입력값입니다.
+
+v13은 `data_availability.py`에서 회사별 데이터 범위를 판정합니다. 자산별 상세 섹션은 선택 회사의 회사별 상세 데이터가 있을 때만 표시하고, 부족한 경우에는 회사 전체 재무 Snapshot과 Peer Benchmark 기반 proxy 표를 표시합니다.
 
 ## 6. API Key 및 보안
 
@@ -177,6 +182,7 @@ py scripts\refresh_reit_peer_snapshot.py
 - `api_manager.py`: API 인증값 로딩 및 마스킹
 - `dart_financials.py`: 분석 대상회사 마스터, 종목코드/DART corp_code 연결, 최근 5년 재무 흐름 로딩
 - `calculations_peer.py`: Peer metric 및 percentile 계산
+- `data_availability.py`: 회사별 상세 데이터 가용성 및 분석 범위 판정
 - `calculations_tax_review_pack.py`: Tax Issue Matrix, 요청자료, 검토 메모 생성
 - `tax_data_loader.py`: Tax Snapshot 및 회사별 fallback 데이터 로딩
 - `red_flag_engine.py`: Assurance/Tax Red Flag 평가

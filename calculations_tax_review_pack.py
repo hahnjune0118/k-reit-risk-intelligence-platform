@@ -191,6 +191,10 @@ def build_tax_issue_matrix(
 
 
 def build_tax_request_list(issue_matrix: pd.DataFrame) -> pd.DataFrame:
+    data_basis_text = ""
+    if issue_matrix is not None and not issue_matrix.empty and "데이터 기준" in issue_matrix.columns:
+        data_basis_text = " / ".join(issue_matrix["데이터 기준"].dropna().astype(str).unique())
+    estimated_scope = any(keyword in data_basis_text for keyword in ["Snapshot", "추정", "estimate", "peer_snapshot", "proxy"])
     defaults = [
         ("재산세 고지서", "추정 보유세와 실제 고지세액 대사", "보유세 정합성", "높음", "자산별·연도별 고지서"),
         ("토지대장", "토지면적, 지번, 소유 구조 확인", "공시가격 / 장부가액 괴리", "높음", "PNU 또는 소재지 대사"),
@@ -212,7 +216,17 @@ def build_tax_request_list(issue_matrix: pd.DataFrame) -> pd.DataFrame:
                 "요청 목적": purpose,
                 "관련 이슈": issue_text if related in {"보유세 / FFO", "보유세 / 영업수익"} and issue_text else related,
                 "우선순위": priority,
-                "비고": note,
+                "비고": f"{note} / 자산별 상세자료 부족 보완" if estimated_scope and priority == "높음" else note,
+            }
+        )
+    if estimated_scope:
+        rows.append(
+            {
+                "요청자료": "자산별 세부 보유세 산출자료",
+                "요청 목적": "회사 전체 Snapshot 추정값을 자산별 실제 고지세액 및 과세표준과 대사",
+                "관련 이슈": "자산별 상세자료 부족 보완",
+                "우선순위": "높음",
+                "비고": "회사 전체 추정값을 공식 세액처럼 사용하지 않기 위한 보완 요청",
             }
         )
     return pd.DataFrame(rows)
@@ -254,6 +268,13 @@ def build_tax_review_memo(
         for _, row in high_or_warning.head(6).iterrows()
     ) or "- 현재 자동 식별된 높음/주의 항목은 제한적입니다. 원자료 대사 후 판단이 필요합니다."
     request_lines = "\n".join(f"- {row['요청자료']}: {row['요청 목적']}" for _, row in request_list.head(8).iterrows())
+    estimated_scope = any(keyword in str(data_basis) for keyword in ["Snapshot", "추정", "estimate", "peer_snapshot", "proxy"])
+    limitation_note = (
+        "현재 선택 회사의 자산별 상세 공시가격 데이터가 제한되어 회사 전체 Snapshot 기반 추정값을 사용했습니다. "
+        "본 메모는 신고 목적의 세액 산출이나 법률의견이 아니라 공개자료 및 Snapshot 기반의 예비 검토 초안입니다."
+        if estimated_scope
+        else "본 메모는 신고 목적의 세액 산출이나 법률의견이 아니라 공개자료 기반의 예비 검토 초안입니다."
+    )
 
     return f"""# Tax Review Memo 초안
 
@@ -277,5 +298,5 @@ def build_tax_review_memo(
 {request_lines}
 
 ## 5. 한계
-본 메모는 신고 목적의 세액 산출이나 법률의견이 아니라, 공개자료 및 Snapshot 기반의 예비 검토 초안입니다. 최종 판단에는 원자료 확인과 전문가 검토가 필요합니다.
+{limitation_note} 최종 판단에는 원자료 확인과 전문가 검토가 필요합니다.
 """

@@ -149,6 +149,228 @@ def _priority_level(condition: bool, fallback: str = "중간") -> str:
     return "높음" if condition else fallback
 
 
+def _to_number(value):
+    return pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+
+
+def _ratio_text(value) -> str:
+    value = _to_number(value)
+    if pd.isna(value):
+        return "데이터 부족"
+    return f"{value * 100:,.1f}%"
+
+
+def _amount_text_mn(value) -> str:
+    value = _to_number(value)
+    if pd.isna(value):
+        return "데이터 부족"
+    return f"{value / 1000:,.1f}십억원"
+
+
+def _risk_from_ratio(value, yellow: float, red: float, high_is_bad: bool = True) -> str:
+    value = _to_number(value)
+    if pd.isna(value):
+        return "데이터 부족"
+    if high_is_bad:
+        if value >= red:
+            return "높음"
+        if value >= yellow:
+            return "주의"
+    else:
+        if value <= red:
+            return "높음"
+        if value <= yellow:
+            return "주의"
+    return "정상"
+
+
+def _period_growth(recent_5y_financials: pd.DataFrame | None, column: str):
+    if recent_5y_financials is None or recent_5y_financials.empty or column not in recent_5y_financials.columns:
+        return pd.NA
+    ordered = recent_5y_financials.sort_values("year") if "year" in recent_5y_financials.columns else recent_5y_financials
+    values = pd.to_numeric(ordered[column], errors="coerce").dropna()
+    if len(values) < 2 or values.iloc[0] == 0:
+        return pd.NA
+    return values.iloc[-1] / values.iloc[0] - 1
+
+
+def build_company_level_asset_tenant_proxy(
+    peer_row: pd.Series | dict | None,
+    recent_5y_financials: pd.DataFrame | None = None,
+    data_basis: str = "회사 전체 Snapshot",
+) -> pd.DataFrame:
+    """Build company-level lease and asset proxy indicators when property-level detail is unavailable."""
+    row = peer_row if peer_row is not None else {}
+    investment_ratio = row.get("investment_property_to_total_assets", pd.NA)
+    revenue_growth = _period_growth(recent_5y_financials, "operating_revenue")
+    ocf_to_dividends = row.get("operating_cash_flow_to_dividends", pd.NA)
+    dividend_to_ffo = row.get("dividend_to_ffo", pd.NA)
+
+    return pd.DataFrame(
+        [
+            {
+                "구분": "자산 구성",
+                "지표": "투자부동산 / 총자산",
+                "값": _ratio_text(investment_ratio),
+                "위험수준": _risk_from_ratio(investment_ratio, 0.90, 0.97),
+                "주요 해석": "자산별 임차인 상세 대신 회사 전체 자산 집중도를 확인합니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "임대수익",
+                "지표": "최근 5년 영업수익 변화율",
+                "값": _ratio_text(revenue_growth),
+                "위험수준": _risk_from_ratio(revenue_growth, 0.00, -0.10, high_is_bad=False),
+                "주요 해석": "임대수익의 방향성을 통해 공실, 임대료 인상, 임차인 변동 가능성을 간접 점검합니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "현금흐름",
+                "지표": "영업현금흐름 / 배당",
+                "값": _ratio_text(ocf_to_dividends),
+                "위험수준": _risk_from_ratio(ocf_to_dividends, 1.00, 0.80, high_is_bad=False),
+                "주요 해석": "배당 재원의 현금흐름 커버 수준을 통해 배당 지속가능성 신호를 봅니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "배당",
+                "지표": "배당 / FFO",
+                "값": _ratio_text(dividend_to_ffo),
+                "위험수준": _risk_from_ratio(dividend_to_ffo, 0.95, 1.10),
+                "주요 해석": "FFO 대비 배당 부담이 크면 배당가능재원과 세무·회계 조정 검토가 필요합니다.",
+                "데이터 기준": data_basis,
+            },
+        ]
+    )
+
+
+def build_company_level_refinancing_proxy(
+    peer_row: pd.Series | dict | None,
+    recent_5y_financials: pd.DataFrame | None = None,
+    data_basis: str = "회사 전체 Snapshot",
+) -> pd.DataFrame:
+    """Build company-level refinancing indicators when debt maturity-wall detail is unavailable."""
+    row = peer_row if peer_row is not None else {}
+    debt_to_assets = row.get("debt_to_assets", pd.NA)
+    current_debt_to_total_debt = row.get("current_debt_to_total_debt", pd.NA)
+    interest_to_ffo = row.get("interest_expense_to_ffo", pd.NA)
+    interest_expense = _to_number(row.get("interest_expense", pd.NA))
+    revenue = _to_number(row.get("operating_revenue", pd.NA))
+    interest_to_revenue = interest_expense / revenue if pd.notna(interest_expense) and pd.notna(revenue) and revenue else pd.NA
+    interest_growth = _period_growth(recent_5y_financials, "interest_expense")
+
+    return pd.DataFrame(
+        [
+            {
+                "구분": "차입 부담",
+                "지표": "총차입금 / 총자산",
+                "값": _ratio_text(debt_to_assets),
+                "위험수준": _risk_from_ratio(debt_to_assets, 0.45, 0.55),
+                "주요 해석": "자산 대비 차입부담을 통해 차환과 담보여력 검토 우선순위를 정합니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "만기 proxy",
+                "지표": "유동성 차입금 / 총차입금",
+                "값": _ratio_text(current_debt_to_total_debt),
+                "위험수준": _risk_from_ratio(current_debt_to_total_debt, 0.25, 0.40),
+                "주요 해석": "만기 wall 상세가 없을 때 1년 내 상환 부담을 간접적으로 확인합니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "이자 부담",
+                "지표": "이자비용 / FFO",
+                "값": _ratio_text(interest_to_ffo),
+                "위험수준": _risk_from_ratio(interest_to_ffo, 0.20, 0.35),
+                "주요 해석": "FFO가 이자비용을 흡수할 수 있는지 보는 회사 단위 proxy입니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "이자 부담",
+                "지표": "이자비용 / 영업수익",
+                "값": _ratio_text(interest_to_revenue),
+                "위험수준": _risk_from_ratio(interest_to_revenue, 0.12, 0.20),
+                "주요 해석": "임대수익 대비 금융비용 부담이 커지는지 확인합니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "추세",
+                "지표": "최근 5년 이자비용 증가율",
+                "값": _ratio_text(interest_growth),
+                "위험수준": _risk_from_ratio(interest_growth, 0.30, 0.70),
+                "주요 해석": "금리 상승과 차환 조건 악화가 비용 구조에 반영되는지 확인합니다.",
+                "데이터 기준": data_basis,
+            },
+        ]
+    )
+
+
+def build_company_level_valuation_proxy(
+    peer_row: pd.Series | dict | None,
+    availability: dict | None = None,
+    data_basis: str = "회사 전체 Snapshot",
+) -> pd.DataFrame:
+    """Build company-level valuation indicators when asset-level cap-rate/NAV detail is unavailable."""
+    row = peer_row if peer_row is not None else {}
+    availability = availability or {}
+    debt_to_assets = row.get("debt_to_assets", pd.NA)
+    official_to_investment = row.get("official_price_to_investment_property", pd.NA)
+    cap_rate_state = "자산별 Cap rate 없음" if not availability.get("cap_rate_detail_available", False) else "자산별 Cap rate 사용 가능"
+
+    return pd.DataFrame(
+        [
+            {
+                "구분": "가치 규모",
+                "지표": "투자부동산 장부가액",
+                "값": _amount_text_mn(row.get("investment_property", pd.NA)),
+                "위험수준": "정상" if pd.notna(_to_number(row.get("investment_property", pd.NA))) else "데이터 부족",
+                "주요 해석": "자산별 평가보고서가 없을 때 회사 전체 투자부동산 규모를 기준으로 중요성을 판단합니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "현금흐름",
+                "지표": "FFO",
+                "값": _amount_text_mn(row.get("ffo_proxy", pd.NA)),
+                "위험수준": "정상" if pd.notna(_to_number(row.get("ffo_proxy", pd.NA))) else "데이터 부족",
+                "주요 해석": "공정가치 민감도와 배당 지속가능성을 함께 해석하기 위한 회사 단위 지표입니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "재무구조",
+                "지표": "차입금",
+                "값": _amount_text_mn(row.get("borrowings_total", pd.NA)),
+                "위험수준": _risk_from_ratio(debt_to_assets, 0.45, 0.55),
+                "주요 해석": "가치 하락 시 LTV와 covenant 여유에 미치는 영향을 간접 검토합니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "재무구조",
+                "지표": "차입금 / 총자산",
+                "값": _ratio_text(debt_to_assets),
+                "위험수준": _risk_from_ratio(debt_to_assets, 0.45, 0.55),
+                "주요 해석": "NAV 민감도를 직접 계산하지 못하는 경우에도 재무구조 취약성을 확인합니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "보유세 proxy",
+                "지표": "공시가격 / 투자부동산",
+                "값": _ratio_text(official_to_investment),
+                "위험수준": _risk_from_ratio(official_to_investment, 0.70, 0.85),
+                "주요 해석": "공시가격 부담과 투자부동산 장부가액의 관계를 통해 보유세·평가 검토 포인트를 잡습니다.",
+                "데이터 기준": data_basis,
+            },
+            {
+                "구분": "자료 범위",
+                "지표": "valuation detail availability",
+                "값": cap_rate_state,
+                "위험수준": "데이터 부족" if "없음" in cap_rate_state else "정상",
+                "주요 해석": "자산별 Cap rate가 부족하면 NAV 민감도 카드는 숨기고 회사 전체 proxy를 사용합니다.",
+                "데이터 기준": data_basis,
+            },
+        ]
+    )
+
+
 def build_audit_workflow_checklist(
     latest_kpi: pd.Series,
     debt_schedule: pd.DataFrame,

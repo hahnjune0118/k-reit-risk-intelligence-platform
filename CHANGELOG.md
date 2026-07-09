@@ -8,6 +8,9 @@
 - Tax Review Memo 초안 생성 기능 추가
 - Tax mode 중심 UI 재정렬
 - SK리츠 외 상장리츠도 Tax 기능이 작동하도록 Snapshot/API fallback 구조 보완
+- 회사별 상세 데이터 가용성을 `data_availability.py`에서 판정하도록 정리
+- 비-SK 리츠에 SK리츠 자산 상세자료가 재사용되지 않도록 회사 전체 Snapshot 기반 fallback 명시
+- Assurance 화면에 자산·임차인, 차입금 만기·차환, 가치·NAV 회사 단위 proxy 표 추가
 - 일반모드 설명 섹션 기본 접힘 처리
 - Tax 분석 가정 패널 접근성 개선
 

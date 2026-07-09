@@ -113,6 +113,43 @@ def render_selected_company_header(peer_context: dict | None):
     st.caption(f"데이터 기준: {data_basis}")
 
 
+def _availability_mark(value: bool) -> str:
+    return "O" if value else "X"
+
+
+def render_data_scope_banner(peer_context: dict | None):
+    if not peer_context:
+        return
+    profile = peer_context.get("selected_company_profile", {}) or {}
+    availability = peer_context.get("data_availability", {}) or {}
+    company_name = profile.get("company_name") or peer_context.get("target_company", "선택 리츠")
+    stock_code = profile.get("stock_code", "")
+    label = f"{company_name} ({stock_code})" if stock_code else company_name
+    latest_year = availability.get("latest_year") or "연도 미확인"
+    scope_label = availability.get("scope_label", peer_context.get("detail_data_basis", "Snapshot 기준"))
+
+    with st.container(border=True):
+        st.caption(f"현재 분석 대상: {label}")
+        st.caption(f"분석 범위: {scope_label} / 데이터 기준: {latest_year} / source_type: {availability.get('source_type', 'unknown')}")
+        st.dataframe(
+            pd.DataFrame([
+                {"상세 데이터": "자산별 보유세 proxy", "가용성": _availability_mark(availability.get("asset_level_tax_available", False))},
+                {"상세 데이터": "임차인 상세", "가용성": _availability_mark(availability.get("tenant_detail_available", False))},
+                {"상세 데이터": "차입금 만기", "가용성": _availability_mark(availability.get("debt_maturity_detail_available", False))},
+                {"상세 데이터": "Cap rate", "가용성": _availability_mark(availability.get("cap_rate_detail_available", False))},
+            ]),
+            width="stretch",
+            hide_index=True,
+            height=145,
+            column_config={
+                "상세 데이터": st.column_config.TextColumn("상세 데이터", width="medium"),
+                "가용성": st.column_config.TextColumn("가용성", width="small"),
+            },
+        )
+        if availability.get("source_note"):
+            st.caption(availability["source_note"])
+
+
 def fmt_mn_to_bn(value):
     if _is_na(value):
         return "N/A"

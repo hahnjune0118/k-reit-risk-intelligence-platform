@@ -122,6 +122,20 @@ def render_methodology_page(
         "Tax Review Pack은 신고 목적의 확정 세액이나 법률의견이 아닙니다. 공시자료와 Snapshot 기반으로 초기 검토 포인트를 "
         "빠르게 구조화하기 위한 산출물이며, 최종 판단에는 원자료 확인과 전문가 검토가 필요합니다."
     )
+
+    st.markdown("### 회사별 상세 데이터가 부족한 경우의 처리 방식")
+    st.write(
+        "모든 상장리츠는 회사 전체 Peer Benchmark와 Tax Snapshot을 기준으로 Tax Review Pack을 생성합니다. "
+        "다만 자산별 임차인, Cap rate, 차입금 만기 wall, 자산별 보유세 상세표는 회사별로 공개자료의 구조화 수준이 다를 수 있습니다."
+    )
+    st.info(
+        "자산별 상세 섹션은 선택 회사의 회사별 상세 데이터가 있을 때만 표시합니다. 상세 데이터가 부족한 회사에는 다른 회사의 "
+        "자산 목록이나 임차인 정보를 재사용하지 않고, 회사 전체 Snapshot 기반 proxy 지표를 표시합니다."
+    )
+    st.caption(
+        "Snapshot 또는 예비 추정값은 `source_type`과 `source_note`로 구분합니다. 이 값은 공식 세액, 감사조서, 회사 내부자료를 "
+        "대체하지 않으며 최종 판단에는 원천자료 대사와 전문가 검토가 필요합니다."
+    )
     if peer_context:
         peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())
         rules = peer_context.get("red_flag_rules", {})

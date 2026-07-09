@@ -5,6 +5,9 @@ from calculations_assurance import (
     build_assurance_asset_priority,
     build_assurance_workpaper_index,
     build_audit_workflow_checklist,
+    build_company_level_asset_tenant_proxy,
+    build_company_level_refinancing_proxy,
+    build_company_level_valuation_proxy,
     build_icfr_control_points,
     build_kam_candidate_table,
     build_rmm_assertion_checklist,
@@ -16,7 +19,7 @@ from ui_peer import (
     render_overall_risk_message,
     style_risk_review_table,
 )
-from ui_common import render_selected_company_header
+from ui_common import render_data_scope_banner, render_selected_company_header
 
 
 def _stage_rows(workflow: pd.DataFrame, stages: list[str]) -> pd.DataFrame:
@@ -77,6 +80,63 @@ def _render_compact_dataframe(df: pd.DataFrame, height: int = 260, column_config
         height=height,
         column_config=column_config,
     )
+
+
+def _target_peer_row(peer_context: dict | None) -> pd.Series | None:
+    if not peer_context:
+        return None
+    peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())
+    target_company = peer_context.get("target_company", "")
+    if peer_metrics is None or peer_metrics.empty or "company_name" not in peer_metrics.columns:
+        return None
+    matched = peer_metrics[peer_metrics["company_name"].astype(str).str.strip() == str(target_company).strip()]
+    if matched.empty:
+        return None
+    sort_cols = [col for col in ["year", "period"] if col in matched.columns]
+    return matched.sort_values(sort_cols).iloc[-1] if sort_cols else matched.iloc[-1]
+
+
+def _proxy_column_config() -> dict:
+    return {
+        "구분": st.column_config.TextColumn("구분", width="small"),
+        "지표": st.column_config.TextColumn("지표", width="medium"),
+        "값": st.column_config.TextColumn("값", width="small"),
+        "위험수준": st.column_config.TextColumn("위험", width="small"),
+        "주요 해석": st.column_config.TextColumn("주요 해석", width="large"),
+        "데이터 기준": st.column_config.TextColumn("데이터 기준", width="medium"),
+    }
+
+
+def _render_company_level_proxy_tables(peer_context: dict | None):
+    peer_row = _target_peer_row(peer_context)
+    if peer_row is None:
+        st.warning("회사 단위 proxy 분석에 필요한 Peer Snapshot 데이터가 부족합니다.")
+        return
+
+    data_availability = (peer_context or {}).get("data_availability", {}) or {}
+    recent_5y = (peer_context or {}).get("recent_5y_financials", pd.DataFrame())
+    data_basis = data_availability.get("scope_label") or (peer_context or {}).get("detail_data_basis", "회사 전체 Snapshot")
+
+    st.write("**회사 단위 Assurance proxy 분석**")
+    st.caption(
+        "자산별 임차인, 차입금 만기 wall, Cap rate 상세자료가 부족한 경우에는 회사 전체 재무 Snapshot과 "
+        "Peer Benchmark를 사용해 감사계획 단계의 위험 신호를 표시합니다."
+    )
+    st.info(
+        "자산별 Cap rate 데이터가 부족하면 NAV 민감도 카드를 계산하지 않고, 회사 전체 재무 Snapshot 기반 가치 민감도 proxy를 표시합니다."
+    )
+
+    with st.expander("자산·임차인 proxy", expanded=True):
+        asset_proxy = build_company_level_asset_tenant_proxy(peer_row, recent_5y, data_basis)
+        _render_compact_dataframe(asset_proxy, height=210, column_config=_proxy_column_config())
+
+    with st.expander("차입금 만기·차환 proxy", expanded=True):
+        debt_proxy = build_company_level_refinancing_proxy(peer_row, recent_5y, data_basis)
+        _render_compact_dataframe(debt_proxy, height=240, column_config=_proxy_column_config())
+
+    with st.expander("부동산 가치·NAV proxy", expanded=True):
+        valuation_proxy = build_company_level_valuation_proxy(peer_row, data_availability, data_basis)
+        _render_compact_dataframe(valuation_proxy, height=260, column_config=_proxy_column_config())
 
 
 def _render_peer_assurance_section(peer_context: dict | None):
@@ -149,15 +209,17 @@ def render_assurance_mode(
 ):
     st.markdown("## A. Assurance: 감사위험 분석")
     render_selected_company_header(peer_context)
+    render_data_scope_banner(peer_context)
     st.caption(
         "이 화면은 리츠회사 감사계획 단계에서 어떤 자산과 계정을 중점적으로 봐야 하는지 판단하기 위한 참고 도구입니다. "
         "기업과 기업환경의 이해, 위험평가절차, 통제테스트, 실증절차 순서로 RMM(중요왜곡표시위험), "
         "KAM(핵심감사사항), 내부회계관리제도 핵심 통제 포인트를 정리합니다."
     )
     if peer_context and not peer_context.get("detail_data_available", True):
-        st.warning(
-            "해당 회사의 자산별 상세 데이터가 부족하여 Peer Benchmark와 재무 Snapshot 중심으로 표시합니다. "
-            "자산별 감사 중점 우선순위는 상세 자산 데이터가 확보되는 범위 내에서만 표시됩니다."
+        st.info(
+            "현재 선택 회사는 회사 전체 재무 Snapshot 및 Peer Benchmark를 기준으로 분석합니다. "
+            "자산별 임차인·Cap rate·만기 wall 등 상세 데이터는 공개자료에서 충분히 구조화되지 않아, "
+            "상세 표 대신 회사 전체 기준의 proxy 지표를 표시합니다."
         )
     run_id = (peer_context or {}).get("analysis_run_id", 0)
 
@@ -185,7 +247,8 @@ def render_assurance_mode(
         st.write("**감사 중점 자산 우선순위**")
         st.caption("`시나리오가치변화_%`는 좌측 사이드바의 예상 거시경제 상황과 Cap rate(자본환원율) 충격 가정에 따라 즉시 달라집니다.")
         if assurance_assets.empty:
-            st.info("선택 회사의 자산별 상세 데이터가 부족하여 감사 중점 자산 우선순위 표를 표시하지 않습니다.")
+            st.info("자산별 상세자료가 부족하여 감사 중점 자산 우선순위 대신 회사 전체 proxy 지표를 표시합니다.")
+            _render_company_level_proxy_tables(peer_context)
         else:
             _render_compact_dataframe(
                 assurance_assets.head(8),

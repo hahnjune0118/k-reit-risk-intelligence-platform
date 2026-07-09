@@ -23,6 +23,7 @@ from calculations_transmission import (
     build_transmission_narrative,
 )
 from data_loader import load_data
+from data_availability import get_company_data_availability, has_asset_level_data
 from red_flag_engine import build_assurance_red_flags, build_tax_red_flags, load_red_flag_rules
 from ui_general import render_general_dashboard
 from ui_layout import apply_page_config, render_intro, render_mode_selector
@@ -30,15 +31,8 @@ from ui_professional import render_professional_page
 from ui_sidebar import render_data_sidebar
 
 
-DETAILED_SAMPLE_STOCK_CODE = "395400"
-DETAILED_SAMPLE_COMPANY = "SK리츠"
-
-
 def _has_detailed_company_sample(company_profile: dict) -> bool:
-    return (
-        str(company_profile.get("stock_code", "")).zfill(6) == DETAILED_SAMPLE_STOCK_CODE
-        or str(company_profile.get("company_name", "")).strip() == DETAILED_SAMPLE_COMPANY
-    )
+    return has_asset_level_data(company_profile.get("company_name", ""), company_profile)
 
 
 def _empty_like(df: pd.DataFrame) -> pd.DataFrame:
@@ -190,6 +184,7 @@ selected_debt_schedule = selected_detail["debt_schedule"]
 selected_debt_summary = selected_detail["debt_summary"]
 detail_data_available = selected_detail["detail_available"]
 detail_data_basis = selected_detail["detail_basis"]
+data_availability = get_company_data_availability(target_company, selected_company_profile, peer_snapshot)
 
 if recent_5y_financials is not None and not recent_5y_financials.empty:
     selected_latest_fin = recent_5y_financials.sort_values("year").iloc[-1]
@@ -242,6 +237,7 @@ peer_context = {
     "recent_5y_status": recent_5y_status,
     "detail_data_available": detail_data_available,
     "detail_data_basis": detail_data_basis,
+    "data_availability": data_availability,
     "analysis_run_id": analysis_run_id,
     "peer_snapshot": peer_snapshot,
     "peer_metrics": peer_metrics,
