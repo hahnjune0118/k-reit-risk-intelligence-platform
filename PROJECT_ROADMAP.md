@@ -2,25 +2,28 @@
 
 ## 현재 위치
 
-현재 활성 개발 및 공개 포트폴리오 버전은 **v12 - Peer Benchmark & Red Flag Engine**입니다.
+현재 활성 개발 및 공개 포트폴리오 버전은 **v13 - Tax Review Pack Generator**입니다.
 
-v12는 상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터, Peer Snapshot을 연결하여 Assurance와 Tax 업무에서 반복적으로 수행되는 위험 검토를 자동화하는 버전입니다.
+v13은 상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터, Peer Snapshot을 연결하여 Tax 업무에서 반복적으로 수행되는 보유세 검토와 요청자료 정리를 자동화하는 버전입니다.
 
-## v12 현재 범위
+## v13 현재 범위
 
 활성 Streamlit 모드는 네 가지입니다.
 
 1. 일반 정보 및 시나리오
-2. Assurance: 감사위험 분석
-3. Tax: 보유세 분석
+2. Tax: 보유세 분석
+3. Assurance: 감사위험 분석
 4. 분석 방법론 및 데이터 출처
 
-v12의 중심 기능:
+v13의 중심 기능:
 
 - 상장리츠 Peer Benchmark
-- Assurance Red Flag Engine
 - Tax 보유세 부담 Benchmark
-- Red Flag별 감사절차 및 요청자료 추천
+- Tax Issue Matrix
+- Holding Tax Reconciliation
+- Tax 요청자료 리스트 자동 생성
+- Tax Review Memo 초안 생성
+- Assurance Red Flag Engine 유지
 - Snapshot 기반 공개 리뷰 경험
 - API Key 비노출 보안 구조
 
@@ -33,21 +36,21 @@ v12의 중심 기능:
 - KRX 기반 market-implied valuation
 - 거래 목적 가치평가
 
-위 기능은 삭제 대상이 아니라 향후 별도 모듈 후보입니다. 다만 공개 포트폴리오 버전에서는 Assurance와 Tax workflow의 완성도와 안정성을 우선합니다.
+위 기능은 삭제 대상이 아니라 향후 별도 모듈 후보입니다. 다만 공개 포트폴리오 버전에서는 Tax workflow의 완성도와 안정성을 우선합니다.
 
-## v13 후보
+## v14 후보
 
-v13에서는 다음 항목을 검토할 수 있습니다.
+v14에서는 다음 항목을 검토할 수 있습니다.
 
-- Peer Benchmark Snapshot 갱신 프로세스 고도화
-- 여러 회계연도 trend 기반 Red Flag
-- Evidence request checklist 내보내기
-- 감사계획 메모 초안 자동화
+- Tax Snapshot 갱신 프로세스 고도화
+- 여러 회계연도 trend 기반 Tax Red Flag
+- 요청자료 리스트 export 고도화
+- 공시가격·고지세액 대사 자동화
 - 보유세 민감도 분석의 자산별 상세화
 
-## v14 이후 후보
+## v15 이후 후보
 
-v14 이후에는 다음 확장을 별도 모듈로 검토할 수 있습니다.
+v15 이후에는 다음 확장을 별도 모듈로 검토할 수 있습니다.
 
 - 안정화된 KRX 기반 시장가치 비교
 - Deals 분석 모드 재도입

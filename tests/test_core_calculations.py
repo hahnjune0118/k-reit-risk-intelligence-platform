@@ -27,10 +27,24 @@ from calculations_tax import (
     build_proxy_official_price_history,
     build_reit_tax_workflow_checklist,
     build_tax_risk_register,
+    summarize_holding_tax_history,
+)
+from calculations_tax_review_pack import (
+    build_ffo_cash_outflow_stress,
+    build_holding_tax_reconciliation,
+    build_tax_issue_matrix,
+    build_tax_request_list,
+    build_tax_review_memo,
 )
 from dart_financials import company_options, get_recent_5y_financials, get_selected_company_profile, load_reit_master
 from data_loader import load_data
 from red_flag_engine import build_assurance_red_flags, build_tax_red_flags, load_red_flag_rules
+from tax_data_loader import (
+    build_company_tax_dataset,
+    build_tax_history_from_company_tax_data,
+    get_tax_source_status,
+    load_tax_snapshot,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -314,3 +328,43 @@ def test_v12_sidebar_state_contract_covers_app_direct_access_keys():
 
     assert app_direct_keys.issubset(sidebar_return_keys)
     assert required_contract_keys.issubset(sidebar_return_keys)
+
+
+def test_v13_tax_snapshot_covers_all_master_reits():
+    master = load_reit_master()
+    tax_snapshot = load_tax_snapshot()
+
+    assert set(master["company_name"]).issubset(set(tax_snapshot["company_name"]))
+    assert {"company_name", "asset_name", "estimated_holding_tax", "source_type", "source_note"}.issubset(tax_snapshot.columns)
+
+
+def test_v13_non_sk_tax_review_pack_uses_snapshot_estimate_without_sample_assets():
+    master = load_reit_master()
+    peer_snapshot = load_peer_snapshot()
+    profile = get_selected_company_profile("2위 ESR켄달스퀘어리츠 (365550)", master, peer_snapshot)
+    recent_5y, _ = get_recent_5y_financials(profile, peer_snapshot, "")
+    latest_kpi = load_data("2026-07-01")["kpis"].sort_values("period_end").iloc[-1].copy()
+    latest_kpi["ffo_mn_krw"] = recent_5y.sort_values("year").iloc[-1]["ffo_proxy"]
+    company_tax = build_company_tax_dataset(profile["company_name"], peer_snapshot, profile)
+    tax_history = build_tax_history_from_company_tax_data(company_tax)
+    annual_summary = summarize_holding_tax_history(tax_history)
+    reconciliation = build_holding_tax_reconciliation(tax_history, latest_kpi)
+    ffo_stress = build_ffo_cash_outflow_stress(latest_kpi, annual_summary, 10.0, 5.0)
+    rules = load_red_flag_rules()
+    metrics = calculate_peer_metrics(peer_snapshot)
+    flags = build_tax_red_flags(profile["company_name"], metrics, rules)
+    data_basis = get_tax_source_status(profile["company_name"], company_tax)
+    issue_matrix = build_tax_issue_matrix(flags, reconciliation, ffo_stress, data_basis)
+    request_list = build_tax_request_list(issue_matrix)
+    memo = build_tax_review_memo(profile, data_basis, issue_matrix, reconciliation, request_list, ffo_stress)
+
+    assert not company_tax.empty
+    assert company_tax["asset_name"].tolist() == ["회사 전체 추정"]
+    assert company_tax["source_type"].iloc[0] == "peer_snapshot_estimate"
+    assert not tax_history.empty
+    assert "SK서린빌딩" not in tax_history["asset_name"].astype(str).tolist()
+    assert not reconciliation.empty
+    assert not issue_matrix.empty
+    assert not request_list.empty
+    assert "Tax Review Memo 초안" in memo
+    assert "ESR켄달스퀘어리츠" in memo

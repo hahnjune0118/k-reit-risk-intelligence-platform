@@ -2,11 +2,11 @@
 
 ## 1. 프로젝트 개요
 
-본 프로젝트는 상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터, Peer 비교 데이터를 연결하여 감사위험과 보유세 부담을 분석하는 Streamlit 기반 리스크 분석 플랫폼입니다.
+본 프로젝트는 상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터, Peer 비교 데이터를 연결하여 보유세 부담과 감사위험을 분석하는 Streamlit 기반 리스크 분석 플랫폼입니다.
 
 단순히 DART 공시나 리츠 투자보고서를 조회하는 화면이 아니라, 회계·세무·감사 실무자가 반복적으로 수행하는 자료 수집, 주요 지표 비교, 위험 신호 식별, 요청자료 정리 과정을 하나의 업무 흐름으로 연결하는 것을 목표로 합니다.
 
-현재 공개 버전은 Assurance와 Tax 업무 자동화에 초점을 둡니다. 투자추천, 감사의견, 세무신고서, 법률 자문, 정식 가치평가 의견을 제공하지 않으며, 공개 포트폴리오 검토를 위한 예비 분석 도구입니다.
+현재 공개 버전은 Tax 업무 자동화에 우선순위를 둡니다. 투자추천, 감사의견, 세무신고서, 법률 자문, 정식 가치평가 의견을 제공하지 않으며, 공개 포트폴리오 검토를 위한 예비 분석 도구입니다.
 
 리츠를 분석 대상으로 선택한 이유는 공개자료만으로도 자산, 임대수익, 차입금, 공정가치 평가, 보유세 부담 등 감사·세무 리스크 분석에 필요한 핵심 정보를 구조화할 수 있기 때문입니다. 리츠는 주요 수익이 보유 부동산 임대료에서 발생해 수익 구조를 비교적 명확하게 이해할 수 있고, 상장리츠는 사업보고서와 분기보고서를 통해 주요 분석 기초자료가 공개됩니다.
 
@@ -23,15 +23,15 @@ DART, ECOS, V-World, 리츠 공시자료는 모두 유용하지만 실무에서 
 
 ## 3. 현재 버전
 
-Current version: **v12 - Peer Benchmark & Red Flag Engine**
+Current version: **v13 - Tax Review Pack Generator**
 
-v12는 상장리츠 전체를 비교대상군으로 설정하고, 선택한 리츠 회사의 감사위험 및 보유세 부담이 Peer 대비 어느 영역에서 높게 나타나는지 자동으로 식별하는 버전입니다.
+v13은 v12의 Tax Red Flag 결과를 실제 Tax Advisory 초기 검토 산출물로 전환하는 버전입니다. 선택한 상장리츠의 보유세 부담, 공시가격 변동, FFO 영향, Peer 비교 결과를 바탕으로 Tax Issue Matrix, 보유세 정합성 검토표, 요청자료 리스트, 검토 메모 초안을 자동 생성합니다.
 
 활성 모드:
 
 1. 일반 정보 및 시나리오
-2. Assurance: 감사위험 분석
-3. Tax: 보유세 분석
+2. Tax: 보유세 분석
+3. Assurance: 감사위험 분석
 4. 분석 방법론 및 데이터 출처
 
 Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 비활성화되어 있습니다.
@@ -71,7 +71,11 @@ Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 
 - 보유세 / 영업수익
 - 공시가격 / 투자부동산 장부금액
 - 보유세 부담 Peer Benchmark
-- Tax Advisory 검토사항 및 요청자료 추천
+- Tax Issue Matrix
+- Holding Tax Reconciliation(보유세 정합성 검토)
+- FFO 현금유출 스트레스
+- Tax 요청자료 리스트 자동 생성
+- Tax Review Memo 초안 다운로드
 
 ### 분석 방법론 및 데이터 출처
 
@@ -91,13 +95,14 @@ Deals 모드와 KRX 기반 시장가치 분석은 현재 공개 런타임에서 
 - **ECOS**: 기준금리, 국고채, 회사채 등 거시경제 지표
 - **V-World / official land price related data**: 공시가격, 개별공시지가, 기준시가 등 보유세 분석 관련 데이터
 - **Internal CSV snapshot/sample data**: 공개 배포 환경에서 안정적으로 실행하기 위한 예시 및 기준 데이터
-- **Peer benchmark snapshot data**: v12 Peer Benchmark와 Red Flag Engine의 입력 데이터
+- **Peer benchmark snapshot data**: Peer Benchmark와 Red Flag Engine의 입력 데이터
+- **Tax snapshot data**: 자산별 상세자료가 제한된 회사의 Tax Review Pack 생성을 위한 회사 전체 Snapshot 기반 예시 추정 데이터
 
 `source_type = "sample_snapshot"`인 데이터는 공개 포트폴리오 검토용 예시 데이터입니다. 감사된 자료나 공식 확정 자료로 과도하게 해석하지 않도록 UI와 문서에서 구분합니다.
 
 공개 앱은 시작 시 모든 상장리츠의 DART 자료를 실시간 호출하지 않습니다. 사용자가 사이드바에서 분석 대상회사를 선택하면 해당 회사의 Snapshot 기반 최근 5년 흐름을 우선 사용하고, Snapshot이 부족한 경우에만 선택 회사의 DART 자료를 보조적으로 사용할 수 있도록 설계했습니다.
 
-회사별 상세 자산·보유세 데이터의 가용성은 서로 다를 수 있습니다. 상세 데이터가 부족한 회사는 다른 회사의 자산 샘플을 재사용하지 않고, 데이터 부족 안내와 함께 Peer Benchmark 및 재무 Snapshot 중심으로 표시합니다.
+회사별 상세 자산·보유세 데이터의 가용성은 서로 다를 수 있습니다. 상세 데이터가 부족한 회사는 다른 회사의 자산 샘플을 재사용하지 않고, 회사 전체 Snapshot 기반 예시 추정값을 사용해 Tax Review Pack을 생성합니다. 이 값은 신고 목적 세액이 아니라 예비 검토용 입력값입니다.
 
 ## 6. API Key 및 보안
 
@@ -160,7 +165,7 @@ py scripts\refresh_reit_peer_snapshot.py
 저장소를 빠르게 검토하려면 다음 순서가 좋습니다.
 
 1. [docs/Reviewer_Guide.md](docs/Reviewer_Guide.md): 3분 리뷰 가이드
-2. [docs/V12_Feature_Summary.md](docs/V12_Feature_Summary.md): v12 기능 요약
+2. [docs/V13_Feature_Summary.md](docs/V13_Feature_Summary.md): v13 Tax Review Pack 기능 요약
 3. [docs/Architecture.md](docs/Architecture.md): 앱 구조와 데이터 흐름
 4. [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md): 현재 범위와 향후 방향
 5. [CHANGELOG.md](CHANGELOG.md): 버전별 변경 이력
@@ -172,6 +177,8 @@ py scripts\refresh_reit_peer_snapshot.py
 - `api_manager.py`: API 인증값 로딩 및 마스킹
 - `dart_financials.py`: 분석 대상회사 마스터, 종목코드/DART corp_code 연결, 최근 5년 재무 흐름 로딩
 - `calculations_peer.py`: Peer metric 및 percentile 계산
+- `calculations_tax_review_pack.py`: Tax Issue Matrix, 요청자료, 검토 메모 생성
+- `tax_data_loader.py`: Tax Snapshot 및 회사별 fallback 데이터 로딩
 - `red_flag_engine.py`: Assurance/Tax Red Flag 평가
 - `ui_assurance.py`: 감사위험 분석 화면
 - `ui_tax.py`: 보유세 분석 화면
@@ -179,7 +186,7 @@ py scripts\refresh_reit_peer_snapshot.py
 
 ## 10. 버전 관리
 
-현재 버전은 `v12`입니다. 중요 기능이 추가되는 경우 `v13`, `v14`처럼 순차적으로 올립니다.
+현재 버전은 `v13`입니다. 중요 기능이 추가되는 경우 `v14`, `v15`처럼 순차적으로 올립니다.
 
 버전을 변경할 때는 다음 파일을 함께 맞춥니다.
 

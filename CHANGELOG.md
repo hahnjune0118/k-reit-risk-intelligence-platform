@@ -1,5 +1,16 @@
 # 변경 이력
 
+## v13 - Tax Review Pack Generator
+
+- Tax Issue Matrix 추가
+- Holding Tax Reconciliation 추가
+- Tax 요청자료 리스트 자동 생성 기능 추가
+- Tax Review Memo 초안 생성 기능 추가
+- Tax mode 중심 UI 재정렬
+- SK리츠 외 상장리츠도 Tax 기능이 작동하도록 Snapshot/API fallback 구조 보완
+- 일반모드 설명 섹션 기본 접힘 처리
+- Tax 분석 가정 패널 접근성 개선
+
 ## v12 - Peer Benchmark & Red Flag Engine
 
 - v12를 현재 활성 개발 및 공개 포트폴리오 버전으로 정리

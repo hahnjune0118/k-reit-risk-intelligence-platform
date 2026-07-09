@@ -6,8 +6,8 @@ from ui_common import render_user_mode_panel
 
 PUBLIC_MODES = [
     "General Info & Scenario",
-    "Assurance",
     "Tax",
+    "Assurance",
     "Methodology & Data Sources",
 ]
 
@@ -62,7 +62,7 @@ def render_mode_selector():
             index=0,
             format_func=lambda mode: PUBLIC_MODE_LABELS.get(mode, mode),
         )
-        st.caption("v12는 일반 정보, 감사위험 분석, 보유세 분석, 분석 방법론 화면에 Peer Benchmark와 Red Flag Engine을 더했습니다.")
+        st.caption("v13은 Tax Review Pack 자동화를 중심으로, 일반 정보·보유세 분석·감사위험 분석·방법론 화면을 제공합니다.")
         st.divider()
     return selected_user_mode
 
@@ -76,7 +76,7 @@ def render_intro(selected_user_mode: str):
         render_user_mode_panel(selected_user_mode)
         return
 
-    with st.expander("이 도구는 무엇을 하나요?", expanded=True):
+    with st.expander("상장리츠 리스크 분석 개요", expanded=False):
         st.markdown(
             """
             **목적**
@@ -92,15 +92,14 @@ def render_intro(selected_user_mode: str):
             리츠 업무를 처음 접하는 회계사, 감사·세무·자문 업무 담당자, 그리고 회계/컨설팅
             디지털 전환 포트폴리오를 검토하는 사용자를 기준으로 설계했습니다.
 
-            **v12 현재 범위**
-            공개 버전은 일반 정보 및 시나리오, Assurance: 감사위험 분석, Tax: 보유세 분석,
-            분석 방법론 및 데이터 출처에 집중합니다. v12에서는 상장리츠 Peer Benchmark와
-            Assurance·Tax Red Flag Engine을 추가했습니다. 시장가격 기반 가치평가와 거래 분석은
-            공개 버전에서 비활성화되어 있으며 향후 버전에서 별도 모듈로 재검토할 예정입니다.
+            **v13 현재 범위**
+            공개 버전은 일반 정보 및 시나리오, Tax: 보유세 분석, Assurance: 감사위험 분석,
+            분석 방법론 및 데이터 출처에 집중합니다. v13에서는 Tax Red Flag를 Tax Issue Matrix,
+            보유세 정합성 검토, 요청자료 리스트, Tax Review Memo 초안으로 연결합니다.
             """
         )
 
-    with st.expander("필수 용어", expanded=False):
+    with st.expander("필수 용어 및 분석 구조 보기", expanded=False):
         st.markdown(
             """
             - **REIT**: 다수 투자자로부터 자금을 모아 부동산에 투자하고 배당하는 부동산투자회사입니다.
@@ -114,7 +113,7 @@ def render_intro(selected_user_mode: str):
             """
         )
 
-    with st.expander("시나리오 모델을 어떻게 읽나요?", expanded=True):
+    with st.expander("시나리오 모델 설명", expanded=False):
         st.markdown(
             """
             이 시나리오 모델은 정식 가치평가 의견이 아니라 예비 검토용 분석입니다. 좌측 사이드바의

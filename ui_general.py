@@ -78,10 +78,10 @@ def _render_peer_benchmark_overview(peer_context: dict | None):
         st.info("Peer Benchmark를 계산할 수 있는 snapshot 데이터가 부족합니다.")
         return
 
-    st.markdown("### v12 Peer Benchmark & Red Flag 요약")
+    st.markdown("### Peer Benchmark 및 Red Flag 요약")
     st.caption(
-        "v12는 선택한 리츠 회사를 상장리츠 Peer Group과 비교하여 감사위험과 보유세 부담이 "
-        "상대적으로 높은 영역을 자동으로 스크리닝합니다."
+        "선택한 리츠 회사를 상장리츠 Peer Group과 비교하여 감사위험, 보유세 부담, "
+        "FFO 현금유출 부담이 상대적으로 높은 영역을 자동으로 스크리닝합니다."
     )
     st.caption(
         f"대상 리츠: {target_company} / Peer Group: {peer_context.get('peer_group', '전체 상장리츠')} / "
@@ -595,7 +595,7 @@ def render_general_dashboard(
                 "추가 수집이 필요한 자료 계획",
                 "컬럼 정의와 산식 기준 메모",
                 "상장리츠 peer master 정보",
-                "v12 Peer Benchmark와 Red Flag Engine snapshot",
+                "Peer Benchmark와 Red Flag Engine snapshot",
                 "Assurance 및 Tax Red Flag 판단 규칙",
             ],
         })

@@ -15,14 +15,72 @@ from calculations_tax import (
     build_tax_risk_register,
     summarize_holding_tax_history,
 )
+from calculations_tax_review_pack import (
+    build_ffo_cash_outflow_stress,
+    build_holding_tax_reconciliation,
+    build_source_detail,
+    build_tax_automation_summary,
+    build_tax_issue_matrix,
+    build_tax_request_list,
+    build_tax_review_memo,
+)
 from config import REALTY_PRICE_API_ENDPOINT_DEFAULT
 from formatting import format_bn_krw, format_pct_from_100
 from api_manager import get_api_key, sanitize_secret_dataframe, sanitize_secret_text
+from tax_data_loader import build_company_tax_dataset, build_tax_history_from_company_tax_data, get_tax_source_status
 from ui_common import compact_fig, render_selected_company_header
 from ui_peer import build_peer_metric_table, flags_to_tax_review_table, render_overall_risk_message, style_risk_review_table
 
 
 SHOW_DEVELOPER_API_INPUTS = os.getenv("SHOW_DEVELOPER_API_INPUTS", "false").lower() == "true"
+
+
+def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
+    st.markdown("### Tax 분석 가정")
+    with st.container(border=True):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            holding_tax_increase_pct = st.slider(
+                "보유세 증가율 가정",
+                min_value=0.0,
+                max_value=50.0,
+                value=float(assumptions.get("v13_holding_tax_increase_pct", 10.0)),
+                step=2.5,
+                key="v13_holding_tax_increase_pct",
+                help="Tax Review Pack의 FFO 현금유출 스트레스에 사용하는 보유세 증가율입니다.",
+            )
+        with c2:
+            default_ffo_stress = float(scenario.get("ffo_haircut_pct", 5.0) or 5.0)
+            ffo_stress_pct = st.slider(
+                "FFO 스트레스 가정",
+                min_value=0.0,
+                max_value=30.0,
+                value=float(assumptions.get("v13_ffo_stress_pct", default_ffo_stress)),
+                step=1.0,
+                key="v13_ffo_stress_pct",
+                help="보유세 증가와 동시에 FFO가 하락하는 경우의 현금 유출 부담을 검토합니다.",
+            )
+        with c3:
+            sensitivity_pct = st.slider(
+                "민감도 분석 기준",
+                min_value=5.0,
+                max_value=40.0,
+                value=float(assumptions.get("v13_tax_sensitivity_pct", 20.0)),
+                step=5.0,
+                key="v13_tax_sensitivity_pct",
+                help="요청자료와 검토 메모에서 주의가 필요한 변동률 기준으로 사용합니다.",
+            )
+        st.caption(
+            "이 가정은 신고 목적 세액 계산이 아니라 보유세 부담의 방향성과 FFO 현금유출 민감도를 보기 위한 예비 분석 기준입니다. "
+            f"토지 공정시장가액비율 {assumptions.get('land_fmv_ratio_pct', 70.0):.0f}% · "
+            f"건축물 공정시장가액비율 {assumptions.get('building_fmv_ratio_pct', 70.0):.0f}% · "
+            f"건축물 재산세율 추정치 {assumptions.get('building_tax_rate_pct', 0.25):.2f}%"
+        )
+    return {
+        "holding_tax_increase_pct": holding_tax_increase_pct,
+        "ffo_stress_pct": ffo_stress_pct,
+        "sensitivity_pct": sensitivity_pct,
+    }
 
 
 def _render_peer_tax_section(peer_context: dict | None):
@@ -106,6 +164,14 @@ def render_tax_mode(
     )
     assumptions = assumptions or {}
     run_id = (peer_context or {}).get("analysis_run_id", 0)
+    company_profile = (peer_context or {}).get("selected_company_profile", {}) or {}
+    target_company = (peer_context or {}).get("target_company", company_profile.get("company_name", "선택 리츠"))
+    peer_snapshot = (peer_context or {}).get("peer_snapshot", pd.DataFrame())
+    peer_summary = (peer_context or {}).get("peer_summary", {})
+    tax_flags = (peer_context or {}).get("tax_red_flags", [])
+    tax_pack_assumptions = _render_tax_assumption_panel(assumptions, scenario)
+    company_tax_data = build_company_tax_dataset(target_company, peer_snapshot, company_profile)
+    tax_source_status = get_tax_source_status(target_company, company_tax_data)
 
     with st.expander("보유세 계산 산식, 과세표준, 세율 보기", expanded=False):
         st.markdown(
@@ -148,21 +214,20 @@ def render_tax_mode(
         st.warning("공시가격 실시간 조회가 제한되어 예시 데이터를 사용합니다.")
     st.caption("공개 리뷰 버전은 서버 측 데이터 연결 또는 내장 예시 데이터를 사용합니다. 사용자가 별도의 인증값을 입력할 필요는 없습니다.")
 
-    if asset_risk is None or asset_risk.empty:
+    has_detailed_asset_data = asset_risk is not None and not asset_risk.empty
+    if not has_detailed_asset_data:
         st.warning(
-            "현재 공개 버전에서는 해당 회사의 자산별 상세 보유세 데이터가 부족합니다. "
-            "회사 전체 Peer 지표와 재무 Snapshot 중심으로 표시합니다."
+            "이 회사는 자산별 상세 공시가격 데이터가 제한되어 회사 전체 Snapshot 기반 추정값을 사용합니다. "
+            "해당 추정값은 신고 목적 세액이 아니라 Tax Review Pack 생성을 위한 예비 분석 입력값입니다."
         )
-        _render_peer_tax_section(peer_context)
-        return
 
     fetch_api = False
     endpoint = ""
     param_template = ""
     pnu_or_code = ""
-    selected_api_asset = asset_risk["asset_name"].iloc[0]
-    selected_row = asset_risk[asset_risk["asset_name"] == selected_api_asset].iloc[0]
-    if SHOW_DEVELOPER_API_INPUTS:
+    selected_api_asset = asset_risk["asset_name"].iloc[0] if has_detailed_asset_data else ""
+    selected_row = asset_risk[asset_risk["asset_name"] == selected_api_asset].iloc[0] if has_detailed_asset_data else pd.Series(dtype="object")
+    if SHOW_DEVELOPER_API_INPUTS and has_detailed_asset_data:
         default_template = '{"format":"json", "pnu":"{pnu}", "stdrYear":"{year}", "pageNo":"1", "numOfRows":"50"}'
         with st.expander("개발자용 공시가격 API 테스트", expanded=False):
             st.caption("로컬 개발 환경에서만 사용하는 기술 설정입니다. 공개 배포 기본값에서는 표시되지 않습니다.")
@@ -176,8 +241,10 @@ def render_tax_mode(
                 with c2:
                     param_template = st.text_area("API 파라미터 템플릿(JSON)", value=st.session_state.get("realty_price_param_template", default_template), height=135)
                     fetch_api = st.form_submit_button("선택 자산 공시가격 5년치 불러오기", width="stretch")
-    with st.expander("선택: 공시가격/기준시가 CSV 업로드", expanded=False):
-        uploaded_price_csv = st.file_uploader("공시가격/기준시가 CSV 업로드", type=["csv"], key="official_price_csv_upload")
+    uploaded_price_csv = None
+    if has_detailed_asset_data:
+        with st.expander("선택: 공시가격/기준시가 CSV 업로드", expanded=False):
+            uploaded_price_csv = st.file_uploader("공시가격/기준시가 CSV 업로드", type=["csv"], key="official_price_csv_upload")
 
     current_year = datetime.today().year
     start_year = current_year - 4
@@ -196,7 +263,11 @@ def render_tax_mode(
 
     uploaded_price_history, upload_status = parse_official_price_upload(uploaded_price_csv) if uploaded_price_csv is not None else (pd.DataFrame(), "업로드 없음")
 
-    if uploaded_price_history is not None and not uploaded_price_history.empty:
+    if not has_detailed_asset_data:
+        official_price_history = pd.DataFrame()
+        tax_history = build_tax_history_from_company_tax_data(company_tax_data, years_back=5, default_latest_year=current_year)
+        price_data_status = tax_source_status
+    elif uploaded_price_history is not None and not uploaded_price_history.empty:
         official_price_history = uploaded_price_history
         price_data_status = "CSV 업로드 공시가격/기준시가 사용"
     elif api_price_history is not None and not api_price_history.empty:
@@ -223,17 +294,18 @@ def render_tax_mode(
         # Uploaded area can override asset master only if present.
         pass
 
-    tax_history = build_holding_tax_estimator(
-        asset_risk,
-        official_price_history,
-        land_fmv_ratio_pct=assumptions.get("land_fmv_ratio_pct", 70.0),
-        building_fmv_ratio_pct=assumptions.get("building_fmv_ratio_pct", 70.0),
-        building_tax_rate_pct=assumptions.get("building_tax_rate_pct", 0.25),
-        include_urban_area_tax=assumptions.get("include_urban_area_tax", True),
-        include_local_education_tax=assumptions.get("include_local_education_tax", True),
-        apply_tax_burden_cap=assumptions.get("apply_tax_burden_cap", False),
-        tax_burden_cap_pct=assumptions.get("tax_burden_cap_pct", 150.0),
-    )
+    if has_detailed_asset_data:
+        tax_history = build_holding_tax_estimator(
+            asset_risk,
+            official_price_history,
+            land_fmv_ratio_pct=assumptions.get("land_fmv_ratio_pct", 70.0),
+            building_fmv_ratio_pct=assumptions.get("building_fmv_ratio_pct", 70.0),
+            building_tax_rate_pct=assumptions.get("building_tax_rate_pct", 0.25),
+            include_urban_area_tax=assumptions.get("include_urban_area_tax", True),
+            include_local_education_tax=assumptions.get("include_local_education_tax", True),
+            apply_tax_burden_cap=assumptions.get("apply_tax_burden_cap", False),
+            tax_burden_cap_pct=assumptions.get("tax_burden_cap_pct", 150.0),
+        )
     st.session_state["selected_company_tax_data"] = tax_history.copy()
     annual_summary = summarize_holding_tax_history(tax_history)
 
@@ -253,7 +325,8 @@ def render_tax_mode(
     m1.metric(f"{latest_year}E 보유세", format_bn_krw(latest_total_tax))
     m2.metric("5년 누적 증가율", format_pct_from_100(cumulative_increase))
     m3.metric("토지 과세표준", format_bn_krw(latest_tax_base))
-    m4.metric("자료 기준", "실시간/CSV" if "proxy" not in price_data_status else "추정치(proxy)")
+    estimated_basis = any(keyword in price_data_status for keyword in ["estimate", "추정", "Snapshot", "proxy"])
+    m4.metric("자료 기준", "추정치/Snapshot" if estimated_basis else "실시간/CSV")
 
     left, right = st.columns([1.15, 0.85])
     with left:
@@ -289,6 +362,17 @@ def render_tax_mode(
     tax_workflow = build_reit_tax_workflow_checklist(latest_kpi, annual_summary, cash_flow_scenarios, price_data_status)
     tax_risk_register = build_tax_risk_register(tax_history, annual_summary, cash_flow_scenarios, price_data_status)
     tax_automation_backlog = build_tax_automation_backlog()
+    reconciliation = build_holding_tax_reconciliation(tax_history, latest_kpi)
+    ffo_pack_stress = build_ffo_cash_outflow_stress(
+        latest_kpi,
+        annual_summary,
+        tax_pack_assumptions["holding_tax_increase_pct"],
+        tax_pack_assumptions["ffo_stress_pct"],
+    )
+    issue_matrix = build_tax_issue_matrix(tax_flags, reconciliation, ffo_pack_stress, price_data_status)
+    request_list = build_tax_request_list(issue_matrix)
+    automation_summary = build_tax_automation_summary(issue_matrix, request_list, reconciliation)
+    memo_text = build_tax_review_memo(company_profile, price_data_status, issue_matrix, reconciliation, request_list, ffo_pack_stress, peer_summary)
 
     annual_display = annual_summary.copy().rename(columns={
         "year": "연도",
@@ -309,52 +393,129 @@ def render_tax_mode(
         "location": "주소/권역",
         "official_land_price_per_sqm_krw": "개별공시지가_원_m2",
     })
-    source_detail_cols = [col for col in ["asset_name", "year", "location", "official_price_source"] if col in latest_asset_tax.columns]
-    source_detail = latest_asset_tax[source_detail_cols].copy()
-    source_detail = source_detail.rename(columns={
-        "asset_name": "자산",
-        "year": "기준연도",
-        "location": "식별자/주소",
-        "official_price_source": "공시가격 자료 출처",
-    })
-    source_detail["비고"] = "공개 버전의 예비 분석용 원천 표시"
+    source_detail = build_source_detail(tax_history)
 
-    tab_cash, tab_workflow, tab_detail, tab_data = st.tabs(
-        ["FFO 현금유출 스트레스", "세무업무 자동화", "보유세 상세 분석", "원천 데이터"]
+    st.markdown("---")
+    st.markdown("## Tax Issue Matrix")
+    st.caption("Tax Red Flag, 보유세 정합성, FFO 현금유출 스트레스 결과를 실무 검토 항목으로 변환합니다.")
+    st.dataframe(
+        style_risk_review_table(issue_matrix),
+        width="stretch",
+        hide_index=True,
+        height=310,
+        column_config={
+            "세무 이슈": st.column_config.TextColumn("세무 이슈", width="medium"),
+            "위험수준": st.column_config.TextColumn("위험", width="small"),
+            "발생 근거": st.column_config.TextColumn("발생 근거", width="large"),
+            "영향받는 지표": st.column_config.TextColumn("영향 지표", width="small"),
+            "검토 방향": st.column_config.TextColumn("검토 방향", width="large"),
+            "요청자료": st.column_config.TextColumn("요청자료", width="large"),
+            "업무유형": st.column_config.TextColumn("업무유형", width="small"),
+            "데이터 기준": st.column_config.TextColumn("데이터 기준", width="small"),
+        },
+    )
+
+    st.markdown("## 보유세 정합성 검토")
+    st.caption("회계상 투자부동산 장부가액과 공시가격·과세표준·추정 보유세를 연결한 예비 대사표입니다.")
+    st.dataframe(
+        reconciliation,
+        width="stretch",
+        hide_index=True,
+        height=230,
+        column_config={
+            "자산명": st.column_config.TextColumn("자산명", width="medium"),
+            "지역": st.column_config.TextColumn("지역", width="small"),
+            "장부가액(억원)": st.column_config.NumberColumn("장부가액", width="small", format="%.1f"),
+            "공시가격(억원)": st.column_config.NumberColumn("공시가격", width="small", format="%.1f"),
+            "공시가격 / 장부가액": st.column_config.NumberColumn("공시/장부", width="small", format="%.1%"),
+            "추정 과세표준(억원)": st.column_config.NumberColumn("추정 과표", width="small", format="%.1f"),
+            "추정 보유세(억원)": st.column_config.NumberColumn("추정 보유세", width="small", format="%.1f"),
+            "보유세 / FFO": st.column_config.NumberColumn("보유세/FFO", width="small", format="%.1%"),
+            "최근 5년 공시가격 증가율": st.column_config.NumberColumn("5년 증가", width="small", format="%.1%"),
+            "검토 필요 여부": st.column_config.TextColumn("검토", width="small"),
+        },
+    )
+    with st.expander("공시가격 자료 출처 보기", expanded=False):
+        st.dataframe(
+            source_detail,
+            width="stretch",
+            hide_index=True,
+            height=180,
+            column_config={
+                "자산명": st.column_config.TextColumn("자산명", width="medium"),
+                "기준연도": st.column_config.TextColumn("연도", width="small"),
+                "source_type": st.column_config.TextColumn("source_type", width="small"),
+                "source_note": st.column_config.TextColumn("source_note", width="large"),
+                "식별자/주소": st.column_config.TextColumn("식별자/주소", width="medium"),
+                "비고": st.column_config.TextColumn("비고", width="medium"),
+            },
+        )
+
+    st.markdown("## 요청자료 리스트")
+    st.dataframe(
+        request_list,
+        width="stretch",
+        hide_index=True,
+        height=260,
+        column_config={
+            "요청자료": st.column_config.TextColumn("요청자료", width="medium"),
+            "요청 목적": st.column_config.TextColumn("요청 목적", width="large"),
+            "관련 이슈": st.column_config.TextColumn("관련 이슈", width="medium"),
+            "우선순위": st.column_config.TextColumn("우선", width="small"),
+            "비고": st.column_config.TextColumn("비고", width="large"),
+        },
+    )
+
+    tab_cash, tab_workflow, tab_detail, tab_memo, tab_data = st.tabs(
+        ["FFO 현금유출 스트레스", "세무업무 자동화", "보유세 상세 분석", "Tax Review Memo 초안", "원천 데이터"]
     )
 
     with tab_cash:
-        st.write("**보유세 인상 시나리오별 FFO·배당 여력**")
+        st.write("**FFO 현금유출 스트레스**")
         st.caption(
-            "최신 KPI의 FFO와 배당총액은 연환산 추정치(proxy)로 비교합니다. 실제 연간 예산이나 forecast가 있으면 별도 입력값으로 대체해야 합니다."
+            "선택 회사의 FFO와 추정 보유세를 사용해 보유세 증가와 FFO 하락이 동시에 발생하는 경우를 검토합니다."
         )
-        if cash_flow_scenarios.empty:
+        if ffo_pack_stress.empty:
             st.warning("FFO 현금유출 시나리오를 계산할 수 없습니다. KPI와 보유세 요약 데이터를 확인하세요.")
         else:
             c1, c2 = st.columns([1.05, 0.95])
             with c1:
                 st.dataframe(
-                    cash_flow_scenarios,
+                    ffo_pack_stress,
                     width="stretch",
                     hide_index=True,
                     height=250,
                     column_config={
-                        "시나리오": st.column_config.TextColumn("시나리오", width="small"),
-                        "판단": st.column_config.TextColumn("판단", width="small"),
-                        "해석": st.column_config.TextColumn("해석", width="large"),
+                        "항목": st.column_config.TextColumn("항목", width="small"),
+                        "금액(억원)": st.column_config.NumberColumn("금액", width="small", format="%.1f"),
+                        "FFO 대비": st.column_config.NumberColumn("FFO 대비", width="small", format="%.1%"),
+                        "주요 해석": st.column_config.TextColumn("주요 해석", width="large"),
                     },
                 )
             with c2:
                 fig_cash = px.bar(
-                    cash_flow_scenarios,
-                    x="시나리오",
-                    y="추가_현금유출_백만원",
-                    color="판단",
-                    title="보유세 인상 시 추가 현금유출",
+                    ffo_pack_stress,
+                    x="항목",
+                    y="금액(억원)",
+                    title="보유세 스트레스 금액",
                 )
                 st.plotly_chart(compact_fig(fig_cash, 250), width="stretch")
+            with st.expander("기존 보유세 인상 시나리오별 FFO·배당 여력 보기", expanded=False):
+                st.dataframe(cash_flow_scenarios, width="stretch", hide_index=True, height=240)
 
     with tab_workflow:
+        st.write("**v13 Tax Review Pack 자동화 요약**")
+        st.dataframe(
+            automation_summary,
+            width="stretch",
+            hide_index=True,
+            height=170,
+            column_config={
+                "항목": st.column_config.TextColumn("항목", width="medium"),
+                "상태": st.column_config.TextColumn("상태", width="small"),
+                "비고": st.column_config.TextColumn("비고", width="large"),
+            },
+        )
         st.write("**리츠 Tax 부서 업무 자동화 체크리스트**")
         disabled_cols = [col for col in tax_workflow.columns if col != "완료"]
         st.data_editor(
@@ -445,18 +606,35 @@ def render_tax_mode(
                 hide_index=True,
                 height=180,
                 column_config={
-                    "자산": st.column_config.TextColumn("자산", width="medium"),
+                    "자산명": st.column_config.TextColumn("자산명", width="medium"),
                     "기준연도": st.column_config.TextColumn("연도", width="small"),
-                    "공시가격 자료 출처": st.column_config.TextColumn("자료 출처", width="large"),
+                    "source_type": st.column_config.TextColumn("source_type", width="small"),
+                    "source_note": st.column_config.TextColumn("source_note", width="large"),
                     "식별자/주소": st.column_config.TextColumn("식별자/주소", width="medium"),
                     "비고": st.column_config.TextColumn("비고", width="medium"),
                 },
             )
 
+    with tab_memo:
+        st.write("**Tax Review Memo 초안**")
+        st.markdown(memo_text)
+        safe_company = str(target_company).replace(" ", "_").replace("/", "_")
+        st.download_button(
+            "Tax Review Memo 다운로드",
+            data=memo_text.encode("utf-8-sig"),
+            file_name=f"tax_review_memo_{safe_company}.md",
+            mime="text/markdown",
+            width="stretch",
+        )
+
     with tab_data:
         st.write("**공시가격/기준시가 원천 데이터**")
-        st.dataframe(official_price_history, width="stretch", hide_index=True, height=260)
-        st.caption("CSV 권장 컬럼: asset_name, year, official_land_price_per_sqm_krw, building_standard_value_mn_krw, land_area_sqm, source")
+        if has_detailed_asset_data and official_price_history is not None and not official_price_history.empty:
+            st.dataframe(official_price_history, width="stretch", hide_index=True, height=260)
+            st.caption("CSV 권장 컬럼: asset_name, year, official_land_price_per_sqm_krw, building_standard_value_mn_krw, land_area_sqm, source")
+        else:
+            st.dataframe(company_tax_data, width="stretch", hide_index=True, height=220)
+            st.caption("자산별 상세자료가 제한된 회사는 회사 전체 Snapshot 기반 예시 추정값을 표시합니다.")
 
     st.warning(
         "본 보유세 계산은 신고 목적의 세액 산출이 아니라, 리츠 보유자산별 세금 부담의 방향성과 민감도를 파악하기 위한 예비 분석입니다. "

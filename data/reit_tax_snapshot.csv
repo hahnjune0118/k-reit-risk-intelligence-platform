@@ -1,0 +1,9 @@
+company_name,stock_code,dart_corp_code,asset_name,region,asset_type,book_value,official_price,estimated_tax_base,estimated_holding_tax,official_price_growth_5y,holding_tax_to_ffo,source_type,source_note,latest_year
+SK리츠,395400,sample_001,회사 전체 추정,Seoul,Office,5232672,2877970,2014579,29500,12.0,0.3332,peer_snapshot_estimate,자산별 상세자료 부족 시 회사 전체 Snapshot 기반 추정값으로 사용,2026
+ESR켄달스퀘어리츠,365550,sample_003,회사 전체 추정,Greater Seoul,Logistics,3010000,1487000,1040900,18600,14.5,0.2503,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
+롯데리츠,330590,sample_002,회사 전체 추정,Nationwide,Retail,2315000,1320000,924000,15800,10.8,0.3033,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
+제이알글로벌리츠,348950,sample_004,회사 전체 추정,Overseas,Office,1968000,905000,633500,17200,8.5,0.3848,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
+신한알파리츠,293940,sample_005,회사 전체 추정,Seoul,Office,1736000,914000,639800,12100,11.2,0.2485,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
+코람코라이프인프라리츠,357120,sample_006,회사 전체 추정,Nationwide,Retail / Infra,1510000,855000,598500,14200,9.6,0.3679,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
+NH올원리츠,400760,sample_008,회사 전체 추정,Nationwide,Diversified,1045000,576000,403200,9100,7.8,0.3383,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
+이지스밸류리츠,334890,sample_007,회사 전체 추정,Seoul,Office,910000,514000,359800,8300,10.1,0.3547,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026

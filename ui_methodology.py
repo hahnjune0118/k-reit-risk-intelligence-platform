@@ -40,12 +40,12 @@ def render_methodology_page(
     render_selected_company_header(peer_context)
     st.caption(f"현재 안정 공개 버전: {APP_VERSION_LABEL}")
 
-    st.markdown("### v12 현재 범위")
+    st.markdown("### v13 현재 범위")
     st.dataframe(
         pd.DataFrame([
             {"화면": "일반 정보 및 시나리오", "목적": "REIT 기본 위험 프로필, 거시경제 Scenario, Peer Benchmark 요약"},
+            {"화면": "Tax: 보유세 분석", "목적": "Tax Issue Matrix, 보유세 정합성 검토, 요청자료 리스트, Tax Review Memo 초안"},
             {"화면": "Assurance: 감사위험 분석", "목적": "감사계획, RMM(중요왜곡표시위험), KAM(핵심감사사항), Peer 기반 감사위험 Red Flag"},
-            {"화면": "Tax: 보유세 분석", "목적": "공시가격/기준시가 기반 보유세 추정, Peer 기반 보유세 부담 Benchmark"},
             {"화면": "분석 방법론 및 데이터 출처", "목적": "자료 출처, Snapshot 구조, Red Flag 기준, 한계 및 보안 구조 설명"},
         ]),
         hide_index=True,
@@ -71,9 +71,9 @@ def render_methodology_page(
         "위험평가와 Tax/Assurance 검토 포인트를 자동화하는 것을 목표로 합니다."
     )
 
-    st.markdown("### v12 분석 workflow")
+    st.markdown("### v13 분석 workflow")
     st.write(
-        "v12 공개 화면은 좌측 사이드바에서 **분석 모드 → 분석 대상회사 → 시나리오** 순서로 검토하도록 구성했습니다. "
+        "v13 공개 화면은 좌측 사이드바에서 **분석 모드 → 분석 대상회사 → 시나리오** 순서로 검토하도록 구성했습니다. "
         "분석 대상회사는 시가총액 순위 Snapshot을 기준으로 정렬되며, 회사를 선택하면 종목코드와 DART corp_code, "
         "최근 5년 재무 흐름의 기준 데이터가 자동으로 연결됩니다."
     )
@@ -87,13 +87,14 @@ def render_methodology_page(
         {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},
         {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": _display_api_status(macro_history_status)},
         {"자료": "V-World 공시가격 데이터", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "제한 시 예시 데이터 사용"},
-        {"자료": "REIT Peer Snapshot", "사용 목적": "v12 Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
+        {"자료": "REIT Peer Snapshot", "사용 목적": "Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
+        {"자료": "REIT Tax Snapshot", "사용 목적": "v13 Tax Review Pack의 회사별 보유세 fallback 입력값", "상태": "앱에 포함"},
         {"자료": "Red Flag Rules", "사용 목적": "Assurance 및 Tax 위험수준 판단 기준", "상태": "앱에 포함"},
         {"자료": "내부 CSV", "사용 목적": "공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블", "상태": "앱에 포함"},
     ])
     st.dataframe(source_status, hide_index=True, width="stretch", height=230)
 
-    st.markdown("### v12 Peer Benchmark 및 Red Flag 방법론")
+    st.markdown("### Peer Benchmark 및 Red Flag 방법론")
     st.write(
         "Peer Benchmark는 `data/reit_peer_snapshot.csv`의 snapshot 데이터를 기준으로 선택 리츠와 상장리츠 peer group을 비교합니다. "
         "총자산, 투자부동산, 차입금, FFO(리츠의 반복적 영업현금흐름에 가까운 지표), 배당, 보유세, 공시가격 입력값을 이용해 "
@@ -109,7 +110,17 @@ def render_methodology_page(
     )
     st.caption(
         "공개 배포 버전에서는 회사별 상세 자산·보유세 데이터의 가용성이 서로 다를 수 있습니다. 상세 데이터가 부족한 회사는 "
-        "Peer Benchmark 및 재무 Snapshot 중심으로 분석하며, 자산별 세부 분석은 데이터가 확보된 범위 내에서만 표시합니다."
+        "회사 전체 Snapshot 기반 추정값으로 Tax Review Pack을 생성하며, 자산별 세부 분석은 데이터가 확보된 범위 내에서만 표시합니다."
+    )
+    st.markdown("### v13 Tax Review Pack 방법론")
+    st.write(
+        "Tax mode는 `data/reit_tax_snapshot.csv`와 Peer Snapshot을 사용해 Tax Issue Matrix, 보유세 정합성 검토표, "
+        "요청자료 리스트, Tax Review Memo 초안을 생성합니다. 자산별 상세자료가 없는 회사는 `회사 전체 추정` 행과 "
+        "`source_type = peer_snapshot_estimate`를 사용해 예비 분석을 계속 진행합니다."
+    )
+    st.info(
+        "Tax Review Pack은 신고 목적의 확정 세액이나 법률의견이 아닙니다. 공시자료와 Snapshot 기반으로 초기 검토 포인트를 "
+        "빠르게 구조화하기 위한 산출물이며, 최종 판단에는 원자료 확인과 전문가 검토가 필요합니다."
     )
     if peer_context:
         peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())
@@ -164,6 +175,6 @@ def render_methodology_page(
 
     st.markdown("### 한계 및 향후 개선 방향")
     st.write(
-        "v12는 감사위험, 보유세 분석, Peer Benchmark, Red Flag Engine에 집중한 공개 포트폴리오 버전입니다. "
-        "향후 v13 이후에는 문서 추출, 요청자료 export, AI-assisted memo drafting, 다기간 peer trend 비교를 검토할 수 있습니다."
+        "v13은 Tax Review Pack 자동화에 집중한 공개 포트폴리오 버전입니다. "
+        "향후 v14 이후에는 문서 추출, 요청자료 export, 고지세액 대사, 다기간 peer trend 비교를 검토할 수 있습니다."
     )

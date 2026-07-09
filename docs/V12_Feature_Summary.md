@@ -1,5 +1,7 @@
 # v12 Feature Summary
 
+> 참고: 현재 활성 버전은 v13 - Tax Review Pack Generator입니다. 이 문서는 v12에서 도입된 Peer Benchmark 및 Red Flag Engine의 이력을 설명합니다.
+
 ## v12 - Peer Benchmark & Red Flag Engine
 
 v12는 상장리츠 전체를 비교대상군으로 설정하고, 선택한 리츠 회사의 감사위험 및 보유세 부담이 Peer 대비 어느 영역에서 높게 나타나는지 자동으로 식별하는 버전입니다.
