@@ -22,7 +22,7 @@ def test_tax_dataset_exposes_source_type_and_source_note_for_fallback_rows():
     assert summary["scope_label"] in {"회사 전체 Snapshot 기반 추정", "예비 추정", "데이터 부족", "자산별 상세"}
 
 
-def test_missing_asset_level_data_is_labeled_as_estimate_or_data_missing():
+def test_missing_asset_level_data_is_labeled_as_estimate_or_data_insufficient():
     company_tax = build_company_tax_dataset(
         "테스트데이터부족리츠",
         peer_snapshot=pd.DataFrame(),
@@ -34,5 +34,7 @@ def test_missing_asset_level_data_is_labeled_as_estimate_or_data_missing():
     assert not company_tax.empty
     assert company_tax["asset_name"].iloc[0] == "회사 전체 추정"
     assert company_tax["source_type"].notna().all()
-    assert company_tax["source_type"].iloc[0] == "data_missing"
-    assert "부족" in summary["scope_label"] or "data_missing" in summary["source_type"]
+    assert company_tax["source_type"].iloc[0] == "data_insufficient"
+    assert "부족" in summary["scope_label"] or "data_insufficient" in summary["source_type"]
+    assert summary["korean_label"] == "데이터 부족"
+    assert summary["reliability_level"] == "부족"

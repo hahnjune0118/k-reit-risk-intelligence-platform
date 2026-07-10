@@ -1,7 +1,9 @@
 import pandas as pd
 
+from data_source_policy import contains_estimate_source, get_source_policy
 from formatting import _is_na
 from red_flag_engine import risk_level_to_korean_label
+from tax_request_mapping import map_tax_issues_to_request_items
 
 
 RISK_ORDER = {"높음": 0, "주의": 1, "데이터 부족": 2, "정상": 3}
@@ -13,16 +15,16 @@ def _fmt_pct(value, decimals: int = 1) -> str:
     return f"{float(value):.{decimals}f}%"
 
 
-def _fmt_bn_from_mn(value, decimals: int = 1) -> str:
+def _fmt_ratio_pct(value, decimals: int = 1) -> str:
     if _is_na(value):
         return "데이터 부족"
-    return f"{float(value) / 1000:,.{decimals}f}십억원"
+    return f"{float(value) * 100:.{decimals}f}%"
 
 
-def _fmt_eok_from_mn(value, decimals: int = 1) -> str:
+def _fmt_eok(value, decimals: int = 1) -> str:
     if _is_na(value):
         return "데이터 부족"
-    return f"{float(value) / 100:,.{decimals}f}억원"
+    return f"{float(value):,.{decimals}f}억원"
 
 
 def _risk_label_from_ratio(value, yellow: float, red: float) -> str:
@@ -68,6 +70,8 @@ def build_holding_tax_reconciliation(tax_history: pd.DataFrame, latest_kpi: pd.S
                 "보유세 / FFO": tax_to_ffo,
                 "최근 5년 공시가격 증가율": growth / 100 if pd.notna(growth) and abs(float(growth)) > 1 else growth,
                 "검토 필요 여부": review_needed,
+                "source_type": row.get("source_type", row.get("official_price_source", "")),
+                "source_note": row.get("source_note", ""),
             }
         )
     return pd.DataFrame(rows)
@@ -80,14 +84,18 @@ def build_source_detail(tax_history: pd.DataFrame) -> pd.DataFrame:
     latest = tax_history[tax_history["year"] == latest_year].copy()
     rows = []
     for _, row in latest.iterrows():
+        source_type = row.get("source_type", row.get("official_price_source", ""))
+        policy = get_source_policy(source_type)
         rows.append(
             {
                 "자산명": row.get("asset_name", ""),
                 "기준연도": latest_year,
-                "source_type": row.get("source_type", row.get("official_price_source", "")),
+                "source_type": source_type,
+                "source_label": policy.korean_label,
+                "신뢰수준": policy.reliability_level,
                 "source_note": row.get("source_note", row.get("official_price_source", "")),
                 "식별자/주소": row.get("location", ""),
-                "비고": "공개자료 및 Snapshot 기반 예비 분석용 원천 표시",
+                "비고": policy.ui_warning_text,
             }
         )
     return pd.DataFrame(rows)
@@ -108,27 +116,28 @@ def build_ffo_cash_outflow_stress(
     stressed_ffo = base_ffo * (1 - ffo_stress_pct / 100) if pd.notna(base_ffo) else pd.NA
     incremental = stressed_tax - latest_tax if pd.notna(stressed_tax) and pd.notna(latest_tax) else pd.NA
     stressed_ratio = stressed_tax / stressed_ffo if pd.notna(stressed_tax) and pd.notna(stressed_ffo) and stressed_ffo else pd.NA
-    rows = [
-        {
-            "항목": "기준 보유세",
-            "금액(억원)": latest_tax / 100 if pd.notna(latest_tax) else pd.NA,
-            "FFO 대비": latest_tax / base_ffo if pd.notna(latest_tax) and pd.notna(base_ffo) and base_ffo else pd.NA,
-            "주요 해석": "현재 Snapshot 또는 예시 데이터 기준 보유세 부담입니다.",
-        },
-        {
-            "항목": f"보유세 +{holding_tax_increase_pct:.0f}%",
-            "금액(억원)": stressed_tax / 100 if pd.notna(stressed_tax) else pd.NA,
-            "FFO 대비": stressed_ratio,
-            "주요 해석": f"FFO {ffo_stress_pct:.0f}% 하락과 보유세 증가를 동시에 반영한 스트레스입니다.",
-        },
-        {
-            "항목": "추가 현금유출",
-            "금액(억원)": incremental / 100 if pd.notna(incremental) else pd.NA,
-            "FFO 대비": incremental / stressed_ffo if pd.notna(incremental) and pd.notna(stressed_ffo) and stressed_ffo else pd.NA,
-            "주요 해석": "예산, 배당가능재원, 자금계획 검토 시 별도 설명이 필요한 증가분입니다.",
-        },
-    ]
-    return pd.DataFrame(rows)
+    return pd.DataFrame(
+        [
+            {
+                "항목": "기준 보유세",
+                "금액(억원)": latest_tax / 100 if pd.notna(latest_tax) else pd.NA,
+                "FFO 대비": latest_tax / base_ffo if pd.notna(latest_tax) and pd.notna(base_ffo) and base_ffo else pd.NA,
+                "주요 해석": "현재 Snapshot 또는 예시 데이터 기준 보유세 부담입니다.",
+            },
+            {
+                "항목": f"보유세 +{holding_tax_increase_pct:.0f}%",
+                "금액(억원)": stressed_tax / 100 if pd.notna(stressed_tax) else pd.NA,
+                "FFO 대비": stressed_ratio,
+                "주요 해석": f"FFO {ffo_stress_pct:.0f}% 하락과 보유세 증가를 동시에 반영한 스트레스입니다.",
+            },
+            {
+                "항목": "추가 현금유출",
+                "금액(억원)": incremental / 100 if pd.notna(incremental) else pd.NA,
+                "FFO 대비": incremental / stressed_ffo if pd.notna(incremental) and pd.notna(stressed_ffo) and stressed_ffo else pd.NA,
+                "주요 해석": "예산, 배당가능재원, 자금계획 검토 시 별도 설명이 필요한 증가분입니다.",
+            },
+        ]
+    )
 
 
 def build_tax_issue_matrix(
@@ -190,49 +199,20 @@ def build_tax_issue_matrix(
     return matrix.sort_values("위험수준", key=lambda s: s.map(RISK_ORDER).fillna(9)).reset_index(drop=True)
 
 
-def build_tax_request_list(issue_matrix: pd.DataFrame) -> pd.DataFrame:
-    data_basis_text = ""
-    if issue_matrix is not None and not issue_matrix.empty and "데이터 기준" in issue_matrix.columns:
-        data_basis_text = " / ".join(issue_matrix["데이터 기준"].dropna().astype(str).unique())
-    estimated_scope = any(keyword in data_basis_text for keyword in ["Snapshot", "추정", "estimate", "peer_snapshot", "proxy"])
-    defaults = [
-        ("재산세 고지서", "추정 보유세와 실제 고지세액 대사", "보유세 정합성", "높음", "자산별·연도별 고지서"),
-        ("토지대장", "토지면적, 지번, 소유 구조 확인", "공시가격 / 장부가액 괴리", "높음", "PNU 또는 소재지 대사"),
-        ("건축물대장", "건물 시가표준액 및 용도 확인", "과세표준 산정", "높음", "건축물 용도별 세율 확인"),
-        ("개별공시지가 조회자료", "공시가격 상승률 및 기준가격 확인", "공시가격 상승 민감도", "높음", "V-World 또는 공식 조회자료"),
-        ("자산별 장부가액 명세", "투자부동산 장부가액과 공시가격 비교", "공시가격 / 장부가액 괴리", "높음", "자산 master와 연결"),
-        ("임대수익 명세", "보유세 부담이 수익성에 미치는 영향 분석", "보유세 / 영업수익", "중간", "자산별 NOI가 있으면 우선 요청"),
-        ("FFO 산정자료", "보유세 현금유출이 배당 여력에 미치는 영향 확인", "보유세 / FFO", "높음", "연환산 여부 확인"),
-        ("취득 관련 계약서", "취득세·감면·과세표준 관련 검토", "취득 관련 지방세 검토", "중간", "취득 시점별 자료"),
-        ("자산별 위치 및 면적 자료", "공시가격, 토지면적, 건물면적 대사", "자산별 과세자료 정합성", "높음", "소재지, 면적, 용도 포함"),
-    ]
-    rows = []
-    high_or_warning = issue_matrix[issue_matrix["위험수준"].isin(["높음", "주의"])] if issue_matrix is not None and not issue_matrix.empty else pd.DataFrame()
-    issue_text = " / ".join(high_or_warning["세무 이슈"].head(3).tolist()) if not high_or_warning.empty else "기본 보유세 검토"
-    for item, purpose, related, priority, note in defaults:
-        rows.append(
-            {
-                "요청자료": item,
-                "요청 목적": purpose,
-                "관련 이슈": issue_text if related in {"보유세 / FFO", "보유세 / 영업수익"} and issue_text else related,
-                "우선순위": priority,
-                "비고": f"{note} / 자산별 상세자료 부족 보완" if estimated_scope and priority == "높음" else note,
-            }
-        )
-    if estimated_scope:
-        rows.append(
-            {
-                "요청자료": "자산별 세부 보유세 산출자료",
-                "요청 목적": "회사 전체 Snapshot 추정값을 자산별 실제 고지세액 및 과세표준과 대사",
-                "관련 이슈": "자산별 상세자료 부족 보완",
-                "우선순위": "높음",
-                "비고": "회사 전체 추정값을 공식 세액처럼 사용하지 않기 위한 보완 요청",
-            }
-        )
-    return pd.DataFrame(rows)
+def build_tax_request_list(
+    issue_matrix: pd.DataFrame,
+    source_type: str | None = None,
+    data_availability: dict | None = None,
+) -> pd.DataFrame:
+    return map_tax_issues_to_request_items(issue_matrix, source_type, data_availability)
 
 
-def build_tax_automation_summary(issue_matrix: pd.DataFrame, request_list: pd.DataFrame, reconciliation: pd.DataFrame, memo_available: bool = True) -> pd.DataFrame:
+def build_tax_automation_summary(
+    issue_matrix: pd.DataFrame,
+    request_list: pd.DataFrame,
+    reconciliation: pd.DataFrame,
+    memo_available: bool = True,
+) -> pd.DataFrame:
     high_count = int(issue_matrix["위험수준"].isin(["높음"]).sum()) if issue_matrix is not None and not issue_matrix.empty else 0
     warning_count = int(issue_matrix["위험수준"].isin(["주의"]).sum()) if issue_matrix is not None and not issue_matrix.empty else 0
     request_count = len(request_list) if request_list is not None else 0
@@ -247,6 +227,42 @@ def build_tax_automation_summary(issue_matrix: pd.DataFrame, request_list: pd.Da
     )
 
 
+def _memo_source_summary(data_basis: str, source_summary: dict | None) -> dict:
+    if source_summary:
+        return source_summary
+    policy = get_source_policy(data_basis)
+    return {
+        "source_type": policy.source_type,
+        "source_note": str(data_basis),
+        "scope_label": "Snapshot 기반 예비 분석" if contains_estimate_source(data_basis) else "공개자료 기반 예비 분석",
+        "latest_year": None,
+        "korean_label": policy.korean_label,
+        "reliability_level": policy.reliability_level,
+        "memo_limitation_text": policy.memo_limitation_text,
+    }
+
+
+def _lines_from_issue_matrix(issue_matrix: pd.DataFrame) -> str:
+    if issue_matrix is None or issue_matrix.empty:
+        return "- 현재 자동 식별된 높음/주의 항목은 제한적입니다. 원자료 대사 후 판단이 필요합니다."
+    high_or_warning = issue_matrix[issue_matrix["위험수준"].isin(["높음", "주의"])] if "위험수준" in issue_matrix.columns else issue_matrix
+    if high_or_warning.empty:
+        high_or_warning = issue_matrix
+    return "\n".join(
+        f"- {row['세무 이슈']}: {row['위험수준']} - {row['발생 근거']}"
+        for _, row in high_or_warning.head(6).iterrows()
+    )
+
+
+def _lines_from_request_list(request_list: pd.DataFrame) -> str:
+    if request_list is None or request_list.empty:
+        return "- 재산세 고지서, 자산별 장부가액 명세, 공시가격 조회자료를 우선 확보해야 합니다."
+    return "\n".join(
+        f"- {row['요청자료']}: {row['요청 목적']} ({row.get('우선순위', '중간')})"
+        for _, row in request_list.head(10).iterrows()
+    )
+
+
 def build_tax_review_memo(
     company_profile: dict,
     data_basis: str,
@@ -255,55 +271,72 @@ def build_tax_review_memo(
     request_list: pd.DataFrame,
     ffo_stress: pd.DataFrame,
     peer_summary: dict | None = None,
+    source_summary: dict | None = None,
+    bridge: pd.DataFrame | None = None,
+    validation: dict | None = None,
 ) -> str:
     company_name = company_profile.get("company_name", "선택 리츠")
     stock_code = company_profile.get("stock_code", "")
     peer_summary = peer_summary or {}
-    high_or_warning = issue_matrix[issue_matrix["위험수준"].isin(["높음", "주의"])] if issue_matrix is not None and not issue_matrix.empty else pd.DataFrame()
+    source = _memo_source_summary(data_basis, source_summary)
+    source_type = source.get("source_type", "data_insufficient")
+    policy = get_source_policy(source_type)
+    estimated_scope = contains_estimate_source(source_type) or contains_estimate_source(data_basis) or bool(source.get("is_estimated"))
+    validation = validation or {}
+
     recon_latest = reconciliation.iloc[0] if reconciliation is not None and not reconciliation.empty else pd.Series(dtype="object")
     stress_row = ffo_stress.iloc[1] if ffo_stress is not None and len(ffo_stress) > 1 else pd.Series(dtype="object")
+    bridge_row = bridge.iloc[0] if bridge is not None and not bridge.empty else pd.Series(dtype="object")
 
-    issue_lines = "\n".join(
-        f"- {row['세무 이슈']}: {row['위험수준']} - {row['발생 근거']}"
-        for _, row in high_or_warning.head(6).iterrows()
-    ) or "- 현재 자동 식별된 높음/주의 항목은 제한적입니다. 원자료 대사 후 판단이 필요합니다."
-    if request_list is not None and not request_list.empty:
-        request_lines = "\n".join(f"- {row['요청자료']}: {row['요청 목적']}" for _, row in request_list.head(8).iterrows())
-    else:
-        request_lines = "- 원자료 대사, 고지세액, 자산별 공시가격 자료를 우선 보완해야 합니다."
-    estimated_scope = any(keyword in str(data_basis) for keyword in ["Snapshot", "추정", "estimate", "peer_snapshot", "proxy"])
-    base_limitation = (
-        "본 메모는 세무신고 목적의 확정 세액 산출이나 법률의견이 아닙니다. "
-        "공개자료 및 Snapshot 기반의 예비 검토 초안입니다. "
-        "최종 판단에는 원자료 확인과 세무 전문가의 검토가 필요합니다."
-    )
+    estimated_tax = bridge_row.get("추정 보유세(억원)", recon_latest.get("추정 보유세(억원)", pd.NA))
+    tax_to_ffo = bridge_row.get("FFO 대비", recon_latest.get("보유세 / FFO", pd.NA))
+    tax_to_revenue = bridge_row.get("영업수익 대비", pd.NA)
+    book_price_ratio = recon_latest.get("공시가격 / 장부가액", pd.NA)
+    peer_position = bridge_row.get("Peer 대비 위치", "Peer Snapshot 기준 위치 확인 필요")
+    source_limit = source.get("memo_limitation_text") or policy.memo_limitation_text
     estimate_limitation = (
-        "현재 선택 회사의 자산별 상세 공시가격 데이터가 제한되어 회사 전체 Snapshot 기반 추정값을 사용했습니다. "
-        "해당 추정값은 신고 목적 세액이 아니며 Tax Review Pack 생성을 위한 예비 분석 입력값입니다."
+        "\n- 회사 전체 Snapshot 기반 추정값을 사용했습니다. 이 값은 신고 목적 세액이 아니며 Tax Review Pack 생성을 위한 예비 분석 입력값입니다."
+        if estimated_scope
+        else ""
     )
-    limitation_note = f"{base_limitation}\n\n{estimate_limitation}" if estimated_scope else base_limitation
+
+    missing_text = ", ".join(validation.get("missing_fields", [])) if validation.get("missing_fields") else "현재 표준 입력값 기준 중대 결측 없음"
+    warning_text = "; ".join(validation.get("warnings", [])) if validation.get("warnings") else "원자료 확인 전까지 예비 분석으로 표시"
 
     return f"""# Tax Review Memo 초안
 
 ## 1. 검토 대상
 - 회사명: {company_name}
 - 종목코드: {stock_code}
-- 데이터 기준: {data_basis}
-- 분석 범위: 보유세 부담, 공시가격 변동, FFO 현금유출, Peer Benchmark 기반 Tax Red Flag
+- 기준연도: {source.get('latest_year') or '연도 미확인'}
+- 분석 범위: {source.get('scope_label', '공개자료 기반 예비 분석')}
+- source_type: {source_type}
+- source_note: {source.get('source_note', data_basis)}
+- source 신뢰수준: {source.get('reliability_level', policy.reliability_level)} / {source.get('korean_label', policy.korean_label)}
 
-## 2. 주요 검토 결과
-- 보유세 / FFO: {_fmt_pct(recon_latest.get('보유세 / FFO', pd.NA) * 100 if pd.notna(recon_latest.get('보유세 / FFO', pd.NA)) else pd.NA)}
-- 공시가격 / 장부가액: {_fmt_pct(recon_latest.get('공시가격 / 장부가액', pd.NA) * 100 if pd.notna(recon_latest.get('공시가격 / 장부가액', pd.NA)) else pd.NA)}
-- 추정 보유세: {_fmt_eok_from_mn(recon_latest.get('추정 보유세(억원)', pd.NA) * 100 if pd.notna(recon_latest.get('추정 보유세(억원)', pd.NA)) else pd.NA)}
-- 스트레스 후 보유세 / FFO: {_fmt_pct(stress_row.get('FFO 대비', pd.NA) * 100 if pd.notna(stress_row.get('FFO 대비', pd.NA)) else pd.NA)}
-- Peer 대비 위치: {peer_summary.get('summary_text', 'Peer Snapshot 기준 주요 지표 비교 필요')}
+## 2. 핵심 수치 요약
+- 추정 보유세: {_fmt_eok(estimated_tax)}
+- 보유세 / FFO: {_fmt_ratio_pct(tax_to_ffo)}
+- 보유세 / 영업수익: {_fmt_ratio_pct(tax_to_revenue)}
+- 공시가격 / 투자부동산 장부금액: {_fmt_ratio_pct(book_price_ratio)}
+- Peer 대비 위치: {peer_position}
+- FFO stress 후 보유세 / FFO: {_fmt_ratio_pct(stress_row.get('FFO 대비', pd.NA))}
+- Peer 요약: {peer_summary.get('summary_text', 'Peer Snapshot 기준 주요 지표 비교 필요')}
 
-## 3. 추가 검토 필요사항
-{issue_lines}
+## 3. 주요 Tax 이슈
+{_lines_from_issue_matrix(issue_matrix)}
 
 ## 4. 요청자료
-{request_lines}
+{_lines_from_request_list(request_list)}
 
-## 5. 제한 및 유의사항
-{limitation_note}
+## 5. 실무적 시사점
+- 보유세 부담은 FFO, 배당가능재원, 예산 편성 검토와 함께 확인해야 합니다.
+- 자산별 공시가격, 장부가액, 실제 고지세액의 대사가 완료되기 전에는 수치 결론보다 요청자료 우선순위와 검토 방향을 중심으로 사용합니다.
+- 검증 상태: {validation.get('validation_status', '검토 필요')} / 결측: {missing_text}
+- 검증 메모: {warning_text}
+
+## 6. 제한 및 유의사항
+- 본 메모는 신고 목적의 확정 세액 산출, 법률의견, 세무신고서, 투자 추천을 제공하지 않습니다.
+- 최종 판단에는 원자료 확인, 회사 확인, 세무 전문가 검토가 필요합니다.
+- {source_limit}{estimate_limitation}
 """

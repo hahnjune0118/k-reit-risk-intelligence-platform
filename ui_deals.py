@@ -2,7 +2,7 @@
 import plotly.express as px
 import streamlit as st
 
-# Archived Deals UI; not imported by the public v13 app path.
+# Archived Deals UI; not imported by the public app path.
 from calculations_valuation import build_deals_backtest_table, build_deals_valuation_summary
 from ui_common import compact_fig
 

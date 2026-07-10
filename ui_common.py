@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from config import PUBLIC_MODE_LABELS
+from data_source_policy import get_source_policy
 from formatting import _is_na, format_pct_from_100, format_ratio
 
 
@@ -43,7 +44,7 @@ USER_MODE_CONFIG = {
         "questions": [
             "DART, ECOS, V-World, 내부 CSV 중 어떤 자료가 어느 표에 사용되나요?",
             "어떤 계산은 정식 의견이 아니라 예비 분석 또는 추정치인가요?",
-            "v13 공개 버전에 포함된 범위와 향후 버전으로 미룬 범위는 무엇인가요?",
+            "v14 공개 버전의 Tax workflow control 구조와 데이터 한계는 무엇인가요?",
         ],
     },
 }
@@ -84,7 +85,7 @@ def mode_specific_action_items(selected_mode: str) -> pd.DataFrame:
         "Methodology & Data Sources": [
             ("자료 기준", "DART, ECOS, V-World/API, 내부 CSV, 사용자 업로드 자료의 사용 위치를 확인합니다."),
             ("한계", "결과는 예비 검토용이며 감사의견, 세무신고, 정식 가치평가, 투자판단을 대체하지 않습니다."),
-            ("버전 관리", "중요 기능이 추가되는 경우 v13, v14처럼 순차적으로 버전을 올립니다."),
+            ("버전 관리", "중요 기능이 추가되는 경우 v14, v15처럼 순차적으로 버전을 올립니다."),
         ],
     }
     return pd.DataFrame(rows[selected_mode], columns=["구분", "권장 확인사항"])
@@ -127,10 +128,16 @@ def render_data_scope_banner(peer_context: dict | None):
     label = f"{company_name} ({stock_code})" if stock_code else company_name
     latest_year = availability.get("latest_year") or "연도 미확인"
     scope_label = availability.get("scope_label", peer_context.get("detail_data_basis", "Snapshot 기준"))
+    policy = get_source_policy(availability.get("source_type", "data_insufficient"))
+    source_label = availability.get("source_label", policy.korean_label)
+    reliability = availability.get("source_reliability", policy.reliability_level)
 
     with st.container(border=True):
         st.caption(f"현재 분석 대상: {label}")
-        st.caption(f"분석 범위: {scope_label} / 데이터 기준: {latest_year} / source_type: {availability.get('source_type', 'unknown')}")
+        st.caption(
+            f"분석 범위: {scope_label} / 데이터 기준: {latest_year} / "
+            f"source_type: {availability.get('source_type', 'data_insufficient')} / {source_label} / 신뢰수준: {reliability}"
+        )
         st.dataframe(
             pd.DataFrame([
                 {"상세 데이터": "자산별 보유세 proxy", "가용성": _availability_mark(availability.get("asset_level_tax_available", False))},
@@ -148,6 +155,8 @@ def render_data_scope_banner(peer_context: dict | None):
         )
         if availability.get("source_note"):
             st.caption(f"source_note: {availability['source_note']}")
+        if availability.get("source_warning"):
+            st.caption(availability["source_warning"])
 
 
 def fmt_mn_to_bn(value):

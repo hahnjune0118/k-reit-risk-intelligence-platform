@@ -62,7 +62,7 @@ def render_mode_selector():
             index=0,
             format_func=lambda mode: PUBLIC_MODE_LABELS.get(mode, mode),
         )
-        st.caption("v13은 Tax Review Pack 자동화를 중심으로, 일반 정보·보유세 분석·감사위험 분석·방법론 화면을 제공합니다.")
+        st.caption("v14는 Tax Workflow Control & Validation을 중심으로, 일반 정보·보유세 분석·감사위험 분석·방법론 화면을 제공합니다.")
         st.divider()
     return selected_user_mode
 
@@ -92,10 +92,10 @@ def render_intro(selected_user_mode: str):
             리츠 업무를 처음 접하는 회계사, 감사·세무·자문 업무 담당자, 그리고 회계/컨설팅
             디지털 전환 포트폴리오를 검토하는 사용자를 기준으로 설계했습니다.
 
-            **v13 현재 범위**
+            **v14 현재 범위**
             공개 버전은 일반 정보 및 시나리오, Tax: 보유세 분석, Assurance: 감사위험 분석,
-            분석 방법론 및 데이터 출처에 집중합니다. v13에서는 Tax Red Flag를 Tax Issue Matrix,
-            보유세 정합성 검토, 요청자료 리스트, Tax Review Memo 초안으로 연결합니다.
+            분석 방법론 및 데이터 출처에 집중합니다. v14에서는 source policy, 보유세 bridge,
+            데이터 검증, 요청자료 export를 Tax Review Memo 초안까지 연결합니다.
             """
         )
 

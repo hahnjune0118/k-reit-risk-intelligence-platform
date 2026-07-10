@@ -21,7 +21,7 @@ def build_historical_panel(financials: pd.DataFrame, kpis: pd.DataFrame, macro_h
 
     market_annual = pd.DataFrame()
     if krx_history is not None and not krx_history.empty:
-        # Archived KRX path; not used by the public v13 runtime.
+        # Archived KRX path; not used by the public runtime.
         from api_krx import build_market_annual_history
         market_annual = build_market_annual_history(krx_history)
     if market_annual is not None and not market_annual.empty:
@@ -97,7 +97,7 @@ def build_market_implied_gap_table(market_snapshot: dict, latest_nav_mn_krw, sce
 
 def interpret_market_gap(market_gap: pd.DataFrame) -> str:
     if market_gap is None or market_gap.empty or "시장할인율_pct" not in market_gap.columns:
-        return "시장가격 시계열은 공개 런타임에서 비활성화되어 있습니다. v13 진단은 Tax Review Pack, 재무, 거시경제, Peer Benchmark 신호에 집중합니다."
+        return "시장가격 시계열은 공개 런타임에서 비활성화되어 있습니다. v14 진단은 Tax workflow, 재무, 거시경제, Peer Benchmark 신호에 집중합니다."
     current = market_gap[market_gap["기준"] == "현재 공시 NAV"]
     stressed = market_gap[market_gap["기준"] == "선택 시나리오 후 NAV"]
     if current.empty:

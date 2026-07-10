@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-# Archived Deals valuation code; not used by the public v13 runtime.
+# Archived Deals valuation code; not used by the public runtime.
 def build_deals_valuation_summary(latest_kpi: pd.Series, scenario: dict, market_snapshot: dict, p_nav_multiple: float, p_ffo_multiple: float, required_dividend_yield_pct: float) -> pd.DataFrame:
     nav = scenario.get("stressed_nav", latest_kpi.get("nav_mn_krw", pd.NA))
     ffo = scenario.get("stressed_ffo", latest_kpi.get("ffo_mn_krw", pd.NA))

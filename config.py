@@ -1,13 +1,13 @@
 from pathlib import Path
 
 
-APP_VERSION = "v13"
-APP_VERSION_NAME = "Tax Review Pack Generator"
-APP_VERSION_LABEL = f"{APP_VERSION} - Tax Review Pack 자동화 버전"
+APP_VERSION = "v14"
+APP_VERSION_NAME = "Tax Workflow Control & Validation"
+APP_VERSION_LABEL = f"{APP_VERSION} - {APP_VERSION_NAME}"
 APP_TITLE = "K-REIT Risk Intelligence Platform"
 APP_SUBTITLE = (
     "상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터를 연결하여 "
-    "보유세 부담, FFO 현금유출, Peer Benchmark 기반 Red Flag를 Tax Review Pack으로 연결하는 Streamlit 기반 리스크 분석 도구"
+    "보유세 부담, FFO 현금유출, Peer Benchmark 기반 Red Flag를 source policy, 검증, 요청자료, Tax Review Memo로 연결하는 Streamlit 기반 리스크 분석 도구"
 )
 PUBLIC_MODE_LABELS = {
     "General Info & Scenario": "일반 정보 및 시나리오",
@@ -25,7 +25,7 @@ DART_CORP_CODE_ENDPOINT = "https://opendart.fss.or.kr/api/corpCode.xml"
 DART_SINGLE_FS_ENDPOINT = "https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json"
 DART_LIST_ENDPOINT = "https://opendart.fss.or.kr/api/list.json"
 
-# Archived endpoint kept out of the public v13 runtime.
+# Archived endpoint kept out of the public runtime.
 KRX_KOSPI_DAILY_TRADE_ENDPOINT = "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd"
 
 # 공시가격 계열 API는 승인 서비스별 조회 방식이 다를 수 있어 공개 UI에서는 예시 데이터 fallback을 기본으로 둡니다.

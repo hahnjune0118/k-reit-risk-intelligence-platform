@@ -1,6 +1,6 @@
 # v12 Feature Summary
 
-> 참고: 현재 활성 버전은 v13 - Tax Review Pack Generator입니다. 이 문서는 v12에서 도입된 Peer Benchmark 및 Red Flag Engine의 이력을 설명합니다.
+> 참고: 현재 활성 버전은 v14 - Tax Workflow Control & Validation입니다. 이 문서는 v12에서 도입된 Peer Benchmark 및 Red Flag Engine의 이력을 설명합니다.
 
 ## v12 - Peer Benchmark & Red Flag Engine
 

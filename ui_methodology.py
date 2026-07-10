@@ -3,20 +3,19 @@ import streamlit as st
 
 from api_manager import sanitize_secret_text
 from config import APP_VERSION_LABEL
+from data_source_policy import source_policy_table
 from ui_common import render_selected_company_header
 
 
 def _source_confidence_table(asset_risk, debt_schedule, financials, kpis) -> pd.DataFrame:
-    source_conf = pd.concat([
-        asset_risk[["source_document", "source_confidence"]],
-        debt_schedule[["source_document", "source_confidence"]],
-        financials[["source_document", "source_confidence"]],
-        kpis[["source_document", "source_confidence"]],
-    ], ignore_index=True).drop_duplicates()
-    return source_conf.rename(columns={
-        "source_document": "자료 문서",
-        "source_confidence": "자료 신뢰도",
-    })
+    frames = []
+    for frame in [asset_risk, debt_schedule, financials, kpis]:
+        if frame is not None and not frame.empty and {"source_document", "source_confidence"}.issubset(frame.columns):
+            frames.append(frame[["source_document", "source_confidence"]])
+    if not frames:
+        return pd.DataFrame(columns=["자료 문서", "자료 신뢰도"])
+    source_conf = pd.concat(frames, ignore_index=True).drop_duplicates()
+    return source_conf.rename(columns={"source_document": "자료 문서", "source_confidence": "자료 신뢰도"})
 
 
 def _display_api_status(status: str) -> str:
@@ -40,145 +39,101 @@ def render_methodology_page(
     render_selected_company_header(peer_context)
     st.caption(f"현재 안정 공개 버전: {APP_VERSION_LABEL}")
 
-    st.markdown("### v13 현재 범위")
+    st.markdown("### v14 Tax Workflow Control 구조")
     st.dataframe(
-        pd.DataFrame([
-            {"화면": "일반 정보 및 시나리오", "목적": "REIT 기본 위험 프로필, 거시경제 Scenario, Peer Benchmark 요약"},
-            {"화면": "Tax: 보유세 분석", "목적": "Tax Issue Matrix, 보유세 정합성 검토, 요청자료 리스트, Tax Review Memo 초안"},
-            {"화면": "Assurance: 감사위험 분석", "목적": "감사계획, RMM(중요왜곡표시위험), KAM(핵심감사사항), Peer 기반 감사위험 Red Flag"},
-            {"화면": "분석 방법론 및 데이터 출처", "목적": "자료 출처, Snapshot 구조, Red Flag 기준, 한계 및 보안 구조 설명"},
-        ]),
+        pd.DataFrame(
+            [
+                {"단계": "1. Source policy", "내용": "자료 출처를 공식 공시, Snapshot, Peer 추정, 데이터 부족으로 표준화"},
+                {"단계": "2. Holding tax bridge", "내용": "공시가격 또는 장부가액에서 과세표준, 추정 보유세, FFO 부담으로 연결"},
+                {"단계": "3. Validation", "내용": "결측, fallback 사용, 0 denominator, 비정상 비율을 별도 검증 패널로 표시"},
+                {"단계": "4. Issue workflow", "내용": "Tax Issue Matrix를 요청자료 리스트와 Memo 초안으로 연결"},
+                {"단계": "5. Export", "내용": "Memo, Issue Matrix, Reconciliation, Request List를 검토용 파일로 다운로드"},
+            ]
+        ),
+        hide_index=True,
+        width="stretch",
+        height=210,
+    )
+
+    st.markdown("### 활성 공개 화면")
+    st.dataframe(
+        pd.DataFrame(
+            [
+                {"화면": "일반 정보 및 시나리오", "목적": "REIT 기본 위험 프로필, 거시경제 Scenario, Peer Benchmark 요약"},
+                {"화면": "Tax: 보유세 분석", "목적": "Tax Summary, 보유세 브리지, Issue Matrix, Reconciliation, FFO Stress, Request List, Memo, Export, Validation"},
+                {"화면": "Assurance: 감사위험 분석", "목적": "감사계획, RMM, KAM, Peer 기반 감사위험 Red Flag"},
+                {"화면": "분석 방법론 및 데이터 출처", "목적": "자료 출처, Snapshot 구조, Red Flag 기준, 한계 및 공개 런타임 구조 설명"},
+            ]
+        ),
         hide_index=True,
         width="stretch",
         height=176,
     )
 
-    st.markdown("### 왜 상장리츠를 분석 대상으로 선택했나요?")
-    st.write(
-        "상장리츠는 다양한 업종 중에서도 수익 인식 구조가 비교적 단순한 편입니다. 주요 수익은 보유 부동산에서 "
-        "발생하는 임대료이며, 기본적으로 월 임대료와 임대기간을 바탕으로 이해할 수 있습니다."
-    )
-    st.write(
-        "또한 아직 현직 회계사가 아닌 개발자는 기업 내부 장부, 세부 임대차계약, 감사조서 등 비공개 자료를 "
-        "입수할 수 없기 때문에, 사업보고서와 분기보고서에 공개된 정보만으로도 분석 가능한 산업을 선택하는 것이 중요했습니다."
-    )
-    st.info(
-        "리츠는 자산 구성, 임대수익, 차입금, 공정가치 평가, 배당, 보유세 부담 등이 공시자료에 비교적 명확히 드러납니다. "
-        "따라서 공개자료 기반으로 실제 감사계획 및 세무 검토에 필요한 기초 정보를 구조화하기에 적합합니다."
-    )
-    st.caption(
-        "이 프로젝트는 실제 감사조서나 회사 내부자료를 대체하지 않습니다. 공개자료 기반으로 감사계획 단계의 "
-        "위험평가와 Tax/Assurance 검토 포인트를 자동화하는 것을 목표로 합니다."
-    )
+    st.markdown("### Source Type Taxonomy")
+    st.caption("Tax 화면의 배너, source expander, 요청자료 리스트, Memo 제한 문구는 같은 source policy를 사용합니다.")
+    st.dataframe(source_policy_table(), hide_index=True, width="stretch", height=260)
 
-    st.markdown("### v13 분석 workflow")
+    st.markdown("### 데이터 사용 원칙")
     st.write(
-        "v13 공개 화면은 좌측 사이드바에서 **분석 모드 → 분석 대상회사 → 시나리오** 순서로 검토하도록 구성했습니다. "
-        "분석 대상회사는 시가총액 순위 Snapshot을 기준으로 정렬되며, 회사를 선택하면 종목코드와 DART corp_code, "
-        "최근 5년 재무 흐름의 기준 데이터가 자동으로 연결됩니다."
+        "공개 런타임은 앱 시작 시 모든 상장리츠의 DART 자료를 일괄 호출하지 않습니다. 선택 회사와 내장 Snapshot을 중심으로 "
+        "빠르게 실행되며, 실시간 연결이 제한되면 예시 데이터로 안정적으로 전환합니다."
+    )
+    st.write(
+        "SK리츠의 자산·임차인·차입금 상세 sample은 SK리츠 선택 시에만 사용합니다. 다른 회사는 회사 전체 Snapshot과 "
+        "Peer 기반 추정 행으로 표시하며, SK리츠 자산 목록이나 상세 데이터를 재사용하지 않습니다."
     )
     st.info(
-        "공개 배포 버전은 앱 실행 시 모든 상장리츠의 DART 자료를 실시간 호출하지 않고, 선택 회사 및 Snapshot 데이터를 "
-        "중심으로 분석합니다. 공시자료가 갱신되면 별도 수집 로직을 통해 Snapshot을 업데이트할 수 있도록 설계했습니다."
+        "Tax 산출물은 신고 목적의 확정 세액, 법률의견, 투자 추천, 정식 가치평가 의견을 제공하지 않습니다. "
+        "실무 사용 전에는 원자료 확인, 회사 확인, 세무 전문가 검토가 필요합니다."
     )
 
     st.markdown("### 사용 데이터")
-    source_status = pd.DataFrame([
-        {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},
-        {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": _display_api_status(macro_history_status)},
-        {"자료": "V-World 공시가격 데이터", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "제한 시 예시 데이터 사용"},
-        {"자료": "REIT Peer Snapshot", "사용 목적": "Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
-        {"자료": "REIT Tax Snapshot", "사용 목적": "v13 Tax Review Pack의 회사별 보유세 fallback 입력값", "상태": "앱에 포함"},
-        {"자료": "Red Flag Rules", "사용 목적": "Assurance 및 Tax 위험수준 판단 기준", "상태": "앱에 포함"},
-        {"자료": "내부 CSV", "사용 목적": "공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블", "상태": "앱에 포함"},
-    ])
+    source_status = pd.DataFrame(
+        [
+            {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},
+            {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": _display_api_status(macro_history_status)},
+            {"자료": "공시가격 계열 데이터", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "제한 시 예시 데이터 사용"},
+            {"자료": "REIT Peer Snapshot", "사용 목적": "Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
+            {"자료": "REIT Tax Snapshot", "사용 목적": "회사별 보유세 fallback 및 bridge 입력값", "상태": "앱에 포함"},
+            {"자료": "Red Flag Rules", "사용 목적": "Assurance 및 Tax 위험수준 판단 기준", "상태": "앱에 포함"},
+            {"자료": "내장 CSV", "사용 목적": "공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블", "상태": "앱에 포함"},
+        ]
+    )
     st.dataframe(source_status, hide_index=True, width="stretch", height=230)
 
     st.markdown("### Peer Benchmark 및 Red Flag 방법론")
     st.write(
-        "Peer Benchmark는 `data/reit_peer_snapshot.csv`의 snapshot 데이터를 기준으로 선택 리츠와 상장리츠 peer group을 비교합니다. "
-        "총자산, 투자부동산, 차입금, FFO(리츠의 반복적 영업현금흐름에 가까운 지표), 배당, 보유세, 공시가격 입력값을 이용해 "
-        "감사위험과 보유세 부담 관련 비율을 계산합니다."
+        "Peer Benchmark는 `data/reit_peer_snapshot.csv`의 Snapshot 데이터를 기준으로 선택 리츠와 상장리츠 peer group을 비교합니다. "
+        "총자산, 투자부동산, 차입금, FFO, 배당, 보유세, 공시가격 입력값을 이용해 감사위험과 보유세 부담 관련 비율을 계산합니다."
     )
     st.write(
         "Red Flag 판단은 `data/red_flag_rules.json`의 규칙을 사용합니다. 각 규칙은 절대 기준과 peer percentile을 함께 보며, "
         "정상·주의·높음·데이터 부족으로 표시합니다. 데이터가 없거나 0으로 나누는 계산은 강제로 추정하지 않고 데이터 부족으로 표시합니다."
     )
-    st.info(
-        "앱 실행 시 모든 상장리츠의 DART API를 실시간 호출하지 않습니다. 공개 배포 버전에서는 빠른 실행과 안정성을 위해 "
-        "Snapshot 데이터를 기본으로 사용하고, 필요 시 별도 수집 스크립트로 갱신할 수 있도록 설계했습니다."
+
+    st.markdown("### Tax 계산 및 검증 기준")
+    st.write(
+        "Tax mode는 `build_company_tax_dataset`으로 선택 회사의 tax dataset을 만들고, `build_holding_tax_bridge`로 공시가격 또는 "
+        "장부가액에서 과세표준과 추정 보유세를 연결합니다. `validate_tax_inputs`는 결측, fallback, denominator 안정성을 별도로 표시합니다."
     )
     st.caption(
-        "공개 배포 버전에서는 회사별 상세 자산·보유세 데이터의 가용성이 서로 다를 수 있습니다. 상세 데이터가 부족한 회사는 "
-        "회사 전체 Snapshot 기반 추정값으로 Tax Review Pack을 생성하며, 자산별 세부 분석은 데이터가 확보된 범위 내에서만 표시합니다."
-    )
-    st.markdown("### v13 Tax Review Pack 방법론")
-    st.write(
-        "Tax mode는 `data/reit_tax_snapshot.csv`와 Peer Snapshot을 사용해 Tax Issue Matrix, 보유세 정합성 검토표, "
-        "요청자료 리스트, Tax Review Memo 초안을 생성합니다. 자산별 상세자료가 없는 회사는 `회사 전체 추정` 행과 "
-        "`source_type = peer_snapshot_estimate`를 사용해 예비 분석을 계속 진행합니다."
-    )
-    st.info(
-        "Tax Review Pack은 신고 목적의 확정 세액이나 법률의견이 아닙니다. 공시자료와 Snapshot 기반으로 초기 검토 포인트를 "
-        "빠르게 구조화하기 위한 산출물이며, 최종 판단에는 원자료 확인과 전문가 검토가 필요합니다."
+        "회사별 상세 자료가 부족한 경우 `회사 전체 추정` 행과 `source_type = peer_snapshot_estimate`가 표시됩니다. "
+        "이 값은 공식 고지세액이 아닌 공개자료 및 Snapshot 기반 예비 검토용 입력값입니다."
     )
 
-    st.markdown("### 회사별 상세 데이터가 부족한 경우의 처리 방식")
+    st.markdown("### 데이터 연결 및 공개 런타임")
     st.write(
-        "모든 상장리츠는 회사 전체 Peer Benchmark와 Tax Snapshot을 기준으로 Tax Review Pack을 생성합니다. "
-        "다만 자산별 임차인, Cap rate, 차입금 만기 wall, 자산별 보유세 상세표는 회사별로 공개자료의 구조화 수준이 다를 수 있습니다."
+        "외부 데이터 인증값은 서버 측 데이터 연결 설정 또는 환경변수에서만 불러옵니다. 인증값은 화면에 표시하지 않으며, "
+        "디버그 문구와 API 응답도 표시 전 마스킹합니다."
     )
     st.info(
-        "자산별 상세 섹션은 선택 회사의 회사별 상세 데이터가 있을 때만 표시합니다. 상세 데이터가 부족한 회사에는 다른 회사의 "
-        "자산 목록이나 임차인 정보를 재사용하지 않고, 회사 전체 Snapshot 기반 proxy 지표를 표시합니다."
-    )
-    st.caption(
-        "Snapshot 또는 예비 추정값은 `source_type`과 `source_note`로 구분합니다. 이 값은 공식 세액, 감사조서, 회사 내부자료를 "
-        "대체하지 않으며 최종 판단에는 원천자료 대사와 전문가 검토가 필요합니다."
-    )
-    if peer_context:
-        peer_metrics = peer_context.get("peer_metrics", pd.DataFrame())
-        rules = peer_context.get("red_flag_rules", {})
-        st.dataframe(
-            pd.DataFrame([
-                {"항목": "Peer 회사 수", "값": str(peer_metrics["company_name"].nunique() if not peer_metrics.empty and "company_name" in peer_metrics.columns else 0)},
-                {"항목": "Assurance 규칙 수", "값": str(len(rules.get("assurance", [])))},
-                {"항목": "Tax 규칙 수", "값": str(len(rules.get("tax", [])))},
-                {"항목": "자료 기준", "값": "Snapshot 기준 / sample_snapshot은 공식·감사 확정 데이터가 아닌 예시 데이터"},
-            ]),
-            hide_index=True,
-            width="stretch",
-            height=176,
-        )
-
-    st.markdown("### 계산 기준")
-    st.write(
-        "이 앱은 정식 의견서가 아니라 예비 분석 및 업무 검토 지원 도구입니다. 공시 재무제표, KPI, 자산별 정보, "
-        "차입금 만기, 거시경제 지표, 공시가격 입력값을 연결해 Scenario 결과와 실무 체크리스트를 생성합니다."
-    )
-    st.caption("현재 공개 버전은 Snapshot 및 예시 데이터를 함께 사용합니다. 데이터 기준일은 각 표의 자료 기준 또는 이 방법론 페이지에서 확인할 수 있습니다.")
-    st.write(
-        "결과는 감사의견, 세무신고서, 법률 자문, 투자추천, 신용등급, 정식 가치평가 의견을 대체하지 않습니다. "
-        "실무에 사용하려면 원천자료 대사와 전문가 검토가 필요합니다."
-    )
-
-    st.markdown("### 데이터 연결 및 보안")
-    st.write(
-        "외부 데이터 인증값은 서버 측 데이터 연결 설정 또는 환경변수에서만 불러옵니다. "
-        "보안상 인증값은 화면에 표시하지 않으며, 디버그 문구와 API 응답도 표시 전 마스킹합니다."
-    )
-    st.info(
-        "본 공개 버전은 서버 측 데이터 연결 설정을 사용하도록 설계되어 있습니다. 사용자는 별도의 인증키를 "
-        "입력할 필요가 없으며, 실시간 데이터 연결이 제한될 경우 예시 데이터로 자동 전환됩니다."
+        "본 공개 버전은 서버 측 데이터 연결 설정을 사용하도록 설계되어 있습니다. 사용자는 별도의 인증값을 입력할 필요가 없으며, "
+        "실시간 데이터 연결이 제한될 경우 예시 데이터로 자동 전환됩니다."
     )
 
     with st.expander("자료 신뢰도 요약", expanded=False):
-        st.dataframe(
-            _source_confidence_table(asset_risk, debt_schedule, financials, kpis),
-            width="stretch",
-            hide_index=True,
-            height=220,
-        )
+        st.dataframe(_source_confidence_table(asset_risk, debt_schedule, financials, kpis), width="stretch", hide_index=True, height=220)
 
     with st.expander("데이터 사전", expanded=False):
         st.caption("원천 컬럼명은 재현성과 검증을 위해 일부 English identifier를 유지합니다.")
@@ -186,9 +141,3 @@ def render_methodology_page(
 
     with st.expander("추가 자료 수집 계획", expanded=False):
         st.dataframe(source_plan, width="stretch", hide_index=True, height=220)
-
-    st.markdown("### 한계 및 향후 개선 방향")
-    st.write(
-        "v13은 Tax Review Pack 자동화에 집중한 공개 포트폴리오 버전입니다. "
-        "향후 v14 이후에는 문서 추출, 요청자료 export, 고지세액 대사, 다기간 peer trend 비교를 검토할 수 있습니다."
-    )

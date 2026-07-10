@@ -1,5 +1,7 @@
 # v13 Feature Summary
 
+> 참고: 현재 활성 버전은 v14 - Tax Workflow Control & Validation입니다. 이 문서는 v13에서 도입된 Tax Review Pack Generator의 이력을 설명합니다.
+
 ## v13 - Tax Review Pack Generator
 
 v13은 v12의 Tax Red Flag 결과를 실제 Tax Advisory 초기 검토 산출물로 전환하는 버전입니다. 선택한 상장리츠의 보유세 부담, 공시가격 변동, FFO 영향, Peer 비교 결과를 바탕으로 Tax Issue Matrix, 보유세 정합성 검토표, 요청자료 리스트, 검토 메모 초안을 자동 생성합니다.

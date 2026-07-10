@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from config import DATA_DIR
+from data_source_policy import contains_estimate_source, get_source_policy, normalize_source_type
 
 
 TAX_SNAPSHOT_PATH = DATA_DIR / "reit_tax_snapshot.csv"
@@ -46,47 +47,59 @@ def get_company_tax_data(company_name: str, tax_snapshot: pd.DataFrame | None = 
     snapshot = tax_snapshot if tax_snapshot is not None else load_tax_snapshot()
     if snapshot is None or snapshot.empty:
         return pd.DataFrame()
-    return snapshot[snapshot["company_name"] == company_name].copy()
+    return snapshot[snapshot["company_name"].astype(str).str.strip() == str(company_name).strip()].copy()
 
 
 def _peer_row(company_name: str, peer_snapshot: pd.DataFrame | None) -> pd.Series | None:
     if peer_snapshot is None or peer_snapshot.empty or "company_name" not in peer_snapshot.columns:
         return None
-    matches = peer_snapshot[peer_snapshot["company_name"] == company_name]
+    matches = peer_snapshot[peer_snapshot["company_name"].astype(str).str.strip() == str(company_name).strip()]
     if matches.empty:
         return None
-    return matches.sort_values("year").iloc[-1]
+    sort_cols = [col for col in ["year", "period"] if col in matches.columns]
+    return matches.sort_values(sort_cols).iloc[-1] if sort_cols else matches.iloc[-1]
 
 
-def estimate_company_holding_tax_from_peer_snapshot(company_name: str, peer_snapshot: pd.DataFrame | None, company_profile: dict | None = None) -> pd.DataFrame:
+def _num(value):
+    return pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+
+
+def estimate_company_holding_tax_from_peer_snapshot(
+    company_name: str,
+    peer_snapshot: pd.DataFrame | None,
+    company_profile: dict | None = None,
+) -> pd.DataFrame:
     profile = company_profile or {}
     row = _peer_row(company_name, peer_snapshot)
     if row is None:
-        return pd.DataFrame([
-            {
-                "company_name": company_name,
-                "stock_code": profile.get("stock_code", ""),
-                "dart_corp_code": profile.get("dart_corp_code", ""),
-                "asset_name": COMPANY_LEVEL_FALLBACK_ASSET_NAME,
-                "region": COMPANY_LEVEL_FALLBACK_REGION,
-                "asset_type": profile.get("main_asset_type", ""),
-                "book_value": pd.NA,
-                "official_price": pd.NA,
-                "estimated_tax_base": pd.NA,
-                "estimated_holding_tax": pd.NA,
-                "official_price_growth_5y": pd.NA,
-                "holding_tax_to_ffo": pd.NA,
-                "source_type": "data_missing",
-                "source_note": DATA_MISSING_NOTE,
-                "latest_year": pd.NA,
-            }
-        ])
+        return pd.DataFrame(
+            [
+                {
+                    "company_name": company_name,
+                    "stock_code": profile.get("stock_code", ""),
+                    "dart_corp_code": profile.get("dart_corp_code", ""),
+                    "asset_name": COMPANY_LEVEL_FALLBACK_ASSET_NAME,
+                    "region": COMPANY_LEVEL_FALLBACK_REGION,
+                    "asset_type": profile.get("main_asset_type", ""),
+                    "book_value": pd.NA,
+                    "official_price": pd.NA,
+                    "estimated_tax_base": pd.NA,
+                    "estimated_holding_tax": pd.NA,
+                    "official_price_growth_5y": pd.NA,
+                    "holding_tax_to_ffo": pd.NA,
+                    "source_type": "data_insufficient",
+                    "source_note": DATA_MISSING_NOTE,
+                    "latest_year": pd.NA,
+                }
+            ]
+        )
 
-    investment_property = pd.to_numeric(pd.Series([row.get("investment_property", pd.NA)]), errors="coerce").iloc[0]
-    official_price = pd.to_numeric(pd.Series([row.get("official_price_total", pd.NA)]), errors="coerce").iloc[0]
-    estimated_tax = pd.to_numeric(pd.Series([row.get("estimated_holding_tax", pd.NA)]), errors="coerce").iloc[0]
+    investment_property = _num(row.get("investment_property", pd.NA))
+    official_price = _num(row.get("official_price_total", pd.NA))
+    estimated_tax = _num(row.get("estimated_holding_tax", pd.NA))
     source_type = "peer_snapshot_estimate"
     source_note = COMPANY_LEVEL_FALLBACK_NOTE
+
     if pd.isna(estimated_tax) and pd.notna(official_price):
         estimated_tax = official_price * 0.011
         source_type = "official_price_estimate"
@@ -97,27 +110,29 @@ def estimate_company_holding_tax_from_peer_snapshot(company_name: str, peer_snap
             estimated_tax = official_price * 0.011
         source_type = "investment_property_estimate"
         source_note = "공시가격과 자산별 상세자료가 부족하여 투자부동산 장부금액 기반 proxy 적용"
-    ffo = pd.to_numeric(pd.Series([row.get("ffo_proxy", pd.NA)]), errors="coerce").iloc[0]
 
-    return pd.DataFrame([
-        {
-            "company_name": company_name,
-            "stock_code": str(profile.get("stock_code", "")),
-            "dart_corp_code": profile.get("dart_corp_code", ""),
-            "asset_name": COMPANY_LEVEL_FALLBACK_ASSET_NAME,
-            "region": COMPANY_LEVEL_FALLBACK_REGION,
-            "asset_type": profile.get("main_asset_type", ""),
-            "book_value": investment_property,
-            "official_price": official_price,
-            "estimated_tax_base": official_price * 0.70 if pd.notna(official_price) else pd.NA,
-            "estimated_holding_tax": estimated_tax,
-            "official_price_growth_5y": 10.0,
-            "holding_tax_to_ffo": estimated_tax / ffo if pd.notna(estimated_tax) and pd.notna(ffo) and ffo else pd.NA,
-            "source_type": source_type,
-            "source_note": source_note,
-            "latest_year": row.get("year", pd.NA),
-        }
-    ])
+    ffo = _num(row.get("ffo_proxy", pd.NA))
+    return pd.DataFrame(
+        [
+            {
+                "company_name": company_name,
+                "stock_code": str(profile.get("stock_code", "")),
+                "dart_corp_code": profile.get("dart_corp_code", ""),
+                "asset_name": COMPANY_LEVEL_FALLBACK_ASSET_NAME,
+                "region": COMPANY_LEVEL_FALLBACK_REGION,
+                "asset_type": profile.get("main_asset_type", ""),
+                "book_value": investment_property,
+                "official_price": official_price,
+                "estimated_tax_base": official_price * 0.70 if pd.notna(official_price) else pd.NA,
+                "estimated_holding_tax": estimated_tax,
+                "official_price_growth_5y": 10.0,
+                "holding_tax_to_ffo": estimated_tax / ffo if pd.notna(estimated_tax) and pd.notna(ffo) and ffo else pd.NA,
+                "source_type": source_type,
+                "source_note": source_note,
+                "latest_year": row.get("year", pd.NA),
+            }
+        ]
+    )
 
 
 def build_company_tax_dataset(
@@ -131,6 +146,7 @@ def build_company_tax_dataset(
         company_tax = estimate_company_holding_tax_from_peer_snapshot(company_name, peer_snapshot, company_profile)
     if company_tax.empty:
         return company_tax
+
     company_tax = company_tax.copy()
     company_tax["company_name"] = company_name
     for col in ["source_type", "source_note", "asset_name", "region"]:
@@ -140,6 +156,7 @@ def build_company_tax_dataset(
     company_tax.loc[fallback_mask, "region"] = COMPANY_LEVEL_FALLBACK_REGION
     company_tax.loc[fallback_mask & company_tax["source_type"].astype(str).str.strip().eq(""), "source_type"] = "peer_snapshot_estimate"
     company_tax.loc[fallback_mask & company_tax["source_note"].astype(str).str.strip().eq(""), "source_note"] = COMPANY_LEVEL_FALLBACK_NOTE
+    company_tax["source_type"] = company_tax["source_type"].apply(lambda value: normalize_source_type(value) if value == "data_missing" else value)
     for col in NUMERIC_TAX_COLUMNS:
         if col in company_tax.columns:
             company_tax[col] = pd.to_numeric(company_tax[col], errors="coerce")
@@ -148,13 +165,19 @@ def build_company_tax_dataset(
 
 def get_tax_source_summary(company_name: str, company_tax_data: pd.DataFrame) -> dict:
     if company_tax_data is None or company_tax_data.empty:
+        policy = get_source_policy("data_insufficient")
         return {
             "company_name": company_name,
             "latest_year": None,
-            "source_type": "data_missing",
+            "source_type": "data_insufficient",
             "source_note": DATA_MISSING_NOTE,
             "scope_label": "데이터 부족",
             "is_estimated": False,
+            "korean_label": policy.korean_label,
+            "reliability_level": policy.reliability_level,
+            "memo_limitation_text": policy.memo_limitation_text,
+            "ui_warning_text": policy.ui_warning_text,
+            "allowed_outputs": policy.allowed_outputs,
         }
 
     source_types = sorted(company_tax_data.get("source_type", pd.Series(dtype="object")).dropna().astype(str).unique())
@@ -163,14 +186,15 @@ def get_tax_source_summary(company_name: str, company_tax_data: pd.DataFrame) ->
     if "latest_year" in company_tax_data.columns:
         years = pd.to_numeric(company_tax_data["latest_year"], errors="coerce").dropna()
         latest_year = years.max() if not years.empty else pd.NA
+
     asset_names = company_tax_data.get("asset_name", pd.Series(dtype="object")).astype(str).str.strip()
     fallback_assets = asset_names.eq(COMPANY_LEVEL_FALLBACK_ASSET_NAME)
-    source_type_text = ", ".join(source_types) or "data_missing"
-    estimate_keywords = ["estimate", "sample", "proxy"]
-    is_estimated = fallback_assets.any() or any(keyword in source_type_text for keyword in estimate_keywords)
+    source_type_text = ", ".join(source_types) or "data_insufficient"
+    policy = get_source_policy(source_type_text)
+    is_estimated = fallback_assets.any() or contains_estimate_source(source_type_text)
     if fallback_assets.any():
         scope_label = "회사 전체 Snapshot 기반 추정"
-    elif "data_missing" in source_type_text:
+    elif policy.source_type == "data_insufficient":
         scope_label = "데이터 부족"
     elif is_estimated:
         scope_label = "예비 추정"
@@ -184,18 +208,28 @@ def get_tax_source_summary(company_name: str, company_tax_data: pd.DataFrame) ->
         "source_note": " / ".join(source_notes) or DATA_MISSING_NOTE,
         "scope_label": scope_label,
         "is_estimated": bool(is_estimated),
+        "korean_label": policy.korean_label,
+        "reliability_level": policy.reliability_level,
+        "memo_limitation_text": policy.memo_limitation_text,
+        "ui_warning_text": policy.ui_warning_text,
+        "allowed_outputs": policy.allowed_outputs,
     }
 
 
 def get_tax_source_status(company_name: str, company_tax_data: pd.DataFrame) -> str:
     summary = get_tax_source_summary(company_name, company_tax_data)
     year_text = f"{summary['latest_year']}년" if summary["latest_year"] else "연도 미확인"
-    if summary["source_type"] == "data_missing":
-        return f"{company_name}: {year_text} / 데이터 부족 / {summary['source_note']}"
-    return f"{year_text} / {summary['source_type']} / {summary['scope_label']} / {summary['source_note']}"
+    return (
+        f"{company_name}: {year_text} / {summary['source_type']} / {summary['scope_label']} / "
+        f"{summary['korean_label']} / {summary['source_note']}"
+    )
 
 
-def build_tax_history_from_company_tax_data(company_tax_data: pd.DataFrame, years_back: int = 5, default_latest_year: int = 2026) -> pd.DataFrame:
+def build_tax_history_from_company_tax_data(
+    company_tax_data: pd.DataFrame,
+    years_back: int = 5,
+    default_latest_year: int = 2026,
+) -> pd.DataFrame:
     if company_tax_data is None or company_tax_data.empty:
         return pd.DataFrame()
 

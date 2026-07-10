@@ -1,6 +1,7 @@
 import pandas as pd
 
 from calculations_peer import load_peer_snapshot
+from data_source_policy import dominant_source_type, get_source_policy
 from tax_data_loader import load_tax_snapshot
 
 
@@ -44,8 +45,8 @@ def has_asset_level_data(company_name: str, company_profile: dict | None = None)
 
 
 def has_tax_asset_data(company_name: str, company_profile: dict | None = None) -> bool:
-    # Current public dataset has SK asset detail that can drive a tax proxy.
-    # It is still not an official asset-by-asset tax bill.
+    # The public sample only has detailed asset tables for SK리츠.
+    # They are never reused for other companies.
     return _is_detailed_sample_company(company_name, company_profile)
 
 
@@ -74,12 +75,14 @@ def get_company_data_availability(
     detail_available = has_asset_level_data(company_name, company_profile)
     tax_asset_available = has_tax_asset_data(company_name, company_profile)
 
-    source_types = []
+    raw_source_types = []
     if tax_available and "source_type" in tax_rows.columns:
-        source_types.extend(tax_rows["source_type"].dropna().astype(str).unique().tolist())
+        raw_source_types.extend(tax_rows["source_type"].dropna().astype(str).unique().tolist())
     if peer_available:
-        source_types.append(str(peer_row.get("source_type", "sample_snapshot")))
-    source_type = ", ".join(sorted(set(filter(None, source_types)))) or "data_missing"
+        raw_source_types.append(str(peer_row.get("source_type", "sample_snapshot")))
+    raw_source_type_text = ", ".join(sorted(set(filter(None, raw_source_types)))) or "data_insufficient"
+    source_type = dominant_source_type(raw_source_type_text)
+    policy = get_source_policy(source_type)
 
     latest_year = pd.NA
     if tax_available and "latest_year" in tax_rows.columns:
@@ -117,7 +120,11 @@ def get_company_data_availability(
         "asset_level_real_estate_available": bool(detail_available),
         "latest_year": int(latest_year) if pd.notna(latest_year) else None,
         "source_type": source_type,
+        "raw_source_type": raw_source_type_text,
+        "source_label": policy.korean_label,
+        "source_reliability": policy.reliability_level,
         "source_note": source_note,
+        "source_warning": policy.ui_warning_text,
         "scope_label": scope_label,
     }
 
