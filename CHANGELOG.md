@@ -1,6 +1,6 @@
 # 변경 이력
 
-## v13 - Tax Review Pack Generator
+## v13 - Tax Review Pack Generator (현재)
 
 - Tax Issue Matrix 추가
 - Holding Tax Reconciliation 추가
@@ -16,7 +16,7 @@
 
 ## v12 - Peer Benchmark & Red Flag Engine
 
-- v12를 현재 활성 개발 및 공개 포트폴리오 버전으로 정리
+- v12 당시 활성 개발 및 공개 포트폴리오 버전으로 정리
 - 상장리츠 Peer Benchmark 기능 추가
 - Assurance Red Flag Engine 추가
 - Tax 보유세 부담 Peer Benchmark 추가

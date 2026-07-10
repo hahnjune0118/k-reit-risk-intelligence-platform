@@ -147,7 +147,7 @@ def render_data_scope_banner(peer_context: dict | None):
             },
         )
         if availability.get("source_note"):
-            st.caption(availability["source_note"])
+            st.caption(f"source_note: {availability['source_note']}")
 
 
 def fmt_mn_to_bn(value):

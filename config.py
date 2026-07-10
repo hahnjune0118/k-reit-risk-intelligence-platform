@@ -25,7 +25,7 @@ DART_CORP_CODE_ENDPOINT = "https://opendart.fss.or.kr/api/corpCode.xml"
 DART_SINGLE_FS_ENDPOINT = "https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json"
 DART_LIST_ENDPOINT = "https://opendart.fss.or.kr/api/list.json"
 
-# Archived for future KRX-based Deals valuation module.
+# Archived endpoint kept out of the public v13 runtime.
 KRX_KOSPI_DAILY_TRADE_ENDPOINT = "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd"
 
 # 공시가격 계열 API는 승인 서비스별 조회 방식이 다를 수 있어 공개 UI에서는 예시 데이터 fallback을 기본으로 둡니다.

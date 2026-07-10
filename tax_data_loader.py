@@ -7,6 +7,10 @@ from config import DATA_DIR
 
 
 TAX_SNAPSHOT_PATH = DATA_DIR / "reit_tax_snapshot.csv"
+COMPANY_LEVEL_FALLBACK_ASSET_NAME = "회사 전체 추정"
+COMPANY_LEVEL_FALLBACK_REGION = "회사 전체"
+COMPANY_LEVEL_FALLBACK_NOTE = "자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정"
+DATA_MISSING_NOTE = "Peer Snapshot 데이터가 부족하여 보유세 추정이 제한됨"
 NUMERIC_TAX_COLUMNS = [
     "book_value",
     "official_price",
@@ -63,8 +67,8 @@ def estimate_company_holding_tax_from_peer_snapshot(company_name: str, peer_snap
                 "company_name": company_name,
                 "stock_code": profile.get("stock_code", ""),
                 "dart_corp_code": profile.get("dart_corp_code", ""),
-                "asset_name": "회사 전체 추정",
-                "region": profile.get("main_region", ""),
+                "asset_name": COMPANY_LEVEL_FALLBACK_ASSET_NAME,
+                "region": COMPANY_LEVEL_FALLBACK_REGION,
                 "asset_type": profile.get("main_asset_type", ""),
                 "book_value": pd.NA,
                 "official_price": pd.NA,
@@ -73,7 +77,7 @@ def estimate_company_holding_tax_from_peer_snapshot(company_name: str, peer_snap
                 "official_price_growth_5y": pd.NA,
                 "holding_tax_to_ffo": pd.NA,
                 "source_type": "data_missing",
-                "source_note": "Peer Snapshot 데이터가 부족하여 보유세 추정이 제한됨",
+                "source_note": DATA_MISSING_NOTE,
                 "latest_year": pd.NA,
             }
         ])
@@ -82,7 +86,7 @@ def estimate_company_holding_tax_from_peer_snapshot(company_name: str, peer_snap
     official_price = pd.to_numeric(pd.Series([row.get("official_price_total", pd.NA)]), errors="coerce").iloc[0]
     estimated_tax = pd.to_numeric(pd.Series([row.get("estimated_holding_tax", pd.NA)]), errors="coerce").iloc[0]
     source_type = "peer_snapshot_estimate"
-    source_note = "자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정"
+    source_note = COMPANY_LEVEL_FALLBACK_NOTE
     if pd.isna(estimated_tax) and pd.notna(official_price):
         estimated_tax = official_price * 0.011
         source_type = "official_price_estimate"
@@ -100,8 +104,8 @@ def estimate_company_holding_tax_from_peer_snapshot(company_name: str, peer_snap
             "company_name": company_name,
             "stock_code": str(profile.get("stock_code", "")),
             "dart_corp_code": profile.get("dart_corp_code", ""),
-            "asset_name": "회사 전체 추정",
-            "region": profile.get("main_region", ""),
+            "asset_name": COMPANY_LEVEL_FALLBACK_ASSET_NAME,
+            "region": COMPANY_LEVEL_FALLBACK_REGION,
             "asset_type": profile.get("main_asset_type", ""),
             "book_value": investment_property,
             "official_price": official_price,
@@ -125,24 +129,70 @@ def build_company_tax_dataset(
     company_tax = get_company_tax_data(company_name, tax_snapshot)
     if company_tax.empty:
         company_tax = estimate_company_holding_tax_from_peer_snapshot(company_name, peer_snapshot, company_profile)
+    if company_tax.empty:
+        return company_tax
+    company_tax = company_tax.copy()
+    company_tax["company_name"] = company_name
+    for col in ["source_type", "source_note", "asset_name", "region"]:
+        if col not in company_tax.columns:
+            company_tax[col] = ""
+    fallback_mask = company_tax["asset_name"].astype(str).str.strip().eq(COMPANY_LEVEL_FALLBACK_ASSET_NAME)
+    company_tax.loc[fallback_mask, "region"] = COMPANY_LEVEL_FALLBACK_REGION
+    company_tax.loc[fallback_mask & company_tax["source_type"].astype(str).str.strip().eq(""), "source_type"] = "peer_snapshot_estimate"
+    company_tax.loc[fallback_mask & company_tax["source_note"].astype(str).str.strip().eq(""), "source_note"] = COMPANY_LEVEL_FALLBACK_NOTE
     for col in NUMERIC_TAX_COLUMNS:
         if col in company_tax.columns:
             company_tax[col] = pd.to_numeric(company_tax[col], errors="coerce")
     return company_tax
 
 
-def get_tax_source_status(company_name: str, company_tax_data: pd.DataFrame) -> str:
+def get_tax_source_summary(company_name: str, company_tax_data: pd.DataFrame) -> dict:
     if company_tax_data is None or company_tax_data.empty:
-        return f"{company_name}: 데이터 부족"
-    source_types = ", ".join(sorted(company_tax_data["source_type"].dropna().astype(str).unique()))
-    latest_year = company_tax_data["latest_year"].dropna().max() if "latest_year" in company_tax_data.columns else pd.NA
-    year_text = f"{int(latest_year)}년" if pd.notna(latest_year) else "연도 미확인"
-    estimate_types = {"peer_snapshot_estimate", "sample_estimate", "official_price_estimate", "investment_property_estimate"}
-    if any(source_type in source_types for source_type in estimate_types):
-        return f"{year_text} / {source_types} / 회사 전체 Snapshot 기반 예시 추정"
-    if "data_missing" in source_types:
-        return f"{year_text} / 데이터 부족"
-    return f"{year_text} / {source_types}"
+        return {
+            "company_name": company_name,
+            "latest_year": None,
+            "source_type": "data_missing",
+            "source_note": DATA_MISSING_NOTE,
+            "scope_label": "데이터 부족",
+            "is_estimated": False,
+        }
+
+    source_types = sorted(company_tax_data.get("source_type", pd.Series(dtype="object")).dropna().astype(str).unique())
+    source_notes = sorted(company_tax_data.get("source_note", pd.Series(dtype="object")).dropna().astype(str).unique())
+    latest_year = pd.NA
+    if "latest_year" in company_tax_data.columns:
+        years = pd.to_numeric(company_tax_data["latest_year"], errors="coerce").dropna()
+        latest_year = years.max() if not years.empty else pd.NA
+    asset_names = company_tax_data.get("asset_name", pd.Series(dtype="object")).astype(str).str.strip()
+    fallback_assets = asset_names.eq(COMPANY_LEVEL_FALLBACK_ASSET_NAME)
+    source_type_text = ", ".join(source_types) or "data_missing"
+    estimate_keywords = ["estimate", "sample", "proxy"]
+    is_estimated = fallback_assets.any() or any(keyword in source_type_text for keyword in estimate_keywords)
+    if fallback_assets.any():
+        scope_label = "회사 전체 Snapshot 기반 추정"
+    elif "data_missing" in source_type_text:
+        scope_label = "데이터 부족"
+    elif is_estimated:
+        scope_label = "예비 추정"
+    else:
+        scope_label = "자산별 상세"
+
+    return {
+        "company_name": company_name,
+        "latest_year": int(latest_year) if pd.notna(latest_year) else None,
+        "source_type": source_type_text,
+        "source_note": " / ".join(source_notes) or DATA_MISSING_NOTE,
+        "scope_label": scope_label,
+        "is_estimated": bool(is_estimated),
+    }
+
+
+def get_tax_source_status(company_name: str, company_tax_data: pd.DataFrame) -> str:
+    summary = get_tax_source_summary(company_name, company_tax_data)
+    year_text = f"{summary['latest_year']}년" if summary["latest_year"] else "연도 미확인"
+    if summary["source_type"] == "data_missing":
+        return f"{company_name}: {year_text} / 데이터 부족 / {summary['source_note']}"
+    return f"{year_text} / {summary['source_type']} / {summary['scope_label']} / {summary['source_note']}"
 
 
 def build_tax_history_from_company_tax_data(company_tax_data: pd.DataFrame, years_back: int = 5, default_latest_year: int = 2026) -> pd.DataFrame:
@@ -166,7 +216,7 @@ def build_tax_history_from_company_tax_data(company_tax_data: pd.DataFrame, year
             tax = latest_tax / discount if pd.notna(latest_tax) else pd.NA
             rows.append(
                 {
-                    "asset_name": row.get("asset_name", "회사 전체 추정"),
+                    "asset_name": row.get("asset_name", COMPANY_LEVEL_FALLBACK_ASSET_NAME),
                     "year": year,
                     "location": row.get("region", ""),
                     "asset_type": row.get("asset_type", ""),

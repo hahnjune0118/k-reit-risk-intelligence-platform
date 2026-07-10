@@ -27,7 +27,7 @@ from calculations_tax_review_pack import (
 from config import REALTY_PRICE_API_ENDPOINT_DEFAULT
 from formatting import format_bn_krw, format_pct_from_100
 from api_manager import get_api_key, sanitize_secret_dataframe, sanitize_secret_text
-from tax_data_loader import build_company_tax_dataset, build_tax_history_from_company_tax_data, get_tax_source_status
+from tax_data_loader import build_company_tax_dataset, build_tax_history_from_company_tax_data, get_tax_source_status, get_tax_source_summary
 from ui_common import compact_fig, render_data_scope_banner, render_selected_company_header
 from ui_peer import build_peer_metric_table, flags_to_tax_review_table, render_overall_risk_message, style_risk_review_table
 
@@ -149,6 +149,19 @@ def _render_peer_tax_section(peer_context: dict | None):
             )
 
 
+def _render_tax_source_scope_banner(target_company: str, company_profile: dict, company_tax_data: pd.DataFrame):
+    summary = get_tax_source_summary(target_company, company_tax_data)
+    stock_code = company_profile.get("stock_code", "")
+    company_label = f"{target_company} ({stock_code})" if stock_code else target_company
+    latest_year = f"{summary['latest_year']}년" if summary["latest_year"] else "연도 미확인"
+
+    with st.container(border=True):
+        st.caption(f"현재 분석 대상: {company_label}")
+        st.caption(f"분석 범위: {summary['scope_label']} / 데이터 기준: {latest_year}")
+        st.caption(f"source_type: {summary['source_type']}")
+        st.caption(f"source_note: {summary['source_note']}")
+
+
 def render_tax_mode(
     asset_risk: pd.DataFrame,
     scenario: dict,
@@ -170,9 +183,10 @@ def render_tax_mode(
     peer_snapshot = (peer_context or {}).get("peer_snapshot", pd.DataFrame())
     peer_summary = (peer_context or {}).get("peer_summary", {})
     tax_flags = (peer_context or {}).get("tax_red_flags", [])
-    tax_pack_assumptions = _render_tax_assumption_panel(assumptions, scenario)
     company_tax_data = build_company_tax_dataset(target_company, peer_snapshot, company_profile)
     tax_source_status = get_tax_source_status(target_company, company_tax_data)
+    _render_tax_source_scope_banner(target_company, company_profile, company_tax_data)
+    tax_pack_assumptions = _render_tax_assumption_panel(assumptions, scenario)
 
     with st.expander("보유세 계산 산식, 과세표준, 세율 보기", expanded=False):
         st.markdown(
@@ -401,6 +415,23 @@ def render_tax_mode(
     source_detail = build_source_detail(tax_history)
 
     st.markdown("---")
+    with st.expander("Tax 데이터 기준 보기", expanded=False):
+        st.caption("Tax Review Pack에서 사용한 데이터 범위와 추정 근거입니다.")
+        st.dataframe(
+            source_detail,
+            width="stretch",
+            hide_index=True,
+            height=180,
+            column_config={
+                "자산명": st.column_config.TextColumn("자산명", width="medium"),
+                "기준연도": st.column_config.TextColumn("연도", width="small"),
+                "source_type": st.column_config.TextColumn("source_type", width="small"),
+                "source_note": st.column_config.TextColumn("source_note", width="large"),
+                "식별자/주소": st.column_config.TextColumn("식별자/주소", width="medium"),
+                "비고": st.column_config.TextColumn("비고", width="medium"),
+            },
+        )
+
     st.markdown("## Tax Issue Matrix")
     st.caption("Tax Red Flag, 보유세 정합성, FFO 현금유출 스트레스 결과를 실무 검토 항목으로 변환합니다.")
     st.dataframe(
@@ -633,6 +664,11 @@ def render_tax_mode(
         )
 
     with tab_data:
+        source_summary = get_tax_source_summary(target_company, company_tax_data)
+        st.caption(
+            f"source_type: {source_summary['source_type']} / "
+            f"source_note: {source_summary['source_note']}"
+        )
         st.write("**공시가격/기준시가 원천 데이터**")
         if has_detailed_asset_data and official_price_history is not None and not official_price_history.empty:
             st.dataframe(official_price_history, width="stretch", hide_index=True, height=260)

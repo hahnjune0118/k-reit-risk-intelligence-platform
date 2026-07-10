@@ -267,14 +267,21 @@ def build_tax_review_memo(
         f"- {row['세무 이슈']}: {row['위험수준']} - {row['발생 근거']}"
         for _, row in high_or_warning.head(6).iterrows()
     ) or "- 현재 자동 식별된 높음/주의 항목은 제한적입니다. 원자료 대사 후 판단이 필요합니다."
-    request_lines = "\n".join(f"- {row['요청자료']}: {row['요청 목적']}" for _, row in request_list.head(8).iterrows())
+    if request_list is not None and not request_list.empty:
+        request_lines = "\n".join(f"- {row['요청자료']}: {row['요청 목적']}" for _, row in request_list.head(8).iterrows())
+    else:
+        request_lines = "- 원자료 대사, 고지세액, 자산별 공시가격 자료를 우선 보완해야 합니다."
     estimated_scope = any(keyword in str(data_basis) for keyword in ["Snapshot", "추정", "estimate", "peer_snapshot", "proxy"])
-    limitation_note = (
-        "현재 선택 회사의 자산별 상세 공시가격 데이터가 제한되어 회사 전체 Snapshot 기반 추정값을 사용했습니다. "
-        "본 메모는 신고 목적의 세액 산출이나 법률의견이 아니라 공개자료 및 Snapshot 기반의 예비 검토 초안입니다."
-        if estimated_scope
-        else "본 메모는 신고 목적의 세액 산출이나 법률의견이 아니라 공개자료 기반의 예비 검토 초안입니다."
+    base_limitation = (
+        "본 메모는 세무신고 목적의 확정 세액 산출이나 법률의견이 아닙니다. "
+        "공개자료 및 Snapshot 기반의 예비 검토 초안입니다. "
+        "최종 판단에는 원자료 확인과 세무 전문가의 검토가 필요합니다."
     )
+    estimate_limitation = (
+        "현재 선택 회사의 자산별 상세 공시가격 데이터가 제한되어 회사 전체 Snapshot 기반 추정값을 사용했습니다. "
+        "해당 추정값은 신고 목적 세액이 아니며 Tax Review Pack 생성을 위한 예비 분석 입력값입니다."
+    )
+    limitation_note = f"{base_limitation}\n\n{estimate_limitation}" if estimated_scope else base_limitation
 
     return f"""# Tax Review Memo 초안
 
@@ -297,6 +304,6 @@ def build_tax_review_memo(
 ## 4. 요청자료
 {request_lines}
 
-## 5. 한계
-{limitation_note} 최종 판단에는 원자료 확인과 전문가 검토가 필요합니다.
+## 5. 제한 및 유의사항
+{limitation_note}
 """

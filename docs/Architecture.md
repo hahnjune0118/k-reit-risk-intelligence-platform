@@ -75,10 +75,12 @@ v13 Tax Review Pack 흐름:
 
 1. `tax_data_loader.load_tax_snapshot()`으로 Tax Snapshot 로딩
 2. 회사별 상세 자산·보유세 데이터가 있으면 해당 자료를 우선 사용
-3. 상세 데이터가 부족하면 `build_company_tax_dataset()`이 회사 전체 Snapshot 기반 추정 행을 생성
+3. 상세 데이터가 부족하면 `build_company_tax_dataset()`이 선택 회사명으로 회사 전체 Snapshot 기반 추정 행을 생성
 4. `red_flag_engine.build_tax_red_flags()`로 Peer 기반 Tax Red Flag 평가
 5. `calculations_tax_review_pack.py`가 Tax Issue Matrix, 보유세 정합성 검토표, 요청자료 리스트, Tax Review Memo 초안을 생성
-6. `ui_tax.py`가 v13 Tax Review Pack을 화면에 표시하고 Markdown memo 다운로드를 제공합니다.
+6. `ui_tax.py`가 `source_type`, `source_note`, 데이터 기준연도를 source/scope banner와 expander에 표시하고 Markdown memo 다운로드를 제공합니다.
+
+Tax Review Memo는 화면 표시와 다운로드 파일 모두 같은 Markdown 문자열을 사용합니다. 따라서 `제한 및 유의사항` 섹션, 확정 세액·법률의견 미제공 문구, 추정 데이터 사용 시 Snapshot 기반 추정값 문구가 양쪽에 동일하게 포함됩니다.
 
 Assurance fallback 흐름:
 
