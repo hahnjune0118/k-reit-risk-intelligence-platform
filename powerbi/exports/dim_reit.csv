@@ -1,0 +1,9 @@
+﻿stock_code,company_name,dart_corp_code,market_cap_rank,market_cap,market,reit_type,main_asset_type,main_region,note
+395400,SK리츠,sample_001,1,980000,KOSPI,위탁관리리츠,Office,Seoul,시가총액 순위 Snapshot 기준 예시 데이터
+365550,ESR켄달스퀘어리츠,sample_003,2,950000,KOSPI,위탁관리리츠,Logistics,Greater Seoul,시가총액 순위 Snapshot 기준 예시 데이터
+330590,롯데리츠,sample_002,3,780000,KOSPI,위탁관리리츠,Retail,Nationwide,시가총액 순위 Snapshot 기준 예시 데이터
+348950,제이알글로벌리츠,sample_004,4,640000,KOSPI,위탁관리리츠,Office,Overseas,시가총액 순위 Snapshot 기준 예시 데이터
+293940,신한알파리츠,sample_005,5,590000,KOSPI,위탁관리리츠,Office,Seoul,시가총액 순위 Snapshot 기준 예시 데이터
+357120,코람코라이프인프라리츠,sample_006,6,470000,KOSPI,위탁관리리츠,Retail / Infra,Nationwide,시가총액 순위 Snapshot 기준 예시 데이터
+400760,NH올원리츠,sample_008,7,320000,KOSPI,위탁관리리츠,Diversified,Nationwide,시가총액 순위 Snapshot 기준 예시 데이터
+334890,이지스밸류리츠,sample_007,8,300000,KOSPI,위탁관리리츠,Office,Seoul,시가총액 순위 Snapshot 기준 예시 데이터

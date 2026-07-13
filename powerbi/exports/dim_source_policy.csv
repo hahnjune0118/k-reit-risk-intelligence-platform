@@ -1,0 +1,7 @@
+﻿source_type,korean_label,reliability_level,reliability_sort,allowed_outputs,memo_limitation_text,ui_warning_text
+official_disclosure,공식 공시/공식 원천자료,높음,1,Tax Summary / 보유세 브리지 / Issue Matrix / Request List / Memo Draft,공식 공시자료를 사용하더라도 원자료 대사와 회사 확인 없이는 확정 세액이나 법률의견으로 사용할 수 없습니다.,공식 공시자료 기준입니다. 최종 판단 전 원자료 대사와 회사 확인이 필요합니다.
+api_snapshot,API/Snapshot 자료,중간,2,Tax Summary / 보유세 브리지 / Issue Matrix / Request List / Memo Draft,API 또는 Snapshot 자료는 기준일과 수집 방식의 차이가 있을 수 있으므로 원자료 확인이 필요합니다.,API/Snapshot 기준입니다. 기준일과 원천자료 차이를 확인해야 합니다.
+peer_snapshot,Peer Snapshot,중간-제한,3,Peer 비교 / Issue Matrix / Request List / Memo Draft,Peer Snapshot은 비교와 초기 선별 목적의 자료이며 회사별 자산 원장이나 고지세액을 대체하지 않습니다.,Peer Snapshot 기준입니다. 회사별 상세 원자료가 확보된 범위 안에서 해석해야 합니다.
+peer_snapshot_estimate,Peer 기반 회사 전체 추정,추정,4,Tax Summary / 보유세 브리지 / Issue Matrix / Request List / Memo Draft,"회사 전체 Snapshot 기반 추정값입니다. 자산별 고지세액, 과세표준, 장부가액 명세로 반드시 보완해야 합니다.",회사 전체 Snapshot 기반 추정입니다. 자산별 상세자료가 부족한 상태의 예비 분석입니다.
+sample_estimate,공개 데모 예시 추정,예시,5,Tax Summary / 보유세 브리지 / Issue Matrix / Request List / Memo Draft,공개 데모 예시 데이터가 포함되어 있습니다. 실제 업무 사용 전 회사 원자료와 공식 조회자료로 교체해야 합니다.,공개 데모 예시 데이터가 포함되어 있습니다. 실제 업무용 원자료가 아닙니다.
+data_insufficient,데이터 부족,부족,6,Request List / Memo Limitation,핵심 입력값이 부족하여 수치 산출이 제한됩니다. 원자료 확보 전에는 수치 결론을 제시하지 않습니다.,핵심 입력값이 부족합니다. 요청자료 확보 후 재계산해야 합니다.

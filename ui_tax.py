@@ -16,6 +16,7 @@ from calculations_tax_review_pack import (
     build_tax_request_list,
     build_tax_review_memo,
 )
+from config import DEFAULT_TAX_ASSUMPTIONS_V14
 from data_source_policy import get_source_policy
 from formatting import format_bn_krw, format_pct_from_100
 from tax_data_loader import build_company_tax_dataset, build_tax_history_from_company_tax_data, get_tax_source_status, get_tax_source_summary
@@ -51,7 +52,7 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
                 "공정시장가액비율",
                 min_value=40.0,
                 max_value=100.0,
-                value=float(assumptions.get("fair_market_value_ratio", assumptions.get("land_fmv_ratio_pct", 70.0))),
+                value=float(assumptions.get("fair_market_value_ratio", assumptions.get("land_fmv_ratio_pct", DEFAULT_TAX_ASSUMPTIONS_V14["fair_market_value_ratio"]))),
                 step=5.0,
                 key="v14_fair_market_value_ratio",
             )
@@ -60,7 +61,7 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
                 "실효 보유세율",
                 min_value=0.1,
                 max_value=3.0,
-                value=float(assumptions.get("effective_holding_tax_rate", 1.1)),
+                value=float(assumptions.get("effective_holding_tax_rate", DEFAULT_TAX_ASSUMPTIONS_V14["effective_holding_tax_rate"])),
                 step=0.1,
                 key="v14_effective_holding_tax_rate",
             )
@@ -69,7 +70,7 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
                 "공시가격 상승 가정",
                 min_value=-10.0,
                 max_value=30.0,
-                value=float(assumptions.get("official_price_growth_assumption", 10.0)),
+                value=float(assumptions.get("official_price_growth_assumption", DEFAULT_TAX_ASSUMPTIONS_V14["official_price_growth_assumption"])),
                 step=2.5,
                 key="v14_official_price_growth_assumption",
             )
@@ -78,12 +79,12 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
                 "보유세 증가율",
                 min_value=0.0,
                 max_value=50.0,
-                value=float(assumptions.get("holding_tax_increase_pct", 10.0)),
+                value=float(assumptions.get("holding_tax_increase_pct", DEFAULT_TAX_ASSUMPTIONS_V14["holding_tax_increase_pct"])),
                 step=2.5,
                 key="v14_holding_tax_increase_pct",
             )
         with c5:
-            default_ffo_stress = float(scenario.get("ffo_haircut_pct", 5.0) or 5.0)
+            default_ffo_stress = float(scenario.get("ffo_haircut_pct", DEFAULT_TAX_ASSUMPTIONS_V14["ffo_stress_pct"]) or DEFAULT_TAX_ASSUMPTIONS_V14["ffo_stress_pct"])
             ffo_stress_pct = st.slider(
                 "FFO 스트레스",
                 min_value=0.0,

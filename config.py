@@ -17,6 +17,17 @@ PUBLIC_MODE_LABELS = {
 }
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
+DEFAULT_TAX_ASSUMPTIONS_V14 = {
+    "fair_market_value_ratio": 70.0,
+    "effective_holding_tax_rate": 1.1,
+    "official_price_growth_assumption": 10.0,
+    "holding_tax_increase_assumption": 10.0,
+    "holding_tax_increase_pct": 10.0,
+    "ffo_stress_assumption": 5.0,
+    "ffo_stress_pct": 5.0,
+    "sensitivity_pct": 10.0,
+}
+
 
 ECOS_KEY_INDICATOR_ENDPOINT = "https://ecos.bok.or.kr/api/KeyStatisticList/{api_key}/json/kr/1/100"
 ECOS_STAT_SEARCH_ENDPOINT = "https://ecos.bok.or.kr/api/StatisticSearch/{api_key}/json/kr/1/{count}/{stat_code}/{cycle}/{start_date}/{end_date}/{item_code}"
