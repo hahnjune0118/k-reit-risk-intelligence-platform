@@ -16,7 +16,7 @@ def _minimal_pack_inputs():
     reconciliation = pd.DataFrame(
         [
             {
-                "보유세 / FFO": 0.12,
+                "보유세 / FFO proxy": 0.12,
                 "공시가격 / 장부가액": 0.52,
                 "추정 보유세(억원)": 12.5,
             }
@@ -30,7 +30,7 @@ def _minimal_pack_inputs():
             }
         ]
     )
-    ffo_stress = pd.DataFrame([{"FFO 대비": 0.12}, {"FFO 대비": 0.18}])
+    ffo_stress = pd.DataFrame([{"FFO proxy 대비": 0.12}, {"FFO proxy 대비": 0.18}])
     return issue_matrix, reconciliation, request_list, ffo_stress
 
 

@@ -1,13 +1,23 @@
 # 변경 이력
 
-## v14 - Tax Workflow Control & Validation (현재)
+## v14.1 - Metric Definition & Source Lineage Stabilization (현재)
+
+- FFO를 공식 공시 FFO처럼 표시하지 않도록 `FFO proxy` 명칭과 계산 한계 설명 보강
+- 장부기준 NAV proxy를 총자산-총부채 기준으로 설명하고, Snapshot에 총부채가 없으면 총자산-차입금으로 대체하지 않도록 수정
+- DART 재무제표 매핑에서 총부채, 이자부 차입부채, 현금및현금성자산, 단기금융자산, 충당부채, 이연법인세부채를 분리
+- 충당부채는 장부기준 NAV proxy의 총부채에는 포함될 수 있지만 Gross LTV, 순차입금, 차입금리 shock 분자에서는 제외한다는 정책 명시
+- 기준금리 변화와 추가 신용스프레드·리파이낸싱 금리 shock을 UI와 방법론에서 구분
+- Methodology 화면에 핵심 재무지표 정의표와 지표별 데이터 계보표 추가
+- 사용자 노출 표기를 K-REITs/REITs 중심으로 정리
+
+## v14 - Tax Workflow Control & Validation
 
 - source reliability framework 추가: `data_source_policy.py`
-- Holding Tax Bridge 추가: 공시가격/장부가액, 과세표준, 추정 보유세, FFO 부담 연결
+- Holding Tax Bridge 추가: 공시가격/장부가액, 과세표준, 추정 보유세, FFO proxy 부담 연결
 - Tax 입력 검증 패널 추가: 결측, fallback, 0 denominator, 비정상 비율 확인
 - Issue 기반 Tax Request List 매핑 추가
 - Tax Review Memo를 6개 섹션 구조로 확장하고 source-specific limitation 문구 반영
-- Tax 화면 순서를 source banner, assumptions, Tax Summary, bridge, Issue Matrix, Reconciliation, FFO stress, Request List, Memo, Export, Validation, source/raw expanders로 정리
+- Tax 화면 순서를 source banner, assumptions, Tax Summary, bridge, Issue Matrix, Reconciliation, FFO proxy stress, Request List, Memo, Export, Validation, source/raw expanders로 정리
 - Memo Markdown, Issue Matrix CSV, Reconciliation CSV, Request List CSV, ZIP export 추가
 - Methodology 페이지에 v14 Tax Workflow Control 구조와 source_type taxonomy 표 추가
 - 비-SK 리츠가 SK리츠 상세 자산 데이터를 재사용하지 않는 fallback 구조 유지 및 테스트 보강
@@ -52,4 +62,4 @@
 
 ## 버전 관리 기준
 
-중요 기능이 추가되는 경우 버전을 v14, v15처럼 순차적으로 올립니다. `VERSION`, `CHANGELOG.md`, `config.py`의 화면 표시 버전을 함께 맞춥니다.
+중요 기능이 추가되는 경우 버전을 v15, v16처럼 순차적으로 올립니다. 안정화 또는 설명 가능성 개선은 v14.1처럼 소수점 버전으로 관리할 수 있습니다. `VERSION`, `CHANGELOG.md`, `config.py`의 화면 표시 버전을 함께 맞춥니다.

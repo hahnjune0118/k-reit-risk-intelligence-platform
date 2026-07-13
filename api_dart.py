@@ -64,31 +64,97 @@ def resolve_dart_corp_code(api_key: str, stock_code: str = "395400", corp_name_k
     return str(row["corp_code"]), str(row["corp_name"]), "connected"
 
 
-def _select_single_account_amount(df: pd.DataFrame, patterns: list[str]):
-    if df.empty or "account_nm" not in df.columns:
-        return pd.NA
-    account = df["account_nm"].astype(str)
+def _account_match_text(df: pd.DataFrame) -> pd.Series:
+    cols = [col for col in ["account_id", "account_nm", "account_detail", "sj_nm"] if col in df.columns]
+    if not cols:
+        return pd.Series("", index=df.index, dtype="object")
+    text = df[cols].fillna("").astype(str).agg(" ".join, axis=1)
+    return text.str.replace(r"\s+", " ", regex=True)
+
+
+def _match_account_rows(df: pd.DataFrame, patterns: list[str]) -> pd.DataFrame:
+    if df.empty:
+        return df
+    account_text = _account_match_text(df)
+    mask = pd.Series(False, index=df.index)
     for pattern in patterns:
-        matched = df[account.str.fullmatch(pattern, case=False, na=False)]
-        if matched.empty:
-            matched = df[account.str.contains(pattern, case=False, na=False, regex=True)]
+        mask = mask | account_text.str.fullmatch(pattern, case=False, na=False)
+        mask = mask | account_text.str.contains(pattern, case=False, na=False, regex=True)
+    return df[mask]
+
+
+def _select_single_account_amount(df: pd.DataFrame, patterns: list[str]):
+    if df.empty:
+        return pd.NA
+    for pattern in patterns:
+        matched = _match_account_rows(df, [pattern])
         if not matched.empty:
             return _to_mn_krw_from_dart_amount(matched.iloc[0].get("thstrm_amount"))
     return pd.NA
 
 
 def _sum_account_amounts(df: pd.DataFrame, patterns: list[str]):
-    if df.empty or "account_nm" not in df.columns:
+    if df.empty:
         return pd.NA
-    mask = pd.Series(False, index=df.index)
-    account = df["account_nm"].astype(str)
-    for pattern in patterns:
-        mask = mask | account.str.contains(pattern, case=False, na=False, regex=True)
-    if not mask.any():
+    matched = _match_account_rows(df, patterns)
+    if matched.empty:
         return pd.NA
-    values = df.loc[mask, "thstrm_amount"].apply(_to_mn_krw_from_dart_amount)
+    values = matched["thstrm_amount"].apply(_to_mn_krw_from_dart_amount)
     values = pd.to_numeric(values, errors="coerce").dropna()
     return values.sum() if not values.empty else pd.NA
+
+
+def _sum_values(values: list):
+    numeric = pd.to_numeric(pd.Series(values), errors="coerce").dropna()
+    return numeric.sum() if not numeric.empty else pd.NA
+
+
+def _select_interest_bearing_debt_components(rows: pd.DataFrame) -> dict:
+    short_term_borrowings = _select_single_account_amount(
+        rows,
+        ["ifrs.*ShorttermBorrowings", "^단기차입금$", "Short.?term borrowings"],
+    )
+    current_portion_long_term_debt = _sum_account_amounts(
+        rows,
+        ["유동성장기.*차입", "유동성.*사채", "Current portion.*borrowings", "Current portion.*bonds"],
+    )
+    long_term_borrowings = _select_single_account_amount(
+        rows,
+        ["ifrs.*LongtermBorrowings", "^장기차입금$", "Long.?term borrowings"],
+    )
+    bonds = _sum_account_amounts(
+        rows,
+        ["^사채$", "일반사채", "Bonds issued", "Debentures"],
+    )
+    lease_liabilities = _sum_account_amounts(
+        rows,
+        ["리스부채", "Lease liabilities"],
+    )
+    fallback_debt = _sum_account_amounts(
+        rows,
+        ["차입금", "^사채$", "일반사채", "리스부채", "Borrowings", "Bonds issued", "Lease liabilities"],
+    )
+    components_total = _sum_values([
+        short_term_borrowings,
+        current_portion_long_term_debt,
+        long_term_borrowings,
+        bonds,
+        lease_liabilities,
+    ])
+    interest_bearing_debt = components_total if pd.notna(components_total) else fallback_debt
+    return {
+        "short_term_borrowings_mn_krw": short_term_borrowings,
+        "current_portion_long_term_debt_mn_krw": current_portion_long_term_debt,
+        "long_term_borrowings_mn_krw": long_term_borrowings,
+        "bonds_mn_krw": bonds,
+        "lease_liabilities_mn_krw": lease_liabilities,
+        "interest_bearing_debt_mn_krw": interest_bearing_debt,
+        "interest_bearing_debt_method": (
+            "단기차입금+유동성장기차입금/사채+장기차입금+사채+리스부채"
+            if pd.notna(components_total)
+            else "차입금/사채/리스부채 fallback"
+        ),
+    }
 
 
 @st.cache_data(ttl=60 * 60 * 6)
@@ -163,32 +229,68 @@ def fetch_dart_annual_financial_history(api_key: str, stock_code: str = "395400"
     records = []
     messages = []
     for year in range(start_year, end_year + 1):
+        fs_div_used = "CFS"
         rows, row_status = fetch_dart_single_year_financials(api_key, corp_code, year, "CFS")
         if rows.empty:
+            fs_div_used = "OFS"
             rows, row_status = fetch_dart_single_year_financials(api_key, corp_code, year, "OFS")
         if rows.empty:
             messages.append(f"{year}: {row_status}")
             continue
+        debt_components = _select_interest_bearing_debt_components(rows)
+        cash = _select_single_account_amount(
+            rows,
+            ["ifrs.*CashAndCashEquivalents", "현금및현금성자산", "Cash and cash equivalents"],
+        )
+        short_term_financial_assets = _sum_account_amounts(
+            rows,
+            ["단기금융", "단기투자", "유동금융자산", "Short.?term financial assets", "Current financial assets"],
+        )
+        total_assets = _select_single_account_amount(rows, ["ifrs-full_Assets\\b", "자산총계", "^자산$"])
+        total_liabilities = _select_single_account_amount(rows, ["ifrs-full_Liabilities\\b", "부채총계", "^부채$"])
+        investment_property = _select_single_account_amount(
+            rows,
+            ["ifrs.*InvestmentProperty", "투자부동산", "Investment property"],
+        )
+        operating_cash_flow = _select_single_account_amount(
+            rows,
+            ["영업활동.*현금흐름", "영업활동.*순현금", "Cash flows from operating activities"],
+        )
         records.append({
             "reit_name": corp_name,
             "ticker": stock_code,
             "year": int(year),
             "period_end": pd.Timestamp(year=year, month=12, day=31),
             "basis": "DART annual report K-IFRS auto-fetch",
+            "financial_statement_scope": "연결재무제표(CFS)" if fs_div_used == "CFS" else "별도재무제표(OFS)",
+            "fs_div": fs_div_used,
             "source_document": "OpenDART fnlttSinglAcntAll annual report",
-            "total_assets_mn_krw": _select_single_account_amount(rows, ["자산총계", "^자산$", "Assets"]),
-            "investment_property_mn_krw": _select_single_account_amount(rows, ["투자부동산", "Investment property"]),
-            "total_liabilities_mn_krw": _select_single_account_amount(rows, ["부채총계", "^부채$", "Liabilities"]),
+            "total_assets_mn_krw": total_assets,
+            "current_assets_mn_krw": _select_single_account_amount(rows, ["ifrs-full_CurrentAssets\\b", "유동자산", "Current assets"]),
+            "cash_and_cash_equivalents_mn_krw": cash,
+            "short_term_financial_assets_mn_krw": short_term_financial_assets,
+            "investment_property_mn_krw": investment_property,
+            "total_liabilities_mn_krw": total_liabilities,
+            "current_liabilities_mn_krw": _select_single_account_amount(rows, ["ifrs-full_CurrentLiabilities\\b", "유동부채", "Current liabilities"]),
             "total_equity_mn_krw": _select_single_account_amount(rows, ["자본총계", "^자본$", "Equity"]),
-            "interest_bearing_debt_mn_krw": _sum_account_amounts(rows, ["차입금", "사채", "리스부채"]),
+            **debt_components,
+            "provisions_mn_krw": _sum_account_amounts(rows, ["충당부채", "Provision"]),
+            "deferred_tax_liabilities_mn_krw": _select_single_account_amount(rows, ["이연법인세부채", "Deferred tax liabilities"]),
             "revenue_mn_krw": _select_single_account_amount(rows, ["영업수익", "매출액", "^수익$", "Revenue"]),
             "operating_income_mn_krw": _select_single_account_amount(rows, ["영업이익", "Operating income"]),
             "net_income_mn_krw": _select_single_account_amount(rows, ["당기순이익", "분기순이익", "Profit"]),
+            "interest_expense_mn_krw": _select_single_account_amount(rows, ["이자비용", "Interest expense", "Finance costs"]),
+            "operating_cash_flow_mn_krw": operating_cash_flow,
             "source_confidence": "dart_api_auto_fetched",
         })
     history = pd.DataFrame(records)
     if not history.empty:
         history["gross_ltv_interest_debt_to_assets_pct"] = history["interest_bearing_debt_mn_krw"] / history["total_assets_mn_krw"] * 100
+        cash = pd.to_numeric(history.get("cash_and_cash_equivalents_mn_krw", pd.Series(pd.NA, index=history.index)), errors="coerce")
+        short_assets = pd.to_numeric(history.get("short_term_financial_assets_mn_krw", pd.Series(0, index=history.index)), errors="coerce").fillna(0)
+        debt = pd.to_numeric(history["interest_bearing_debt_mn_krw"], errors="coerce")
+        history["net_debt_mn_krw"] = debt - cash - short_assets
+        history.loc[cash.isna() | debt.isna(), "net_debt_mn_krw"] = pd.NA
     status_msg = "connected" if not history.empty else "; ".join(messages)
     if report_status != "connected":
         status_msg = f"{status_msg}; report-list: {report_status}"

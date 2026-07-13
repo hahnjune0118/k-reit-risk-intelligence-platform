@@ -199,7 +199,7 @@ def build_holding_tax_bridge(
                 "과세표준 추정(억원)": tax_base / 100 if pd.notna(tax_base) else pd.NA,
                 "적용 세율": _ratio_to_fraction(effective_tax_rate, 0.011),
                 "추정 보유세(억원)": estimated_tax / 100 if pd.notna(estimated_tax) else pd.NA,
-                "FFO 대비": tax_to_ffo,
+                "FFO proxy 대비": tax_to_ffo,
                 "영업수익 대비": tax_to_revenue,
                 "Peer 대비 위치": peer_position,
                 "검토 필요 여부": "필요" if peer_position in {"높음", "주의", "검토 필요", "데이터 부족"} else "낮음",

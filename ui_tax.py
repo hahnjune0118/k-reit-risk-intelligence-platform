@@ -37,10 +37,10 @@ def _zip_review_pack(company_name: str, memo_text: str, issue_matrix: pd.DataFra
     safe_company = _safe_filename(company_name)
     buffer = BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr(f"tax_review_memo_{safe_company}_v14.md", memo_text.encode("utf-8-sig"))
-        zf.writestr(f"tax_issue_matrix_{safe_company}_v14.csv", _to_csv_bytes(issue_matrix))
-        zf.writestr(f"holding_tax_reconciliation_{safe_company}_v14.csv", _to_csv_bytes(reconciliation))
-        zf.writestr(f"tax_request_list_{safe_company}_v14.csv", _to_csv_bytes(request_list))
+        zf.writestr(f"tax_review_memo_{safe_company}_v14_1.md", memo_text.encode("utf-8-sig"))
+        zf.writestr(f"tax_issue_matrix_{safe_company}_v14_1.csv", _to_csv_bytes(issue_matrix))
+        zf.writestr(f"holding_tax_reconciliation_{safe_company}_v14_1.csv", _to_csv_bytes(reconciliation))
+        zf.writestr(f"tax_request_list_{safe_company}_v14_1.csv", _to_csv_bytes(request_list))
     return buffer.getvalue()
 
 
@@ -86,7 +86,7 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
         with c5:
             default_ffo_stress = float(scenario.get("ffo_haircut_pct", DEFAULT_TAX_ASSUMPTIONS_V14["ffo_stress_pct"]) or DEFAULT_TAX_ASSUMPTIONS_V14["ffo_stress_pct"])
             ffo_stress_pct = st.slider(
-                "FFO 스트레스",
+                "FFO proxy 스트레스",
                 min_value=0.0,
                 max_value=30.0,
                 value=float(assumptions.get("ffo_stress_assumption", default_ffo_stress)),
@@ -94,7 +94,7 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
                 key="v14_ffo_stress_assumption",
             )
         st.caption(
-            "가정은 신고 목적 세액 계산이 아니라 보유세 부담 방향성, FFO 현금유출, 요청자료 우선순위를 보기 위한 예비 분석 기준입니다."
+            "가정은 신고 목적 세액 계산이 아니라 보유세 부담 방향성, FFO proxy 현금유출, 요청자료 우선순위를 보기 위한 예비 분석 기준입니다."
         )
     return {
         "fair_market_value_ratio": fair_market_value_ratio,
@@ -138,10 +138,10 @@ def _render_peer_tax_section(peer_context: dict | None):
             peer_metrics,
             target_company,
             {
-                "holding_tax_to_ffo": "보유세/FFO",
+                "holding_tax_to_ffo": "보유세/FFO proxy",
                 "holding_tax_to_operating_revenue": "보유세/영업수익",
                 "official_price_to_investment_property": "공시가격/투자부동산",
-                "dividend_to_ffo": "배당/FFO",
+                "dividend_to_ffo": "배당/FFO proxy",
                 "debt_to_assets": "차입금/총자산",
             },
         )
@@ -194,7 +194,7 @@ def render_tax_mode(
     render_selected_company_header(peer_context)
     render_data_scope_banner(peer_context)
     st.caption(
-        "공시가격, 장부가액, Peer Snapshot, FFO를 연결해 보유세 부담과 요청자료 우선순위를 예비 검토합니다."
+        "공시가격, 장부가액, Peer Snapshot, FFO proxy를 연결해 보유세 부담과 요청자료 우선순위를 예비 검토합니다."
     )
 
     assumptions = assumptions or {}
@@ -286,16 +286,16 @@ def render_tax_mode(
     _render_peer_tax_section(peer_context)
 
     st.markdown("## Tax Issue Matrix")
-    st.caption("Tax Red Flag, 보유세 정합성, FFO 현금유출 스트레스 결과를 실무 검토 항목으로 변환합니다.")
+    st.caption("Tax Red Flag, 보유세 정합성, FFO proxy 현금유출 스트레스 결과를 실무 검토 항목으로 변환합니다.")
     st.dataframe(style_risk_review_table(issue_matrix), width="stretch", hide_index=True, height=310)
 
     st.markdown("## 보유세 정합성 검토")
     st.caption("투자부동산 장부가액, 공시가격, 과세표준, 추정 보유세를 연결한 예비 대사표입니다.")
     st.dataframe(reconciliation, width="stretch", hide_index=True, height=240)
 
-    st.markdown("## FFO 현금유출 스트레스")
+    st.markdown("## FFO proxy 현금유출 스트레스")
     if ffo_pack_stress.empty:
-        st.warning("FFO 현금유출 시나리오를 계산할 수 없습니다. KPI와 보유세 요약 데이터를 확인하세요.")
+        st.warning("FFO proxy 현금유출 시나리오를 계산할 수 없습니다. KPI와 보유세 요약 데이터를 확인하세요.")
     else:
         c1, c2 = st.columns([1.05, 0.95])
         with c1:
@@ -317,7 +317,7 @@ def render_tax_mode(
         st.download_button(
             "Memo MD",
             data=memo_text.encode("utf-8-sig"),
-            file_name=f"tax_review_memo_{safe_company}_v14.md",
+            file_name=f"tax_review_memo_{safe_company}_v14_1.md",
             mime="text/markdown",
             width="stretch",
         )
@@ -325,7 +325,7 @@ def render_tax_mode(
         st.download_button(
             "Issue CSV",
             data=_to_csv_bytes(issue_matrix),
-            file_name=f"tax_issue_matrix_{safe_company}_v14.csv",
+            file_name=f"tax_issue_matrix_{safe_company}_v14_1.csv",
             mime="text/csv",
             width="stretch",
         )
@@ -333,7 +333,7 @@ def render_tax_mode(
         st.download_button(
             "Recon CSV",
             data=_to_csv_bytes(reconciliation),
-            file_name=f"holding_tax_reconciliation_{safe_company}_v14.csv",
+            file_name=f"holding_tax_reconciliation_{safe_company}_v14_1.csv",
             mime="text/csv",
             width="stretch",
         )
@@ -341,7 +341,7 @@ def render_tax_mode(
         st.download_button(
             "Request CSV",
             data=_to_csv_bytes(request_list),
-            file_name=f"tax_request_list_{safe_company}_v14.csv",
+            file_name=f"tax_request_list_{safe_company}_v14_1.csv",
             mime="text/csv",
             width="stretch",
         )
@@ -349,7 +349,7 @@ def render_tax_mode(
         st.download_button(
             "ZIP",
             data=_zip_review_pack(target_company, memo_text, issue_matrix, reconciliation, request_list),
-            file_name=f"tax_review_pack_{safe_company}_v14.zip",
+            file_name=f"tax_review_pack_{safe_company}_v14_1.zip",
             mime="application/zip",
             width="stretch",
         )

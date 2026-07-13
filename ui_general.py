@@ -40,7 +40,7 @@ def _trend_interpretation(row: pd.Series) -> str:
     if pd.notna(rate) and rate >= 3.0 and pd.notna(debt) and debt > 0:
         return "금리 부담과 차입금 구조를 함께 확인"
     if pd.notna(ffo) and ffo <= 0:
-        return "FFO 또는 이익 지표 보완 필요"
+        return "FFO proxy 또는 이익 지표 보완 필요"
     return "특이 신호 제한적"
 
 
@@ -53,8 +53,8 @@ def build_five_year_trend_display(historical_panel: pd.DataFrame) -> pd.DataFram
     out["기준금리(%)"] = _numeric_series(df, "기준금리")
     out["국고채 3년(%)"] = _numeric_series(df, "국고채 3년")
     out["회사채 AA- 3년(%)"] = _numeric_series(df, "회사채 AA- 3년")
-    out["NAV(억원)"] = _numeric_series(df, "순자산가치_또는_자본", "nav_mn_krw", "nav") / 100
-    out["FFO(억원)"] = _numeric_series(df, "현금흐름_또는_이익", "ffo_mn_krw", "ffo_proxy") / 100
+    out["장부NAV proxy(억원)"] = _numeric_series(df, "순자산가치_또는_자본", "nav_mn_krw", "book_nav_proxy", "nav") / 100
+    out["FFO proxy(억원)"] = _numeric_series(df, "현금흐름_또는_이익", "ffo_mn_krw", "ffo_proxy") / 100
     out["총자산(억원)"] = _numeric_series(df, "total_assets_mn_krw", "total_assets") / 100
     out["차입금(억원)"] = _numeric_series(df, "interest_bearing_debt_mn_krw", "borrowings_total") / 100
     out["이자비용(억원)"] = _numeric_series(df, "interest_expense", "interest_expense_mn_krw") / 100
@@ -63,7 +63,7 @@ def build_five_year_trend_display(historical_panel: pd.DataFrame) -> pd.DataFram
     display = out.copy()
     for col in ["기준금리(%)", "국고채 3년(%)", "회사채 AA- 3년(%)"]:
         display[col] = display[col].map(_fmt_pct)
-    for col in ["NAV(억원)", "FFO(억원)", "총자산(억원)", "차입금(억원)", "이자비용(억원)"]:
+    for col in ["장부NAV proxy(억원)", "FFO proxy(억원)", "총자산(억원)", "차입금(억원)", "이자비용(억원)"]:
         display[col] = display[col].map(lambda value: f"{value:,.0f}" if pd.notna(value) else "N/A")
     return display
 
@@ -80,8 +80,8 @@ def _render_peer_benchmark_overview(peer_context: dict | None):
 
     st.markdown("### Peer Benchmark 및 Red Flag 요약")
     st.caption(
-        "선택한 리츠 회사를 상장리츠 Peer Group과 비교하여 감사위험, 보유세 부담, "
-        "FFO 현금유출 부담이 상대적으로 높은 영역을 자동으로 스크리닝합니다."
+        "선택한 리츠 회사를 상장 REITs Peer Group과 비교하여 감사위험, 보유세 부담, "
+        "FFO proxy 현금유출 부담이 상대적으로 높은 영역을 자동으로 스크리닝합니다."
     )
     st.caption(
         f"대상 리츠: {target_company} / Peer Group: {peer_context.get('peer_group', '전체 상장리츠')} / "
@@ -99,8 +99,8 @@ def _render_peer_benchmark_overview(peer_context: dict | None):
     c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("자산규모", format_peer_value("total_assets", asset_size.get("value")), format_peer_percentile(asset_size.get("percentile")))
     c2.metric("차입부담", format_peer_value("debt_to_assets", debt_burden.get("value")), format_peer_percentile(debt_burden.get("percentile")))
-    c3.metric("이자비용 부담", format_peer_value("interest_expense_to_ffo", interest_burden.get("value")), format_peer_percentile(interest_burden.get("percentile")))
-    c4.metric("보유세 부담", format_peer_value("holding_tax_to_ffo", holding_tax_burden.get("value")), format_peer_percentile(holding_tax_burden.get("percentile")))
+    c3.metric("이자비용/FFO proxy", format_peer_value("interest_expense_to_ffo", interest_burden.get("value")), format_peer_percentile(interest_burden.get("percentile")))
+    c4.metric("보유세/FFO proxy", format_peer_value("holding_tax_to_ffo", holding_tax_burden.get("value")), format_peer_percentile(holding_tax_burden.get("percentile")))
     c5.metric("공시가격/투자부동산", format_peer_value("official_price_to_investment_property", official_price_ratio.get("value")), format_peer_percentile(official_price_ratio.get("percentile")))
 
     a_flags = peer_context.get("assurance_red_flags", [])
@@ -117,8 +117,8 @@ def _render_peer_benchmark_overview(peer_context: dict | None):
         {
             "total_assets": "자산규모",
             "debt_to_assets": "차입부담",
-            "interest_expense_to_ffo": "이자비용/FFO",
-            "holding_tax_to_ffo": "보유세/FFO",
+            "interest_expense_to_ffo": "이자비용/FFO proxy",
+            "holding_tax_to_ffo": "보유세/FFO proxy",
             "holding_tax_to_operating_revenue": "보유세/영업수익",
             "official_price_to_investment_property": "공시가격/투자부동산",
         },
@@ -179,7 +179,7 @@ def render_general_dashboard(
         ])
         st.write("**선택 회사 요약**")
         st.dataframe(summary, width="stretch", hide_index=True, height=190)
-        st.caption("선택 회사의 최근 가용 공시자료 및 Snapshot 데이터를 기준으로 분석합니다.")
+        st.caption("선택 회사의 최근 가용 공시자료 및 Snapshot 데이터를 기준으로 분석합니다. FFO와 NAV는 공식값이 아니라 proxy 기준으로 표시될 수 있습니다.")
 
     if verdict_level == "High":
         st.error(f"{verdict_text} — {verdict_reason}")
@@ -190,24 +190,26 @@ def render_general_dashboard(
 
     st.caption(
         f"선택 시나리오: {macro_scenario['selected_scenario']} | "
-        f"기준금리 {macro_scenario['base_rate_pct']:.2f}% → {macro_scenario['scenario_base_rate_pct']:.2f}% | "
-        f"차입금리 충격 +{macro_scenario['rate_shock_bp']}bp | "
+        f"{macro_scenario.get('scenario_base_rate_label', '시나리오 기준금리')} "
+        f"{macro_scenario['base_rate_pct']:.2f}% → {macro_scenario['scenario_base_rate_pct']:.2f}% | "
+        f"차입 스프레드·리파이낸싱 금리 충격 +{macro_scenario['rate_shock_bp']}bp | "
         f"Cap rate +{macro_scenario['cap_rate_shock_bp']}bp | "
         f"자료 기준: {macro_context['source']}"
     )
+    st.caption(macro_scenario.get("scenario_base_rate_note", ""))
 
     k1, k2, k3, k4, k5 = st.columns(5)
     k1.metric("종합 위험도", {"High":"높음", "Medium":"보통", "Low":"낮음"}.get(risk_level, risk_level), format_score(total_risk))
-    k2.metric("시나리오 후 현금흐름", fmt_mn_to_bn(scenario["stressed_ffo"]), f"{scenario['ffo_decline_pct']:.1f}%" if pd.notna(scenario["ffo_decline_pct"]) else "N/A")
-    k3.metric("이자 감당력", format_ratio(scenario["stressed_icr"]), f"현재 {format_ratio(scenario['reported_icr'])}")
-    k4.metric("순자산가치 영향", format_pct_from_100(scenario["nav_change_pct"]), fmt_mn_to_bn(scenario["total_value_change"]))
-    k5.metric("부채비율 추정", format_pct_from_100(scenario["stressed_ltv_proxy"]), f"현재 {format_pct_from_100(scenario['base_ltv_proxy'])}")
+    k2.metric("시나리오 후 FFO proxy", fmt_mn_to_bn(scenario["stressed_ffo"]), f"{scenario['ffo_decline_pct']:.1f}%" if pd.notna(scenario["ffo_decline_pct"]) else "N/A")
+    k3.metric("FFO 이자감당력 proxy", format_ratio(scenario["stressed_icr"]), f"현재 {format_ratio(scenario['reported_icr'])}")
+    k4.metric("장부NAV proxy 영향", format_pct_from_100(scenario["nav_change_pct"]), fmt_mn_to_bn(scenario["total_value_change"]))
+    k5.metric("LTV proxy", format_pct_from_100(scenario["stressed_ltv_proxy"]), f"현재 {format_pct_from_100(scenario['base_ltv_proxy'])}")
 
     _render_peer_benchmark_overview(peer_context)
 
     st.markdown("---")
     st.markdown("## 2. 현재 상태와 선택한 시나리오 비교")
-    st.caption("좌측 사이드바에서 거시경제 시나리오를 바꾸면 현금흐름, 이자 감당력, 배당 여력, 순자산가치가 즉시 바뀝니다.")
+    st.caption("좌측 사이드바에서 거시경제 시나리오를 바꾸면 FFO proxy, FFO 이자감당력 proxy, 배당 여력, 장부기준 NAV proxy가 즉시 바뀝니다.")
 
     left, right = st.columns([1.05, 1.0])
 
@@ -216,7 +218,7 @@ def render_general_dashboard(
             scenario["ffo_bridge"].sort_values("display_order"),
             x="step",
             y="mn_krw",
-            title="현금흐름 변화: 현재 → 시나리오 후",
+            title="FFO proxy 변화: 현재 → 시나리오 후",
             text="mn_krw",
         )
         fig_ffo.update_traces(texttemplate="%{text:,.0f}", textposition="outside", cliponaxis=False)
@@ -231,14 +233,14 @@ def render_general_dashboard(
         st.dataframe(kpi_display, width="stretch", hide_index=True, height=245)
 
     st.markdown("---")
-    st.markdown("## 3. 최근 5년 흐름: 금리와 리츠 주요 지표")
+    st.markdown("## 3. 최근 5년 흐름: 금리와 REITs 주요 지표")
     st.caption(
-        "선택 회사의 최근 5년 재무 흐름은 Snapshot 데이터를 우선 사용하고, Snapshot이 부족할 때만 선택 회사 DART 자료를 보조적으로 사용합니다. "
+        "선택 회사의 최근 5년 재무 흐름은 서버 측 DART 연결이 가능하면 DART 자료를 우선 사용하고, 연결이 제한되거나 계정이 부족하면 Snapshot fallback을 사용합니다. "
         "거시경제 시계열은 ECOS 연결 또는 내장 예시 데이터를 통해 함께 표시합니다."
     )
     st.caption(
         "금리 지표와 리츠 재무지표는 단위와 해석 기준이 다르기 때문에 하나의 축으로 지수화하여 비교하면 오해가 발생할 수 있습니다. "
-        "따라서 본 화면에서는 기준금리·국고채·회사채 금리는 실제 이자율(%)로, NAV·FFO·총자산·차입금 등은 실제 금액(억원)으로 구분하여 표시합니다."
+        "따라서 본 화면에서는 기준금리·국고채·회사채 금리는 실제 이자율(%)로, 장부NAV proxy·FFO proxy·총자산·차입금 등은 실제 금액(억원)으로 구분하여 표시합니다."
     )
 
     trend_display = build_five_year_trend_display(historical_panel)
@@ -254,13 +256,13 @@ def render_general_dashboard(
             reaction = reaction.rename(columns={
                 "year": "연도",
                 "기준금리_변화_bp": "기준금리 변화폭(bp)",
-                "순자산가치_변화율": "NAV/자본 변화율(%)",
-                "현금흐름_변화율": "FFO/이익 변화율(%)",
+                "순자산가치_변화율": "장부NAV proxy/자본 변화율(%)",
+                "현금흐름_변화율": "FFO proxy/이익 변화율(%)",
             })
             st.write("**기준금리 변화와 리츠 지표 변화**")
             st.dataframe(reaction, width="stretch", hide_index=True, height=160)
             st.caption(
-                "주의: 이 표는 인과관계를 확정하지 않습니다. 리츠의 NAV·FFO는 금리 외에도 자산 편입, 유상증자, 임대차 계약, 회계 기준, 평가가정에 영향을 받습니다."
+                "주의: 이 표는 인과관계를 확정하지 않습니다. REITs의 장부NAV proxy·FFO proxy는 금리 외에도 자산 편입, 유상증자, 임대차 계약, 회계 기준, 평가가정에 영향을 받습니다."
             )
 
     if all(c in historical_panel.columns for c in ["기준금리_변화_bp", "시장가치_변화율", "P_NAV_변화"]):
@@ -275,13 +277,13 @@ def render_general_dashboard(
             st.write("**기준금리 변화와 시장가격 반응**")
             st.dataframe(market_reaction, width="stretch", hide_index=True, height=150)
             st.caption(
-                "P/NAV 하락은 시장이 공시 순자산가치보다 더 큰 할인율을 적용하기 시작했다는 신호일 수 있습니다. "
+                "P/NAV 하락은 시장이 장부기준 NAV proxy보다 더 큰 할인율을 적용하기 시작했다는 신호일 수 있습니다. "
                 "단, 주가는 시장 전체 리스크 선호, 유상증자, 배당정책, 거래량에도 영향을 받습니다."
             )
 
-    st.markdown("### 3-1. 위험 전이 진단: 금리 → FFO/NAV → 시장가격")
+    st.markdown("### 3-1. 위험 전이 진단: 금리 → FFO proxy/장부NAV proxy → 시장가격")
     st.caption(
-        "이 섹션은 금리가 바뀐 해에 리츠의 현금흐름과 순자산가치가 어떻게 움직였는지 요약합니다. "
+        "이 섹션은 금리가 바뀐 해에 REITs의 FFO proxy와 장부기준 NAV proxy가 어떻게 움직였는지 요약합니다. "
         "인과관계 확정이 아니라, Assurance와 Tax 초기검토에서 어디를 더 봐야 하는지 알려주는 신호입니다."
     )
     st.info(transmission_narrative)
@@ -488,13 +490,13 @@ def render_general_dashboard(
             st.dataframe(debt_simple, width="stretch", hide_index=True, height=250)
 
     st.markdown("---")
-    st.markdown("## 7. 부동산 가치와 순자산가치 변화")
-    st.caption("Cap rate는 부동산 수익률입니다. 이 수치가 오르면 같은 임대수익을 가진 부동산의 평가가치는 내려갑니다.")
+    st.markdown("## 7. 부동산 가치와 장부기준 NAV proxy 변화")
+    st.caption("Cap rate proxy는 부동산 수익률 proxy입니다. 이 수치가 오르면 같은 NOI proxy를 가진 부동산의 평가가치는 내려갑니다.")
 
     v1, v2, v3, v4 = st.columns(4)
-    v1.metric("현재 순자산가치", format_trn_krw_from_mn(scenario["base_nav"]))
-    v2.metric("시나리오 후 순자산가치", format_trn_krw_from_mn(scenario["stressed_nav"]))
-    v3.metric("순자산가치 변화", format_pct_from_100(scenario["nav_change_pct"]))
+    v1.metric("현재 장부NAV proxy", format_trn_krw_from_mn(scenario["base_nav"]))
+    v2.metric("시나리오 후 장부NAV proxy", format_trn_krw_from_mn(scenario["stressed_nav"]))
+    v3.metric("장부NAV proxy 변화", format_pct_from_100(scenario["nav_change_pct"]))
     v4.metric("배당 후 남는 여력", fmt_mn_to_bn(scenario["dividend_cushion"]))
 
     asset_sens = scenario["asset_sensitivity"].copy().sort_values("value_change_pct")
@@ -587,7 +589,7 @@ def render_general_dashboard(
             ],
             "purpose": [
                 "재무 추이와 K-IFRS 기준 부채비율 분석",
-                "NAV, FFO, 배당, 차입, 이자 감당력 KPI",
+                "장부NAV proxy, FFO proxy, 배당, 차입, FFO 이자감당력 proxy KPI",
                 "자산 평가액, 임대차, 주요 임차인 정보",
                 "투자보고서 기준 직접 보유자산 세부정보",
                 "차입 약정별 만기와 금리 분석",

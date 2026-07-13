@@ -42,6 +42,13 @@ from calculations_tax_review_pack import (
 from dart_financials import company_options, get_recent_5y_financials, get_selected_company_profile, load_reit_master
 from data_loader import load_data
 from data_availability import get_company_data_availability, has_asset_level_data, has_tax_asset_data
+from metric_definitions import (
+    derive_book_nav_proxy,
+    derive_interest_bearing_debt,
+    derive_net_debt,
+    is_quarter_point_rate,
+    metric_definition_table,
+)
 from red_flag_engine import build_assurance_red_flags, build_tax_red_flags, load_red_flag_rules
 from tax_data_loader import (
     build_company_tax_dataset,
@@ -165,7 +172,7 @@ def test_tax_cash_flow_and_workflow_automation_tables_are_built():
         "공시가격/과표 +30%",
     ]
     assert cash["추가_현금유출_백만원"].max() > 0
-    assert "FFO·배당 현금세무 계획" in workflow["업무영역"].tolist()
+    assert "FFO proxy·배당 현금세무 계획" in workflow["업무영역"].tolist()
     assert workflow["완료"].eq(False).all()
     assert "공시가격·기준시가 원천 신뢰도" in risk_register["리스크/기회"].tolist()
 
@@ -283,10 +290,12 @@ def test_v12_selected_company_profile_and_recent_5y_snapshot_are_built():
     assert profile["company_name"] == "SK리츠"
     assert profile["stock_code"] == "395400"
     assert profile["market_cap_rank"] == 1
-    assert status == "Snapshot 기준"
+    assert status == "Snapshot 기준 / DART 연결 설정 없음"
     assert recent_5y.shape[0] == 5
     assert recent_5y["year"].is_monotonic_increasing
     assert {"total_assets", "investment_property", "borrowings_total", "ffo_proxy", "nav", "source_type"}.issubset(recent_5y.columns)
+    assert recent_5y["nav"].isna().all()
+    assert recent_5y["nav_calculation_method"].str.contains("총부채 또는 nav 컬럼 부족", na=False).all()
 
 
 def test_v12_empty_company_asset_detail_does_not_reuse_sample_assets():
@@ -416,3 +425,52 @@ def test_v13_assurance_company_level_proxy_tables_render_for_non_sk():
     assert asset_proxy["지표"].str.contains("투자부동산 / 총자산", na=False).any()
     assert debt_proxy["지표"].str.contains("유동성 차입금 / 총차입금", na=False).any()
     assert valuation_proxy["지표"].str.contains("valuation detail availability", na=False).any()
+
+
+def test_v14_1_metric_definitions_include_proxy_limitations():
+    table = metric_definition_table()
+    ffo = table[table["지표"].eq("FFO proxy")].iloc[0]
+    nav = table[table["지표"].eq("장부기준 NAV proxy")].iloc[0]
+    ltv = table[table["지표"].eq("Gross LTV")].iloc[0]
+
+    assert "공식적으로 공시한 FFO와 동일하지 않을 수" in ffo["제한사항"]
+    assert "총자산 - 총부채" in nav["계산식"]
+    assert "시가평가 NAV" in nav["제한사항"]
+    assert "충당부채" in ltv["제외"]
+
+
+def test_v14_1_book_nav_uses_total_liabilities_not_debt_only():
+    nav, method = derive_book_nav_proxy(total_assets=1_000, total_liabilities=420, total_equity=pd.NA)
+    missing_nav, missing_method = derive_book_nav_proxy(total_assets=1_000, total_liabilities=pd.NA, total_equity=pd.NA)
+
+    assert nav == 580
+    assert method == "총자산 - 총부채"
+    assert pd.isna(missing_nav)
+    assert "부족" in missing_method
+
+
+def test_v14_1_provisions_are_excluded_from_interest_bearing_debt_and_net_debt():
+    debt, method = derive_interest_bearing_debt(
+        short_term_borrowings=100,
+        current_portion_long_term_debt=50,
+        long_term_borrowings=300,
+        bonds=200,
+        lease_liabilities=25,
+    )
+    net_debt, net_method = derive_net_debt(debt, cash_and_cash_equivalents=80, short_term_financial_assets=20)
+
+    assert debt == 675
+    assert "충당부채" not in method
+    assert net_debt == 575
+    assert "현금및현금성자산" in net_method
+
+
+def test_v14_1_rate_step_and_weighted_label_are_explicit():
+    macro = build_macro_context("")
+    weighted = macro_scenario_parameters(macro, FORECAST_WEIGHTED_SCENARIO_NAME)
+    neutral = macro_scenario_parameters(macro, "중립: 현재와 유사한 금융환경")
+
+    assert weighted["scenario_base_rate_label"] == "확률가중 예상 기준금리"
+    assert "연속값" in weighted["scenario_base_rate_note"]
+    assert neutral["scenario_base_rate_label"] == "시나리오 기준금리"
+    assert is_quarter_point_rate(neutral["scenario_base_rate_pct"])

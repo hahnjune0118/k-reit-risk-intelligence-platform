@@ -1,13 +1,13 @@
 from pathlib import Path
 
 
-APP_VERSION = "v14"
-APP_VERSION_NAME = "Tax Workflow Control & Validation"
+APP_VERSION = "v14.1"
+APP_VERSION_NAME = "Metric Definition & Source Lineage Stabilization"
 APP_VERSION_LABEL = f"{APP_VERSION} - {APP_VERSION_NAME}"
-APP_TITLE = "K-REIT Risk Intelligence Platform"
+APP_TITLE = "K-REITs Risk Intelligence Platform"
 APP_SUBTITLE = (
     "상장리츠의 공시자료, 거시경제 지표, 자산별 정보, 공시가격 데이터를 연결하여 "
-    "보유세 부담, FFO 현금유출, Peer Benchmark 기반 Red Flag를 source policy, 검증, 요청자료, Tax Review Memo로 연결하는 Streamlit 기반 리스크 분석 도구"
+    "보유세 부담, FFO proxy 현금유출, Peer Benchmark 기반 Red Flag를 source policy, 검증, 요청자료, Tax Review Memo로 연결하는 Streamlit 기반 리스크 분석 도구"
 )
 PUBLIC_MODE_LABELS = {
     "General Info & Scenario": "일반 정보 및 시나리오",

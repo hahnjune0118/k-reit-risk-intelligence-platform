@@ -67,7 +67,7 @@ def build_holding_tax_reconciliation(tax_history: pd.DataFrame, latest_kpi: pd.S
                 "공시가격 / 장부가액": ratio,
                 "추정 과세표준(억원)": row.get("토지_과세표준_백만원", pd.NA) / 100 if pd.notna(row.get("토지_과세표준_백만원", pd.NA)) else pd.NA,
                 "추정 보유세(억원)": holding_tax / 100 if pd.notna(holding_tax) else pd.NA,
-                "보유세 / FFO": tax_to_ffo,
+                "보유세 / FFO proxy": tax_to_ffo,
                 "최근 5년 공시가격 증가율": growth / 100 if pd.notna(growth) and abs(float(growth)) > 1 else growth,
                 "검토 필요 여부": review_needed,
                 "source_type": row.get("source_type", row.get("official_price_source", "")),
@@ -121,19 +121,19 @@ def build_ffo_cash_outflow_stress(
             {
                 "항목": "기준 보유세",
                 "금액(억원)": latest_tax / 100 if pd.notna(latest_tax) else pd.NA,
-                "FFO 대비": latest_tax / base_ffo if pd.notna(latest_tax) and pd.notna(base_ffo) and base_ffo else pd.NA,
+                "FFO proxy 대비": latest_tax / base_ffo if pd.notna(latest_tax) and pd.notna(base_ffo) and base_ffo else pd.NA,
                 "주요 해석": "현재 Snapshot 또는 예시 데이터 기준 보유세 부담입니다.",
             },
             {
                 "항목": f"보유세 +{holding_tax_increase_pct:.0f}%",
                 "금액(억원)": stressed_tax / 100 if pd.notna(stressed_tax) else pd.NA,
-                "FFO 대비": stressed_ratio,
-                "주요 해석": f"FFO {ffo_stress_pct:.0f}% 하락과 보유세 증가를 동시에 반영한 스트레스입니다.",
+                "FFO proxy 대비": stressed_ratio,
+                "주요 해석": f"FFO proxy {ffo_stress_pct:.0f}% 하락과 보유세 증가를 동시에 반영한 스트레스입니다.",
             },
             {
                 "항목": "추가 현금유출",
                 "금액(억원)": incremental / 100 if pd.notna(incremental) else pd.NA,
-                "FFO 대비": incremental / stressed_ffo if pd.notna(incremental) and pd.notna(stressed_ffo) and stressed_ffo else pd.NA,
+                "FFO proxy 대비": incremental / stressed_ffo if pd.notna(incremental) and pd.notna(stressed_ffo) and stressed_ffo else pd.NA,
                 "주요 해석": "예산, 배당가능재원, 자금계획 검토 시 별도 설명이 필요한 증가분입니다.",
             },
         ]
@@ -178,16 +178,16 @@ def build_tax_issue_matrix(
         )
 
     if ffo_stress is not None and not ffo_stress.empty:
-        stress_ratio = ffo_stress.loc[ffo_stress["항목"].str.contains("보유세 \\+", regex=True), "FFO 대비"]
+        stress_ratio = ffo_stress.loc[ffo_stress["항목"].str.contains("보유세 \\+", regex=True), "FFO proxy 대비"]
         risk_level = _risk_label_from_ratio(stress_ratio.iloc[0] if not stress_ratio.empty else pd.NA, 0.20, 0.35)
         rows.append(
             {
-                "세무 이슈": "FFO 현금유출 스트레스",
+                "세무 이슈": "FFO proxy 현금유출 스트레스",
                 "위험수준": risk_level,
-                "발생 근거": "보유세 증가 및 FFO 하락 가정을 함께 반영",
-                "영향받는 지표": "보유세 / FFO, 추가 현금유출",
+                "발생 근거": "보유세 증가 및 FFO proxy 하락 가정을 함께 반영",
+                "영향받는 지표": "보유세 / FFO proxy, 추가 현금유출",
                 "검토 방향": "배당가능재원, 예산, 투자자 커뮤니케이션 영향 검토",
-                "요청자료": "FFO 산정자료 / 배당계획 / 보유세 예산 / 공시가격 변동 분석",
+                "요청자료": "FFO proxy 산정자료 / 배당계획 / 보유세 예산 / 공시가격 변동 분석",
                 "업무유형": "현금흐름 스트레스",
                 "데이터 기준": data_basis,
             }
@@ -289,7 +289,7 @@ def build_tax_review_memo(
     bridge_row = bridge.iloc[0] if bridge is not None and not bridge.empty else pd.Series(dtype="object")
 
     estimated_tax = bridge_row.get("추정 보유세(억원)", recon_latest.get("추정 보유세(억원)", pd.NA))
-    tax_to_ffo = bridge_row.get("FFO 대비", recon_latest.get("보유세 / FFO", pd.NA))
+    tax_to_ffo = bridge_row.get("FFO 대비", bridge_row.get("FFO proxy 대비", recon_latest.get("보유세 / FFO proxy", pd.NA)))
     tax_to_revenue = bridge_row.get("영업수익 대비", pd.NA)
     book_price_ratio = recon_latest.get("공시가격 / 장부가액", pd.NA)
     peer_position = bridge_row.get("Peer 대비 위치", "Peer Snapshot 기준 위치 확인 필요")
@@ -316,11 +316,11 @@ def build_tax_review_memo(
 
 ## 2. 핵심 수치 요약
 - 추정 보유세: {_fmt_eok(estimated_tax)}
-- 보유세 / FFO: {_fmt_ratio_pct(tax_to_ffo)}
+- 보유세 / FFO proxy: {_fmt_ratio_pct(tax_to_ffo)}
 - 보유세 / 영업수익: {_fmt_ratio_pct(tax_to_revenue)}
 - 공시가격 / 투자부동산 장부금액: {_fmt_ratio_pct(book_price_ratio)}
 - Peer 대비 위치: {peer_position}
-- FFO stress 후 보유세 / FFO: {_fmt_ratio_pct(stress_row.get('FFO 대비', pd.NA))}
+- FFO proxy stress 후 보유세 / FFO proxy: {_fmt_ratio_pct(stress_row.get('FFO proxy 대비', pd.NA))}
 - Peer 요약: {peer_summary.get('summary_text', 'Peer Snapshot 기준 주요 지표 비교 필요')}
 
 ## 3. 주요 Tax 이슈

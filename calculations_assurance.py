@@ -67,13 +67,13 @@ def build_rmm_mapping(latest_kpi: pd.Series, debt_schedule: pd.DataFrame, scenar
     rows = [
         {
             "감사영역": "투자부동산 공정가치",
-            "RMM 신호": f"{scenario_label} / Cap rate +{cap_rate_shock_bp}bp: 감사 우선순위 높은 자산 {high_priority_assets}개, NAV 변화 {scenario.get('nav_change_pct', None):.1f}%" if pd.notna(scenario.get('nav_change_pct', None)) else "Cap rate 민감도 확인 필요",
-            "왜 중요한가": "리츠 재무제표에서 투자부동산 평가액은 총자산과 순자산가치에 직접 영향을 줍니다.",
+            "RMM 신호": f"{scenario_label} / Cap rate +{cap_rate_shock_bp}bp: 감사 우선순위 높은 자산 {high_priority_assets}개, 장부NAV proxy 변화 {scenario.get('nav_change_pct', None):.1f}%" if pd.notna(scenario.get('nav_change_pct', None)) else "Cap rate proxy 민감도 확인 필요",
+            "왜 중요한가": "리츠 재무제표에서 투자부동산 평가액은 총자산과 장부기준 NAV proxy에 직접 영향을 줍니다.",
             "권장 감사절차": "외부평가보고서, Cap rate, NOI, 공실률, 임대료 성장률, 민감도 공시를 집중 검토",
         },
         {
             "감사영역": "차입금·유동성·계속기업",
-            "RMM 신호": f"1년 내 만기 차입금 비중 {near_1y_pct:.1f}%, 시나리오 후 이자 감당력 {scenario.get('stressed_icr', None):.2f}x" if pd.notna(near_1y_pct) and pd.notna(scenario.get('stressed_icr', None)) else "차입금 만기와 이자 감당력 확인 필요",
+            "RMM 신호": f"1년 내 만기 차입금 비중 {near_1y_pct:.1f}%, 시나리오 후 FFO 이자감당력 proxy {scenario.get('stressed_icr', None):.2f}x" if pd.notna(near_1y_pct) and pd.notna(scenario.get('stressed_icr', None)) else "차입금 만기와 FFO 이자감당력 proxy 확인 필요",
             "왜 중요한가": "차환 실패나 이자비용 급증은 유동성 주석, 계속기업 검토, 후속사건 검토에 영향을 줄 수 있습니다.",
             "권장 감사절차": "차입약정, 만기연장 계획, 리파이낸싱 term sheet, 현금흐름 forecast, 배당정책 변경 가능성 확인",
         },
@@ -126,7 +126,7 @@ def build_icfr_control_points() -> pd.DataFrame:
         ("차입금·유동성", "만기·금리·covenant 모니터링 및 리파이낸싱 계획 검토", "차입금 master file, 이사회 보고, 차환계획 업데이트 통제 확인"),
         ("임대차계약", "신규/변경/해지 계약 승인 및 임대료 조건 검토", "계약서 원본, 렌트프리, 보증금, 특수조건 입력 통제 확인"),
         ("특수관계자", "계열거래 식별, 조건 검토, 공시 완전성 검토", "특수관계자 master list와 거래내역 대사"),
-        ("배당가능이익", "FFO·배당가능이익 계산 및 배당 의사결정 검토", "계산 spreadsheet 접근권한, review evidence, 이사회 승인 확인"),
+        ("배당가능이익", "FFO proxy·배당가능이익 계산 및 배당 의사결정 검토", "계산 spreadsheet 접근권한, review evidence, 이사회 승인 확인"),
     ]
     return pd.DataFrame(rows, columns=["프로세스", "핵심 통제", "감사·ICFR 테스트 포인트"])
 
@@ -234,10 +234,10 @@ def build_company_level_asset_tenant_proxy(
             },
             {
                 "구분": "배당",
-                "지표": "배당 / FFO",
+                "지표": "배당 / FFO proxy",
                 "값": _ratio_text(dividend_to_ffo),
                 "위험수준": _risk_from_ratio(dividend_to_ffo, 0.95, 1.10),
-                "주요 해석": "FFO 대비 배당 부담이 크면 배당가능재원과 세무·회계 조정 검토가 필요합니다.",
+                "주요 해석": "FFO proxy 대비 배당 부담이 크면 배당가능재원과 세무·회계 조정 검토가 필요합니다.",
                 "데이터 기준": data_basis,
             },
         ]
@@ -279,10 +279,10 @@ def build_company_level_refinancing_proxy(
             },
             {
                 "구분": "이자 부담",
-                "지표": "이자비용 / FFO",
+                "지표": "이자비용 / FFO proxy",
                 "값": _ratio_text(interest_to_ffo),
                 "위험수준": _risk_from_ratio(interest_to_ffo, 0.20, 0.35),
-                "주요 해석": "FFO가 이자비용을 흡수할 수 있는지 보는 회사 단위 proxy입니다.",
+                "주요 해석": "FFO proxy가 이자비용을 흡수할 수 있는지 보는 회사 단위 proxy입니다.",
                 "데이터 기준": data_basis,
             },
             {
@@ -310,7 +310,7 @@ def build_company_level_valuation_proxy(
     availability: dict | None = None,
     data_basis: str = "회사 전체 Snapshot",
 ) -> pd.DataFrame:
-    """Build company-level valuation indicators when asset-level cap-rate/NAV detail is unavailable."""
+    """Build company-level valuation indicators when asset-level cap-rate/book-NAV detail is unavailable."""
     row = peer_row if peer_row is not None else {}
     availability = availability or {}
     debt_to_assets = row.get("debt_to_assets", pd.NA)
@@ -329,7 +329,7 @@ def build_company_level_valuation_proxy(
             },
             {
                 "구분": "현금흐름",
-                "지표": "FFO",
+                "지표": "FFO proxy",
                 "값": _amount_text_mn(row.get("ffo_proxy", pd.NA)),
                 "위험수준": "정상" if pd.notna(_to_number(row.get("ffo_proxy", pd.NA))) else "데이터 부족",
                 "주요 해석": "공정가치 민감도와 배당 지속가능성을 함께 해석하기 위한 회사 단위 지표입니다.",
@@ -348,7 +348,7 @@ def build_company_level_valuation_proxy(
                 "지표": "차입금 / 총자산",
                 "값": _ratio_text(debt_to_assets),
                 "위험수준": _risk_from_ratio(debt_to_assets, 0.45, 0.55),
-                "주요 해석": "NAV 민감도를 직접 계산하지 못하는 경우에도 재무구조 취약성을 확인합니다.",
+                "주요 해석": "장부기준 NAV proxy 민감도를 직접 계산하지 못하는 경우에도 재무구조 취약성을 확인합니다.",
                 "데이터 기준": data_basis,
             },
             {
@@ -364,7 +364,7 @@ def build_company_level_valuation_proxy(
                 "지표": "valuation detail availability",
                 "값": cap_rate_state,
                 "위험수준": "데이터 부족" if "없음" in cap_rate_state else "정상",
-                "주요 해석": "자산별 Cap rate가 부족하면 NAV 민감도 카드는 숨기고 회사 전체 proxy를 사용합니다.",
+                "주요 해석": "자산별 Cap rate proxy가 부족하면 NAV 민감도 카드는 숨기고 회사 전체 proxy를 사용합니다.",
                 "데이터 기준": data_basis,
             },
         ]
@@ -377,7 +377,7 @@ def build_audit_workflow_checklist(
     scenario: dict,
     assurance_assets: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Build a practical REIT audit checklist aligned to risk assessment and response standards."""
+    """Build a practical REITs audit checklist aligned to risk assessment and response standards."""
     near_1y_pct = _near_maturity_pct(debt_schedule)
     stressed_icr = scenario.get("stressed_icr", None)
     nav_change_pct = scenario.get("nav_change_pct", None)
@@ -418,7 +418,7 @@ def build_audit_workflow_checklist(
             "감사단계": "기업과 기업환경 이해",
             "기준서 근거": "감사기준서 315.19, 315.20",
             "체크 항목": "재무성과 지표와 회계정책 이해",
-            "리츠 감사 포인트": "NAV, FFO, LTV, ICR, 배당가능이익 및 투자부동산 측정 정책을 연결",
+            "리츠 감사 포인트": "장부기준 NAV proxy, FFO proxy, LTV, ICR, 배당가능이익 및 투자부동산 측정 정책을 연결",
             "수행 절차": "주요 KPI 산식, 경영진 보고 지표, 투자부동산 공정가치/원가 정책, 수익인식 정책을 문서화",
             "증거/문서화": "KPI bridge, accounting policy memo",
             "우선순위": "높음",
@@ -438,7 +438,7 @@ def build_audit_workflow_checklist(
             "감사단계": "위험평가절차",
             "기준서 근거": "감사기준서 315.13-18",
             "체크 항목": "질문·분석적 절차·관찰/검사 수행",
-            "리츠 감사 포인트": f"NAV 민감도 {_metric_text(nav_change_pct, '%')}, 1년 내 만기 차입금 {_metric_text(near_1y_pct, '%')}, 스트레스 ICR {_metric_text(stressed_icr, 'x', 2)}",
+            "리츠 감사 포인트": f"장부NAV proxy 민감도 {_metric_text(nav_change_pct, '%')}, 1년 내 만기 차입금 {_metric_text(near_1y_pct, '%')}, 스트레스 ICR {_metric_text(stressed_icr, 'x', 2)}",
             "수행 절차": "경영진/감사위원회 면담, 전년 대비 KPI 분석, 금리·cap rate·임대율 변화와 재무제표 왜곡 가능성 연결",
             "증거/문서화": "Risk assessment analytics, inquiry notes",
             "우선순위": "높음",
@@ -538,7 +538,7 @@ def build_audit_workflow_checklist(
             "감사단계": "실증절차",
             "기준서 근거": "감사기준서 330.6-7",
             "체크 항목": "투자부동산 평가 실증절차",
-            "리츠 감사 포인트": "평가액이 NAV와 총자산을 좌우하므로 가정과 원천자료의 완전성·정확성을 검증",
+            "리츠 감사 포인트": "평가액이 장부기준 NAV proxy와 총자산을 좌우하므로 가정과 원천자료의 완전성·정확성을 검증",
             "수행 절차": "외부평가보고서, NOI, cap rate, 공실률, 임대료 성장률, 비교거래, 민감도 공시를 테스트",
             "증거/문서화": "투자부동산 평가 작업문서, 독립적 기대값",
             "우선순위": valuation_priority,
@@ -577,10 +577,10 @@ def build_audit_workflow_checklist(
         {
             "감사단계": "실증절차",
             "기준서 근거": "감사기준서 330.6-7",
-            "체크 항목": "배당가능이익·FFO 재계산",
+            "체크 항목": "배당가능이익·FFO proxy 재계산",
             "리츠 감사 포인트": "배당 유지가능성과 투자자 커뮤니케이션에 직접 연결되는 지표",
-            "수행 절차": "FFO, 이자비용, 배당가능이익, 배당성향 산식을 재계산하고 이사회 결의와 공시 금액을 대사",
-            "증거/문서화": "FFO/dividend recalculation",
+            "수행 절차": "FFO proxy, 이자비용, 배당가능이익, 배당성향 산식을 재계산하고 이사회 결의와 공시 금액을 대사",
+            "증거/문서화": "FFO proxy/dividend recalculation",
             "우선순위": "중간",
             "완료": False,
         },
@@ -637,7 +637,7 @@ def build_rmm_assertion_checklist(
                 "계정/공시": "투자부동산 공정가치",
                 "경영진 주장": "평가, 표시와 공시",
                 "RMM 판단": _priority_level(high_assets > 0 or (pd.notna(nav_change_pct) and nav_change_pct <= -8)),
-                "위험 신호": f"중점 자산 {high_assets}개, NAV 민감도 {_metric_text(nav_change_pct, '%')}",
+                "위험 신호": f"중점 자산 {high_assets}개, 장부NAV proxy 민감도 {_metric_text(nav_change_pct, '%')}",
                 "위험평가절차": "평가방법, 외부평가기관, NOI·cap rate·공실률 가정과 시장자료를 이해",
                 "통제테스트 판단": "평가가정 검토 통제에 의존하거나 공시 취합 통제 테스트 필요",
                 "실증절차": "외부평가보고서 검사, 주요 가정 독립 기대치 산정, 민감도 재계산, 공시 tie-out",
@@ -678,13 +678,13 @@ def build_rmm_assertion_checklist(
                 "KAM 연계": "거래 규모와 조건에 따라 검토",
             },
             {
-                "계정/공시": "배당가능이익·FFO",
+                "계정/공시": "배당가능이익·FFO proxy",
                 "경영진 주장": "정확성, 표시와 공시",
                 "RMM 판단": "중간",
-                "위험 신호": "배당정책과 FFO가 투자자 판단과 유동성 평가에 직접 연결",
-                "위험평가절차": "FFO 산식, 배당가능이익 계산, 이사회 배당 의사결정 프로세스를 이해",
+                "위험 신호": "배당정책과 FFO proxy가 투자자 판단과 유동성 평가에 직접 연결",
+                "위험평가절차": "FFO proxy 산식, 배당가능이익 계산, 이사회 배당 의사결정 프로세스를 이해",
                 "통제테스트 판단": "계산 spreadsheet 검토 통제와 접근권한 테스트 여부 결정",
-                "실증절차": "FFO/배당가능이익 재계산, 이사회 결의와 공시 대사",
+                "실증절차": "FFO proxy/배당가능이익 재계산, 이사회 결의와 공시 대사",
                 "KAM 연계": "유동성 KAM의 보조 근거",
             },
             {
@@ -704,7 +704,7 @@ def build_rmm_assertion_checklist(
 def build_assurance_workpaper_index() -> pd.DataFrame:
     rows = [
         ("A-100", "기업과 기업환경 이해", "기업 이해 메모", "사업모델, 규제환경, 지배구조, 정보시스템", "감사기준서 315 이해사항과 정보 원천 문서화"),
-        ("A-200", "위험평가절차", "위험평가 분석표", "NAV/FFO/LTV/ICR, 금리·Cap rate 시나리오", "분석적 절차와 질문 결과가 RMM 결론으로 연결"),
+        ("A-200", "위험평가절차", "위험평가 분석표", "장부NAV proxy/FFO proxy/LTV/ICR, 금리·Cap rate 시나리오", "분석적 절차와 질문 결과가 RMM 결론으로 연결"),
         ("A-210", "위험평가절차", "RMM 주장별 매핑표", "계정/공시별 주장, 유의적 위험, 통제 의존 판단", "RMM과 후속 감사절차의 연결 관계 명확화"),
         ("C-100", "통제테스트", "Process walkthrough", "임대, 차입금, 평가, 결산, 공시 프로세스", "설계·구현 확인 및 운영효과성 테스트 범위 결정"),
         ("C-200", "통제테스트", "ICFR 테스트 시트", "핵심 통제 표본, 검토 증거, 예외사항", "통제 의존 결론 또는 실증절차 확대 판단"),

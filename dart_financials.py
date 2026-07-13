@@ -4,6 +4,7 @@ import pandas as pd
 
 from api_dart import fetch_dart_annual_financial_history
 from config import DATA_DIR
+from metric_definitions import derive_book_nav_proxy, derive_ffo_proxy, derive_net_debt
 
 
 REIT_MASTER_PATH = DATA_DIR / "reit_master.csv"
@@ -113,7 +114,8 @@ def _to_recent_5y_from_snapshot(company_name: str, peer_snapshot: pd.DataFrame) 
         investment_property = _scale(latest.get("investment_property"), factor)
         borrowings_total = _scale(latest.get("borrowings_total"), factor * 0.98)
         ffo_proxy = _scale(latest.get("ffo_proxy"), 0.86 + (factor - 0.82) * 0.9)
-        nav = total_assets - borrowings_total if pd.notna(total_assets) and pd.notna(borrowings_total) else pd.NA
+        nav = _scale(latest.get("nav"), factor)
+        nav_method = "Snapshot nav 컬럼" if pd.notna(nav) else "Snapshot에 총부채 또는 nav 컬럼 부족"
         records.append({
             "company_name": company_name,
             "year": int(year),
@@ -127,6 +129,12 @@ def _to_recent_5y_from_snapshot(company_name: str, peer_snapshot: pd.DataFrame) 
             "interest_expense": _scale(latest.get("interest_expense"), 0.78 + (factor - 0.82) * 1.05),
             "ffo_proxy": ffo_proxy,
             "nav": nav,
+            "book_nav_proxy": nav,
+            "ffo_proxy_calculation_method": "Snapshot ffo_proxy 컬럼",
+            "nav_calculation_method": nav_method,
+            "financial_statement_scope": "Snapshot 기준",
+            "source_note": "Peer Snapshot 기반 5년 흐름 proxy입니다. 총부채가 없어 총자산-차입금으로 NAV를 대체하지 않습니다.",
+            "is_fallback": True,
             "source_type": str(latest.get("source_type", "sample_snapshot")),
         })
     return _add_compat_columns(pd.DataFrame(records))
@@ -144,23 +152,78 @@ def _normalize_dart_history(dart_history: pd.DataFrame) -> pd.DataFrame:
     rename = {
         "reit_name": "company_name",
         "total_assets_mn_krw": "total_assets",
+        "current_assets_mn_krw": "current_assets",
+        "cash_and_cash_equivalents_mn_krw": "cash_and_cash_equivalents",
+        "short_term_financial_assets_mn_krw": "short_term_financial_assets",
         "investment_property_mn_krw": "investment_property",
+        "total_liabilities_mn_krw": "total_liabilities",
         "interest_bearing_debt_mn_krw": "borrowings_total",
+        "short_term_borrowings_mn_krw": "short_term_borrowings",
+        "current_portion_long_term_debt_mn_krw": "current_portion_long_term_debt",
+        "long_term_borrowings_mn_krw": "long_term_borrowings",
+        "bonds_mn_krw": "bonds",
+        "lease_liabilities_mn_krw": "lease_liabilities",
+        "provisions_mn_krw": "provisions",
+        "deferred_tax_liabilities_mn_krw": "deferred_tax_liabilities",
+        "net_debt_mn_krw": "net_debt",
         "revenue_mn_krw": "operating_revenue",
         "operating_income_mn_krw": "operating_income",
         "net_income_mn_krw": "net_income",
-        "total_equity_mn_krw": "nav",
+        "interest_expense_mn_krw": "interest_expense",
+        "operating_cash_flow_mn_krw": "operating_cash_flow",
+        "total_equity_mn_krw": "total_equity",
     }
     df = df.rename(columns={k: v for k, v in rename.items() if k in df.columns})
-    if "ffo_proxy" not in df.columns:
-        df["ffo_proxy"] = df.get("operating_income", df.get("net_income", pd.NA))
+    ffo_values = []
+    ffo_methods = []
+    nav_values = []
+    nav_methods = []
+    net_debt_values = []
+    net_debt_methods = []
+    for _, row in df.iterrows():
+        ffo_value, ffo_method = derive_ffo_proxy(
+            operating_cash_flow=row.get("operating_cash_flow", pd.NA),
+            operating_income=row.get("operating_income", pd.NA),
+            net_income=row.get("net_income", pd.NA),
+        )
+        nav_value, nav_method = derive_book_nav_proxy(
+            row.get("total_assets", pd.NA),
+            row.get("total_liabilities", pd.NA),
+            row.get("total_equity", pd.NA),
+        )
+        net_debt_value, net_debt_method = derive_net_debt(
+            row.get("borrowings_total", pd.NA),
+            row.get("cash_and_cash_equivalents", pd.NA),
+            row.get("short_term_financial_assets", pd.NA),
+        )
+        ffo_values.append(ffo_value)
+        ffo_methods.append(ffo_method)
+        nav_values.append(nav_value)
+        nav_methods.append(nav_method)
+        net_debt_values.append(net_debt_value)
+        net_debt_methods.append(net_debt_method)
+    df["ffo_proxy"] = ffo_values
+    df["ffo_proxy_calculation_method"] = ffo_methods
+    df["nav"] = nav_values
+    df["book_nav_proxy"] = nav_values
+    df["nav_calculation_method"] = nav_methods
+    df["net_debt"] = net_debt_values
+    df["net_debt_calculation_method"] = net_debt_methods
     if "interest_expense" not in df.columns:
         df["interest_expense"] = pd.NA
     df["source_type"] = "dart_api_selected_company"
+    df["source_note"] = "DART 재무제표 API 기준. 연결재무제표(CFS)를 우선하고 자료가 없으면 별도재무제표(OFS)를 사용합니다."
+    df["is_fallback"] = False
     keep = [
         "company_name", "year", "total_assets", "investment_property", "borrowings_total",
-        "operating_revenue", "operating_income", "net_income", "interest_expense",
-        "ffo_proxy", "nav", "source_type",
+        "current_assets", "cash_and_cash_equivalents", "short_term_financial_assets",
+        "total_liabilities", "short_term_borrowings", "current_portion_long_term_debt",
+        "long_term_borrowings", "bonds", "lease_liabilities", "provisions",
+        "deferred_tax_liabilities", "net_debt", "operating_revenue", "operating_income",
+        "net_income", "operating_cash_flow", "interest_expense", "ffo_proxy", "nav",
+        "book_nav_proxy", "source_type", "source_note", "financial_statement_scope",
+        "ffo_proxy_calculation_method", "nav_calculation_method", "net_debt_calculation_method",
+        "is_fallback",
     ]
     return _add_compat_columns(df[[col for col in keep if col in df.columns]])
 
@@ -177,7 +240,7 @@ def _add_compat_columns(df: pd.DataFrame) -> pd.DataFrame:
         "operating_income": "operating_income_mn_krw",
         "net_income": "net_income_mn_krw",
         "ffo_proxy": "ffo_mn_krw",
-        "nav": "nav_mn_krw",
+        "book_nav_proxy": "nav_mn_krw",
     }
     for source, target in compat.items():
         if source in out.columns and target not in out.columns:
@@ -193,12 +256,6 @@ def get_recent_5y_financials(
     dart_api_key: str = "",
 ) -> tuple[pd.DataFrame, str]:
     company_name = company_profile.get("company_name", "")
-    snapshot_history = _to_recent_5y_from_snapshot(company_name, peer_snapshot)
-    status = "Snapshot 기준"
-
-    if not snapshot_history.empty:
-        return snapshot_history, status
-
     if dart_api_key:
         dart_history, _reports, dart_status = fetch_dart_annual_financial_history(
             dart_api_key,
@@ -209,6 +266,13 @@ def get_recent_5y_financials(
         normalized = _normalize_dart_history(dart_history)
         if not normalized.empty:
             return normalized, "DART 선택 회사 최근 5개 사업연도 기준"
-        status = f"Snapshot 기준 / DART 조회 제한: {dart_status}"
+        status = f"DART 조회 제한: {dart_status}"
+    else:
+        status = "DART 연결 설정 없음"
+
+    snapshot_history = _to_recent_5y_from_snapshot(company_name, peer_snapshot)
+    if not snapshot_history.empty:
+        snapshot_history["source_note"] = snapshot_history.get("source_note", "Snapshot fallback")
+        return snapshot_history, f"Snapshot 기준 / {status}"
 
     return pd.DataFrame(), "예시 데이터 기준"

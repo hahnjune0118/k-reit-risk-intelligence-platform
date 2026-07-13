@@ -36,8 +36,8 @@ def test_holding_tax_ratios_do_not_raise_when_ffo_is_zero():
     ffo_stress = build_ffo_cash_outflow_stress(latest_kpi, annual_summary, 10.0, 5.0)
 
     assert pd.isna(company_tax["holding_tax_to_ffo"].iloc[0])
-    assert pd.isna(reconciliation["보유세 / FFO"].iloc[0])
-    assert ffo_stress["FFO 대비"].isna().all()
+    assert pd.isna(reconciliation["보유세 / FFO proxy"].iloc[0])
+    assert ffo_stress["FFO proxy 대비"].isna().all()
 
 
 def test_holding_tax_ratios_do_not_raise_when_ffo_is_missing():
@@ -68,5 +68,5 @@ def test_holding_tax_ratios_do_not_raise_when_ffo_is_missing():
     reconciliation = build_holding_tax_reconciliation(tax_history, pd.Series(dtype="object"))
     ffo_stress = build_ffo_cash_outflow_stress(pd.Series(dtype="object"), annual_summary, 10.0, 5.0)
 
-    assert pd.isna(reconciliation["보유세 / FFO"].iloc[0])
-    assert ffo_stress["FFO 대비"].isna().all()
+    assert pd.isna(reconciliation["보유세 / FFO proxy"].iloc[0])
+    assert ffo_stress["FFO proxy 대비"].isna().all()

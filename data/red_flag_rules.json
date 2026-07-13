@@ -65,7 +65,7 @@
     },
     {
       "id": "interest_expense_to_ffo",
-      "label": "FFO 대비 이자비용",
+      "label": "FFO proxy 대비 이자비용",
       "metric": "interest_expense_to_ffo",
       "risk_direction": "high_is_bad",
       "yellow_percentile": 0.70,
@@ -73,7 +73,7 @@
       "yellow_absolute": 0.55,
       "red_absolute": 0.75,
       "area": "Assurance",
-      "explanation_ko": "FFO 대비 이자비용 부담이 높으면 이자비용 완전성, 금융비용 배분, 배당가능성 검토가 중요해집니다.",
+      "explanation_ko": "FFO proxy 대비 이자비용 부담이 높으면 이자비용 완전성, 금융비용 배분, 배당가능성 검토가 중요해집니다.",
       "audit_response": [
         "차입금 평균잔액과 적용금리를 재계산해 이자비용 완전성을 검토합니다.",
         "금리 상승 시나리오가 forecast와 배당 정책에 미치는 영향을 확인합니다."
@@ -86,7 +86,7 @@
     },
     {
       "id": "dividend_to_ffo",
-      "label": "FFO 대비 배당",
+      "label": "FFO proxy 대비 배당",
       "metric": "dividend_to_ffo",
       "risk_direction": "high_is_bad",
       "yellow_percentile": 0.70,
@@ -94,7 +94,7 @@
       "yellow_absolute": 0.85,
       "red_absolute": 0.95,
       "area": "Assurance",
-      "explanation_ko": "FFO 대비 배당 비율이 높으면 배당 지속가능성과 현금흐름 forecast의 합리성 검토가 필요합니다.",
+      "explanation_ko": "FFO proxy 대비 배당 비율이 높으면 배당 지속가능성과 현금흐름 forecast의 합리성 검토가 필요합니다.",
       "audit_response": [
         "배당 정책과 이사회 승인 문서를 확인합니다.",
         "운영현금흐름, 차입금 상환, 보유세 증가를 반영한 배당 여력 분석을 검토합니다."
@@ -151,7 +151,7 @@
   "tax": [
     {
       "id": "holding_tax_to_ffo",
-      "label": "FFO 대비 보유세 부담",
+      "label": "FFO proxy 대비 보유세 부담",
       "metric": "holding_tax_to_ffo",
       "risk_direction": "high_is_bad",
       "yellow_percentile": 0.70,
@@ -159,7 +159,7 @@
       "yellow_absolute": 0.25,
       "red_absolute": 0.35,
       "area": "Tax",
-      "explanation_ko": "FFO 대비 보유세 비중이 높으면 공시가격 상승 시 배당 여력과 현금 유출 부담이 빠르게 악화될 수 있습니다.",
+      "explanation_ko": "FFO proxy 대비 보유세 비중이 높으면 공시가격 상승 시 배당 여력과 현금 유출 부담이 빠르게 악화될 수 있습니다.",
       "tax_review_points": [
         "자산별 공시가격, 기준시가, 고지세액 자료를 대사합니다.",
         "공정시장가액비율과 세부담상한 적용 가능성을 검토합니다."

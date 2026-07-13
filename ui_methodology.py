@@ -4,6 +4,7 @@ import streamlit as st
 from api_manager import sanitize_secret_text
 from config import APP_VERSION_LABEL
 from data_source_policy import source_policy_table
+from metric_definitions import metric_definition_table, metric_lineage_table
 from ui_common import render_selected_company_header
 
 
@@ -39,12 +40,18 @@ def render_methodology_page(
     render_selected_company_header(peer_context)
     st.caption(f"현재 안정 공개 버전: {APP_VERSION_LABEL}")
 
+    st.markdown("### v14.1 안정화 범위")
+    st.info(
+        "v14.1은 새로운 분석 기능을 크게 늘리기보다 FFO proxy, 장부기준 NAV proxy, Gross LTV, "
+        "Cap rate proxy, WALE, 이자감당력처럼 화면에 노출되는 핵심 지표의 계산식과 출처 계보를 명확히 하는 버전입니다."
+    )
+
     st.markdown("### v14 Tax Workflow Control 구조")
     st.dataframe(
         pd.DataFrame(
             [
                 {"단계": "1. Source policy", "내용": "자료 출처를 공식 공시, Snapshot, Peer 추정, 데이터 부족으로 표준화"},
-                {"단계": "2. Holding tax bridge", "내용": "공시가격 또는 장부가액에서 과세표준, 추정 보유세, FFO 부담으로 연결"},
+                {"단계": "2. Holding tax bridge", "내용": "공시가격 또는 장부가액에서 과세표준, 추정 보유세, FFO proxy 부담으로 연결"},
                 {"단계": "3. Validation", "내용": "결측, fallback 사용, 0 denominator, 비정상 비율을 별도 검증 패널로 표시"},
                 {"단계": "4. Issue workflow", "내용": "Tax Issue Matrix를 요청자료 리스트와 Memo 초안으로 연결"},
                 {"단계": "5. Export", "내용": "Memo, Issue Matrix, Reconciliation, Request List를 검토용 파일로 다운로드"},
@@ -59,7 +66,7 @@ def render_methodology_page(
     st.dataframe(
         pd.DataFrame(
             [
-                {"화면": "일반 정보 및 시나리오", "목적": "REIT 기본 위험 프로필, 거시경제 Scenario, Peer Benchmark 요약"},
+                {"화면": "일반 정보 및 시나리오", "목적": "REITs 기본 위험 프로필, 거시경제 Scenario, Peer Benchmark 요약"},
                 {"화면": "Tax: 보유세 분석", "목적": "Tax Summary, 보유세 브리지, Issue Matrix, Reconciliation, FFO Stress, Request List, Memo, Export, Validation"},
                 {"화면": "Assurance: 감사위험 분석", "목적": "감사계획, RMM, KAM, Peer 기반 감사위험 Red Flag"},
                 {"화면": "분석 방법론 및 데이터 출처", "목적": "자료 출처, Snapshot 구조, Red Flag 기준, 한계 및 공개 런타임 구조 설명"},
@@ -88,14 +95,40 @@ def render_methodology_page(
         "실무 사용 전에는 원자료 확인, 회사 확인, 세무 전문가 검토가 필요합니다."
     )
 
+    st.markdown("### 핵심 재무지표 정의와 계산식")
+    st.caption("아래 표는 화면과 문서에서 공통으로 사용하는 v14.1 metric metadata입니다. 긴 설명은 셀을 클릭해 확인할 수 있습니다.")
+    st.dataframe(
+        metric_definition_table(),
+        hide_index=True,
+        width="stretch",
+        height=360,
+        column_config={
+            "구분": st.column_config.TextColumn("구분", width="small"),
+            "지표": st.column_config.TextColumn("지표", width="medium"),
+            "정의": st.column_config.TextColumn("정의", width="medium"),
+            "계산식": st.column_config.TextColumn("계산식", width="large"),
+            "사용 데이터": st.column_config.TextColumn("사용 데이터", width="large"),
+            "포함": st.column_config.TextColumn("포함", width="medium"),
+            "제외": st.column_config.TextColumn("제외", width="medium"),
+            "제한사항": st.column_config.TextColumn("제한사항", width="large"),
+        },
+    )
+
+    st.markdown("### 지표별 데이터 계보")
+    st.dataframe(metric_lineage_table(), hide_index=True, width="stretch", height=230)
+    st.caption(
+        "장부기준 NAV proxy는 총부채 전체를 차감하지만, Gross LTV와 금리충격은 이자부 차입부채만 사용합니다. "
+        "충당부채, 이연법인세부채, 일반 영업채무는 LTV 분자와 차입 스프레드·리파이낸싱 금리 shock 대상에서 제외합니다."
+    )
+
     st.markdown("### 사용 데이터")
     source_status = pd.DataFrame(
         [
             {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},
             {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": _display_api_status(macro_history_status)},
             {"자료": "공시가격 계열 데이터", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "제한 시 예시 데이터 사용"},
-            {"자료": "REIT Peer Snapshot", "사용 목적": "Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
-            {"자료": "REIT Tax Snapshot", "사용 목적": "회사별 보유세 fallback 및 bridge 입력값", "상태": "앱에 포함"},
+            {"자료": "REITs Peer Snapshot", "사용 목적": "Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
+            {"자료": "REITs Tax Snapshot", "사용 목적": "회사별 보유세 fallback 및 bridge 입력값", "상태": "앱에 포함"},
             {"자료": "Red Flag Rules", "사용 목적": "Assurance 및 Tax 위험수준 판단 기준", "상태": "앱에 포함"},
             {"자료": "내장 CSV", "사용 목적": "공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블", "상태": "앱에 포함"},
         ]
@@ -104,8 +137,8 @@ def render_methodology_page(
 
     st.markdown("### Peer Benchmark 및 Red Flag 방법론")
     st.write(
-        "Peer Benchmark는 `data/reit_peer_snapshot.csv`의 Snapshot 데이터를 기준으로 선택 리츠와 상장리츠 peer group을 비교합니다. "
-        "총자산, 투자부동산, 차입금, FFO, 배당, 보유세, 공시가격 입력값을 이용해 감사위험과 보유세 부담 관련 비율을 계산합니다."
+        "Peer Benchmark는 `data/reit_peer_snapshot.csv`의 Snapshot 데이터를 기준으로 선택 리츠와 상장 REITs peer group을 비교합니다. "
+        "총자산, 투자부동산, 이자부 차입부채, FFO proxy, 배당, 보유세, 공시가격 입력값을 이용해 감사위험과 보유세 부담 관련 비율을 계산합니다."
     )
     st.write(
         "Red Flag 판단은 `data/red_flag_rules.json`의 규칙을 사용합니다. 각 규칙은 절대 기준과 peer percentile을 함께 보며, "
@@ -120,6 +153,16 @@ def render_methodology_page(
     st.caption(
         "회사별 상세 자료가 부족한 경우 `회사 전체 추정` 행과 `source_type = peer_snapshot_estimate`가 표시됩니다. "
         "이 값은 공식 고지세액이 아닌 공개자료 및 Snapshot 기반 예비 검토용 입력값입니다."
+    )
+
+    st.markdown("### 기준금리와 차입 스프레드·리파이낸싱 금리 shock 구분")
+    st.write(
+        "기준금리 변화는 한국은행 기준금리 또는 기준시장금리 변화가 리츠의 변동금리 차입과 신규 조달금리에 전이되는 효과입니다. "
+        "추가 신용스프레드 변화는 회사 신용, 담보가치, 만기 구조, 금융기관 가산금리, 시장 유동성 변화로 실제 조달금리가 추가로 변하는 효과입니다."
+    )
+    st.caption(
+        "확률가중 예상 기준금리 = Σ(각 기준금리 시나리오 × 해당 시나리오 확률). "
+        "따라서 전망 기반 확률가중 모드에서는 2.51%처럼 0.25%p 단위가 아닌 연속값이 표시될 수 있습니다."
     )
 
     st.markdown("### 데이터 연결 및 공개 런타임")

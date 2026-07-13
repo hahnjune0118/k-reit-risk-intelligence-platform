@@ -332,7 +332,7 @@ def _append_bridge_rows(rows: list[dict], profile: dict, bridge: pd.DataFrame, s
             (1, "공시가격 또는 장부가액", "공시가격 또는 장부가액(억원)", "억원", interpretation_base),
             (2, "과세표준 추정", "과세표준 추정(억원)", "억원", f"공정시장가액비율 {DEFAULT_TAX_ASSUMPTIONS_V14['fair_market_value_ratio']:.1f}% 기준"),
             (3, "추정 보유세", "추정 보유세(억원)", "억원", f"실효 보유세율 {DEFAULT_TAX_ASSUMPTIONS_V14['effective_holding_tax_rate']:.1f}% 또는 Snapshot 추정값"),
-            (4, "FFO 대비", "FFO 대비", "decimal", "FFO 대비 보유세 부담"),
+            (4, "FFO proxy 대비", "FFO proxy 대비", "decimal", "FFO proxy 대비 보유세 부담"),
             (5, "영업수익 대비", "영업수익 대비", "decimal", "영업수익 대비 보유세 부담"),
         ]
         for stage_order, stage_label, value_col, unit, interpretation in stage_specs:
@@ -414,7 +414,7 @@ def _append_reconciliation_rows(rows: list[dict], profile: dict, reconciliation:
                 "official_price_to_book": row.get("공시가격 / 장부가액", pd.NA),
                 "estimated_tax_base_eok": row.get("추정 과세표준(억원)", pd.NA),
                 "estimated_holding_tax_eok": row.get("추정 보유세(억원)", pd.NA),
-                "holding_tax_to_ffo": row.get("보유세 / FFO", pd.NA),
+                "holding_tax_to_ffo": row.get("보유세 / FFO proxy", row.get("보유세 / FFO", pd.NA)),
                 "official_price_growth_5y": row.get("최근 5년 공시가격 증가율", pd.NA),
                 "review_required": row.get("검토 필요 여부", ""),
                 "source_type": row.get("source_type", source_summary.get("source_type", "")),
@@ -435,7 +435,7 @@ def _append_ffo_stress_rows(rows: list[dict], profile: dict, ffo_stress: pd.Data
                 "scenario": row.get("항목", ""),
                 "scenario_sort": idx + 1,
                 "amount_eok": row.get("금액(억원)", pd.NA),
-                "ffo_ratio": row.get("FFO 대비", pd.NA),
+                "ffo_ratio": row.get("FFO proxy 대비", row.get("FFO 대비", pd.NA)),
                 "interpretation": row.get("주요 해석", ""),
                 "holding_tax_increase_pct": DEFAULT_TAX_ASSUMPTIONS_V14["holding_tax_increase_pct"],
                 "ffo_stress_pct": DEFAULT_TAX_ASSUMPTIONS_V14["ffo_stress_pct"],
@@ -550,7 +550,7 @@ def main(output_dir: str | Path = DEFAULT_OUTPUT_DIR) -> dict[str, int]:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Export v14 K-REIT Tax workflow tables for Power BI.")
+    parser = argparse.ArgumentParser(description="Export v14.1 K-REITs Tax workflow tables for Power BI.")
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Directory for generated CSV files.")
     args = parser.parse_args()
     counts = main(args.output_dir)

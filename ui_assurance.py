@@ -123,7 +123,7 @@ def _render_company_level_proxy_tables(peer_context: dict | None):
         "Peer Benchmark를 사용해 감사계획 단계의 위험 신호를 표시합니다."
     )
     st.info(
-        "자산별 Cap rate 데이터가 부족하면 NAV 민감도 카드를 계산하지 않고, 회사 전체 재무 Snapshot 기반 가치 민감도 proxy를 표시합니다."
+        "자산별 Cap rate proxy 데이터가 부족하면 NAV 민감도 카드를 계산하지 않고, 회사 전체 재무 Snapshot 기반 가치 민감도 proxy를 표시합니다."
     )
 
     with st.expander("자산·임차인 proxy", expanded=True):
@@ -134,7 +134,7 @@ def _render_company_level_proxy_tables(peer_context: dict | None):
         debt_proxy = build_company_level_refinancing_proxy(peer_row, recent_5y, data_basis)
         _render_compact_dataframe(debt_proxy, height=240, column_config=_proxy_column_config())
 
-    with st.expander("부동산 가치·NAV proxy", expanded=True):
+    with st.expander("부동산 가치·장부NAV proxy", expanded=True):
         valuation_proxy = build_company_level_valuation_proxy(peer_row, data_availability, data_basis)
         _render_compact_dataframe(valuation_proxy, height=260, column_config=_proxy_column_config())
 
@@ -161,8 +161,8 @@ def _render_peer_assurance_section(peer_context: dict | None):
             "investment_property_to_total_assets": "투자부동산/총자산",
             "debt_to_assets": "차입금/총자산",
             "current_debt_to_total_debt": "유동성 차입금/총차입금",
-            "interest_expense_to_ffo": "이자비용/FFO",
-            "dividend_to_ffo": "배당/FFO",
+            "interest_expense_to_ffo": "이자비용/FFO proxy",
+            "dividend_to_ffo": "배당/FFO proxy",
             "operating_cash_flow_to_dividends": "영업현금흐름/배당",
         },
     )
@@ -334,6 +334,6 @@ def render_assurance_mode(
     _render_peer_assurance_section(peer_context)
 
     st.warning(
-        "계속기업 관련 중요한 불확실성이 존재한다고 단정하지 않습니다. 다만 차입금 만기, 이자 감당력, 배당정책, "
+        "계속기업 관련 중요한 불확실성이 존재한다고 단정하지 않습니다. 다만 차입금 만기, FFO 이자감당력 proxy, 배당정책, "
         "리파이낸싱 계획, 후속사건은 감사계획 단계에서 추가 검토가 필요한 신호입니다."
     )

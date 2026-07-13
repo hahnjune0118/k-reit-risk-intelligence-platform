@@ -101,14 +101,18 @@ def _weighted_rule(macro: dict, forecast: dict | None = None) -> dict:
 
 def macro_scenario_parameters(macro: dict, scenario_name: str, forecast: dict | None = None) -> dict:
     """
-    ECOS 기준 거시경제 기초값을 REIT 스트레스 가정으로 변환합니다.
+    ECOS 기준 거시경제 기초값을 REITs 스트레스 가정으로 변환합니다.
     ECOS는 현재·최근 지표를 제공하고, 전망 기반 확률가중 모드는 사용자가 입력한 미래 전망치를 추가로 반영합니다.
     """
     if scenario_name == FORECAST_WEIGHTED_SCENARIO_NAME:
         rule = _weighted_rule(macro, forecast)
+        rate_label = "확률가중 예상 기준금리"
+        rate_note = "호황·중립·불황 확률가중 평균이므로 0.25%p 단위가 아닌 연속값이 표시될 수 있습니다."
     else:
         rule = SCENARIO_RULES[scenario_name].copy()
         rule["probabilities"] = None
+        rate_label = "시나리오 기준금리"
+        rate_note = "정책금리 시나리오는 0.25%p 단위 충격을 사용합니다."
 
     funding_shock_bp = rule["policy_rate_change_bp"] + rule["credit_spread_change_bp"]
     cap_rate_shock_bp = max(0, rule["policy_rate_change_bp"] + rule["cap_rate_spread_bp"])
@@ -120,6 +124,8 @@ def macro_scenario_parameters(macro: dict, scenario_name: str, forecast: dict | 
         "scenario_explain": rule["explain"],
         "base_rate_pct": macro["base_rate_pct"],
         "scenario_base_rate_pct": scenario_rate_pct,
+        "scenario_base_rate_label": rate_label,
+        "scenario_base_rate_note": rate_note,
         "credit_spread_pct": macro["credit_spread_pct"],
         "scenario_credit_spread_pct": scenario_credit_spread_pct,
         "rate_shock_bp": int(round(max(0, funding_shock_bp))),
@@ -128,6 +134,7 @@ def macro_scenario_parameters(macro: dict, scenario_name: str, forecast: dict | 
         "refinancing_share_pct": round(rule["refinancing_share_pct"], 1),
         "policy_rate_change_bp": round(rule["policy_rate_change_bp"], 1),
         "credit_spread_change_bp": round(rule["credit_spread_change_bp"], 1),
+        "rate_shock_formula": "기준금리 변화 + 추가 신용스프레드 변화",
         "scenario_probabilities": rule.get("probabilities"),
     }
 
@@ -144,10 +151,10 @@ def korean_risk_label(name: str) -> str:
 
 def korean_metric_label(name: str) -> str:
     mapping = {
-        "FFO": "현금흐름(FFO)",
-        "Interest coverage": "이자 감당력",
+        "FFO": "FFO proxy",
+        "Interest coverage": "FFO 이자감당력 proxy",
         "Dividend payout": "배당 부담률",
-        "NAV": "순자산가치(NAV)",
-        "LTV proxy": "부채비율 추정치",
+        "NAV": "장부기준 NAV proxy",
+        "LTV proxy": "LTV proxy",
     }
     return mapping.get(name, name)

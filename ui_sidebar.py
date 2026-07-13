@@ -205,9 +205,10 @@ def render_data_sidebar(
             probs = macro_scenario["scenario_probabilities"]
             st.caption(f"확률가중: 호황 {probs['호황']:.0%} · 중립 {probs['중립']:.0%} · 불황 {probs['불황']:.0%}")
         st.caption(
-            f"스트레스 값: 차입금리 +{rate_shock_bp}bp · 차환 대상 {refinancing_share_pct}% · "
+            f"스트레스 값: 차입 스프레드·리파이낸싱 금리 +{rate_shock_bp}bp · 차환 대상 {refinancing_share_pct}% · "
             f"현금흐름 하락 {ffo_haircut_pct}% · Cap rate +{cap_rate_shock_bp}bp"
         )
+        st.caption(macro_scenario.get("scenario_base_rate_note", ""))
         st.divider()
 
     with _sidebar_slot("company"):

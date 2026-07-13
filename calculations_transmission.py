@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def build_historical_panel(financials: pd.DataFrame, kpis: pd.DataFrame, macro_history: pd.DataFrame, dart_history: pd.DataFrame | None = None, krx_history: pd.DataFrame | None = None) -> pd.DataFrame:
-    """Combine available REIT financials/KPIs with ECOS annual rates for a 5-year view."""
+    """Combine available REITs financials/KPIs with ECOS annual rates for a 5-year view."""
     if dart_history is not None and not dart_history.empty:
         fin = dart_history.copy()
     else:
@@ -66,17 +66,17 @@ def build_historical_panel(financials: pd.DataFrame, kpis: pd.DataFrame, macro_h
 
 
 def build_market_implied_gap_table(market_snapshot: dict, latest_nav_mn_krw, scenario: dict) -> pd.DataFrame:
-    """Compare disclosed NAV, stressed NAV, market cap, and market-implied haircut."""
+    """Compare book NAV proxy, stressed NAV proxy, market cap, and market-implied haircut."""
     rows = []
     nav = latest_nav_mn_krw
     market_cap = market_snapshot.get("market_cap_mn_krw", pd.NA) if market_snapshot.get("available") else pd.NA
     stressed_nav = nav + scenario.get("total_value_change", pd.NA) if pd.notna(nav) and pd.notna(scenario.get("total_value_change", pd.NA)) else pd.NA
-    for label, nav_value in [("현재 공시 NAV", nav), ("선택 시나리오 후 NAV", stressed_nav)]:
+    for label, nav_value in [("현재 장부NAV proxy", nav), ("선택 시나리오 후 장부NAV proxy", stressed_nav)]:
         p_nav = market_cap / nav_value if pd.notna(market_cap) and pd.notna(nav_value) and nav_value else pd.NA
         discount = (1 - p_nav) * 100 if pd.notna(p_nav) else pd.NA
         rows.append({
             "기준": label,
-            "NAV_백만원": nav_value,
+            "NAV_proxy_백만원": nav_value,
             "시가총액_백만원": market_cap,
             "P_NAV": p_nav,
             "시장할인율_pct": discount,
@@ -86,8 +86,8 @@ def build_market_implied_gap_table(market_snapshot: dict, latest_nav_mn_krw, sce
         market_discount = (1 - market_cap / nav) * 100 if nav else pd.NA
         excess_discount = market_discount - model_downside if pd.notna(market_discount) else pd.NA
         rows.append({
-            "기준": "시장할인 - 시나리오 NAV 하락폭",
-            "NAV_백만원": pd.NA,
+            "기준": "시장할인 - 시나리오 장부NAV proxy 하락폭",
+            "NAV_proxy_백만원": pd.NA,
             "시가총액_백만원": pd.NA,
             "P_NAV": pd.NA,
             "시장할인율_pct": excess_discount,
@@ -98,28 +98,28 @@ def build_market_implied_gap_table(market_snapshot: dict, latest_nav_mn_krw, sce
 def interpret_market_gap(market_gap: pd.DataFrame) -> str:
     if market_gap is None or market_gap.empty or "시장할인율_pct" not in market_gap.columns:
         return "시장가격 시계열은 공개 런타임에서 비활성화되어 있습니다. v14 진단은 Tax workflow, 재무, 거시경제, Peer Benchmark 신호에 집중합니다."
-    current = market_gap[market_gap["기준"] == "현재 공시 NAV"]
-    stressed = market_gap[market_gap["기준"] == "선택 시나리오 후 NAV"]
+    current = market_gap[market_gap["기준"] == "현재 장부NAV proxy"]
+    stressed = market_gap[market_gap["기준"] == "선택 시나리오 후 장부NAV proxy"]
     if current.empty:
-        return "시장가격과 NAV를 연결할 데이터가 부족합니다."
+        return "시장가격과 장부NAV proxy를 연결할 데이터가 부족합니다."
     cur_disc = current["시장할인율_pct"].iloc[0]
     if pd.isna(cur_disc):
-        return "시장가격과 NAV를 연결할 데이터가 부족합니다."
+        return "시장가격과 장부NAV proxy를 연결할 데이터가 부족합니다."
     if not stressed.empty and pd.notna(stressed["시장할인율_pct"].iloc[0]):
         st_disc = stressed["시장할인율_pct"].iloc[0]
         if cur_disc > 25 and st_disc > 10:
-            return "시장은 현재 공시 NAV보다 상당히 낮은 가격을 적용하고 있습니다. 선택한 스트레스 이후에도 할인율이 남아 있다면, 시장은 단순 cap-rate 하락 외의 차환·배당·유동성 위험도 반영하고 있을 수 있습니다."
+            return "시장은 현재 장부NAV proxy보다 상당히 낮은 가격을 적용하고 있습니다. 선택한 스트레스 이후에도 할인율이 남아 있다면, 시장은 단순 cap-rate 하락 외의 차환·배당·유동성 위험도 반영하고 있을 수 있습니다."
         if cur_disc < 10 and st_disc < 0:
-            return "현재 시장가격은 공시 NAV 대비 할인폭이 크지 않습니다. 스트레스 NAV 기준으로는 오히려 프리미엄이 될 수 있으므로, downside 방어 논리가 충분한지 확인해야 합니다."
+            return "현재 시장가격은 장부NAV proxy 대비 할인폭이 크지 않습니다. 스트레스 NAV proxy 기준으로는 오히려 프리미엄이 될 수 있으므로, downside 방어 논리가 충분한지 확인해야 합니다."
     if cur_disc > 25:
-        return "현재 P/NAV 할인폭이 큽니다. 이는 저평가일 수도 있지만, 시장이 공시 NAV의 지속가능성이나 차환·배당위험을 의심한다는 신호일 수도 있습니다."
+        return "현재 P/NAV proxy 할인폭이 큽니다. 이는 저평가일 수도 있지만, 시장이 장부NAV proxy의 지속가능성이나 차환·배당위험을 의심한다는 신호일 수도 있습니다."
     if cur_disc < 0:
-        return "시장가격이 공시 NAV보다 높습니다. 시장은 성장성, 배당 안정성, 스폰서 신뢰 등을 프리미엄으로 평가하고 있을 수 있습니다."
-    return "현재 P/NAV 할인폭은 중간 수준입니다. 할인 원인이 금리, 차환, 자산가치, 배당 중 어디에 있는지 peer 비교가 필요합니다."
+        return "시장가격이 장부NAV proxy보다 높습니다. 시장은 성장성, 배당 안정성, 스폰서 신뢰 등을 프리미엄으로 평가하고 있을 수 있습니다."
+    return "현재 P/NAV proxy 할인폭은 중간 수준입니다. 할인 원인이 금리, 차환, 자산가치, 배당 중 어디에 있는지 peer 비교가 필요합니다."
 
 
 def build_macro_transmission_table(panel: pd.DataFrame) -> pd.DataFrame:
-    """Create annual macro -> REIT -> market transmission diagnostics."""
+    """Create annual macro -> REITs -> market transmission diagnostics."""
     if panel is None or panel.empty:
         return pd.DataFrame()
     df = panel.copy().sort_values("year")
@@ -134,9 +134,9 @@ def build_macro_transmission_table(panel: pd.DataFrame) -> pd.DataFrame:
     if "기준금리_변화_bp" in df.columns:
         out["기준금리 변화폭(bp)"] = df["기준금리_변화_bp"]
     if "현금흐름_변화율" in df.columns:
-        out["FFO/이익 변화율(%)"] = df["현금흐름_변화율"]
+        out["FFO proxy/이익 변화율(%)"] = df["현금흐름_변화율"]
     if "순자산가치_변화율" in df.columns:
-        out["NAV/자본 변화율(%)"] = df["순자산가치_변화율"]
+        out["장부NAV proxy/자본 변화율(%)"] = df["순자산가치_변화율"]
     if "시장가치_변화율" in df.columns:
         out["시가총액 변화율(%)"] = df["시장가치_변화율"]
     if "P_NAV_변화" in df.columns:
@@ -144,8 +144,8 @@ def build_macro_transmission_table(panel: pd.DataFrame) -> pd.DataFrame:
 
     def signal(row):
         rate_up = row.get("금리 국면") == "금리 상승"
-        ffo_down = pd.notna(row.get("FFO/이익 변화율(%)")) and row.get("FFO/이익 변화율(%)") < -5
-        nav_down = pd.notna(row.get("NAV/자본 변화율(%)")) and row.get("NAV/자본 변화율(%)") < -5
+        ffo_down = pd.notna(row.get("FFO proxy/이익 변화율(%)")) and row.get("FFO proxy/이익 변화율(%)") < -5
+        nav_down = pd.notna(row.get("장부NAV proxy/자본 변화율(%)")) and row.get("장부NAV proxy/자본 변화율(%)") < -5
         mcap_down = pd.notna(row.get("시가총액 변화율(%)")) and row.get("시가총액 변화율(%)") < -10
         pnav_down = pd.notna(row.get("P/NAV 변화")) and row.get("P/NAV 변화") < -0.05
         if rate_up and (ffo_down or nav_down or mcap_down or pnav_down):
@@ -165,8 +165,8 @@ def build_transmission_correlation_table(panel: pd.DataFrame) -> pd.DataFrame:
     if panel is None or panel.empty:
         return pd.DataFrame()
     pairs = [
-        ("기준금리", "현금흐름_또는_이익", "기준금리 vs FFO/이익"),
-        ("기준금리", "순자산가치_또는_자본", "기준금리 vs NAV/자본"),
+        ("기준금리", "현금흐름_또는_이익", "기준금리 vs FFO proxy/이익"),
+        ("기준금리", "순자산가치_또는_자본", "기준금리 vs 장부NAV proxy/자본"),
         ("기준금리", "시장가치", "기준금리 vs 시가총액"),
         ("국고채 3년", "P_NAV", "국고채 3년 vs P/NAV"),
         ("회사채 AA- 3년", "시장가치", "회사채 AA- vs 시가총액"),
@@ -202,9 +202,9 @@ def build_transmission_narrative(transmission: pd.DataFrame, corr_table: pd.Data
     rate_flags = signals.get("금리 상승 영향 의심", 0)
     market_flags = signals.get("시장 선반영/심리 악화 가능", 0)
     if rate_flags >= 2:
-        return "여러 연도에서 금리 상승과 리츠 지표/시장가격 약화가 같이 관찰됩니다. 이는 차입비용, cap rate, 배당여력 경로를 추가 실사해야 한다는 신호입니다."
+        return "여러 연도에서 금리 상승과 REITs 지표/시장가격 약화가 같이 관찰됩니다. 이는 차입비용, cap rate, 배당여력 경로를 추가 실사해야 한다는 신호입니다."
     if market_flags >= 1:
-        return "공시 NAV/FFO보다 시장가격이 먼저 약해진 구간이 있습니다. 시장이 미래 차환위험이나 평가가정 조정을 선반영했는지 확인해야 합니다."
+        return "장부NAV proxy/FFO proxy보다 시장가격이 먼저 약해진 구간이 있습니다. 시장이 미래 차환위험이나 평가가정 조정을 선반영했는지 확인해야 합니다."
     if corr_table is not None and not corr_table.empty and (corr_table["상관계수"] < -0.5).any():
         rel = corr_table.loc[corr_table["상관계수"].idxmin(), "관계"]
         return f"{rel}에서 비교적 강한 음의 관계가 관찰됩니다. 표본 수는 작지만, 금리 민감도를 설명하는 보조 근거로 사용할 수 있습니다."

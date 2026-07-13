@@ -12,7 +12,7 @@ def build_deals_valuation_summary(latest_kpi: pd.Series, scenario: dict, market_
     ffo_value = ffo * p_ffo_multiple if pd.notna(ffo) else pd.NA
     dividend_value = dividend / (required_dividend_yield_pct / 100) if pd.notna(dividend) and required_dividend_yield_pct else pd.NA
     for method, value, explanation in [
-        ("NAV 기반", nav_value, "시나리오 후 순자산가치 × 적용 P/NAV multiple"),
+        ("NAV proxy 기반", nav_value, "시나리오 후 장부NAV proxy × 적용 P/NAV proxy multiple"),
         ("FFO 기반", ffo_value, "시나리오 후 FFO × 적용 P/FFO multiple"),
         ("배당수익률 기반", dividend_value, "예상 배당총액 ÷ 요구 배당수익률"),
     ]:

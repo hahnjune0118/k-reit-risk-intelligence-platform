@@ -2,11 +2,11 @@
 
 ## 현재 위치
 
-현재 활성 개발 및 공개 포트폴리오 버전은 **v14 - Tax Workflow Control & Validation**입니다.
+현재 활성 개발 및 공개 포트폴리오 버전은 **v14.1 - Metric Definition & Source Lineage Stabilization**입니다.
 
-v14는 상장리츠의 공시자료, 거시경제 지표, Peer Snapshot, Tax Snapshot을 연결하여 Tax 업무에서 반복적으로 수행되는 보유세 검토, 요청자료 정리, Memo 초안 작성, 데이터 검증을 하나의 workflow로 안정화한 버전입니다.
+v14.1은 상장리츠의 공시자료, 거시경제 지표, Peer Snapshot, Tax Snapshot을 연결하여 Tax 업무에서 반복적으로 수행되는 보유세 검토, 요청자료 정리, Memo 초안 작성, 데이터 검증을 하나의 workflow로 안정화하고, FFO proxy·장부기준 NAV proxy·Gross LTV 등 핵심 지표의 정의와 출처 계보를 명확히 한 버전입니다.
 
-## v14 현재 범위
+## v14.1 현재 범위
 
 활성 Streamlit 모드는 네 가지입니다.
 
@@ -28,7 +28,8 @@ v14의 중심 기능:
 - Tax 입력 검증 패널
 - CSV/Markdown/ZIP export
 - Assurance Red Flag Engine 유지
-- Snapshot 기반 공개 리뷰 경험
+- DART API-first, Snapshot fallback 기반 공개 리뷰 경험
+- 핵심 지표 정의 및 source lineage 설명
 
 ## 공개 버전에서 제외된 범위
 

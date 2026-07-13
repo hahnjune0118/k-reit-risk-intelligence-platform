@@ -93,11 +93,11 @@ def map_tax_issues_to_request_items(
     if "FFO" in text or "현금유출" in text or "배당" in text:
         _append(
             rows,
-            "FFO 산정자료",
-            "보유세 현금유출이 배당가능재원에 미치는 영향을 확인",
+            "FFO proxy 산정자료",
+            "보유세 현금유출이 배당가능재원에 미치는 영향을 확인하고 공식 FFO와 차이를 대사",
             high_issue,
             "높음",
-            "FFO 스트레스",
+            "FFO proxy 스트레스",
             base_trigger,
             "연환산 여부와 조정항목을 함께 확인",
         )
@@ -105,7 +105,7 @@ def map_tax_issues_to_request_items(
             rows,
             "배당가능이익 산정자료",
             "추가 보유세 부담이 배당 여력에 미치는 영향을 검토",
-            "FFO 현금유출 스트레스",
+            "FFO proxy 현금유출 스트레스",
             "중간",
             "배당 여력",
             base_trigger,

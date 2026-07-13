@@ -1,4 +1,4 @@
-"""Optional local script to refresh the REIT peer snapshot from DART.
+"""Optional local script to refresh the REITs peer snapshot from DART.
 
 This script is intentionally not imported or executed by the Streamlit app.
 It preserves the existing snapshot if DART is unavailable or a fetch fails.

@@ -6,7 +6,7 @@ from formatting import format_pct_from_100, format_ratio, format_years
 
 
 def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame, assets: pd.DataFrame):
-    """REIT 예비 검토용 규칙 기반 점수입니다. 정식 신용등급이 아닙니다."""
+    """REITs 예비 검토용 규칙 기반 점수입니다. 정식 신용등급이 아닙니다."""
     scores = {}
     flags = []
 
@@ -49,10 +49,10 @@ def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame
     if pd.notna(icr):
         if icr < 2.0:
             debt_score += 30
-            flags.append("이자 감당력 2.0배 미만")
+            flags.append("FFO 이자감당력 proxy 2.0배 미만")
         elif icr < 2.5:
             debt_score += 20
-            flags.append("이자 감당력 2.5배 미만")
+            flags.append("FFO 이자감당력 proxy 2.5배 미만")
     if pd.notna(wam):
         if wam < 1.5:
             debt_score += 25
@@ -65,7 +65,7 @@ def calculate_reit_level_risk(latest_kpi: pd.Series, debt_schedule: pd.DataFrame
         flags.append("고정금리 차입금 비중 50% 미만")
     if pd.notna(avg_rate) and avg_rate > 4.5:
         debt_score += 10
-        flags.append("평균 차입금리 4.5% 초과")
+        flags.append("기말잔액 기준 차입비용률 proxy 4.5% 초과")
 
     near_term_debt = debt_schedule[debt_schedule["days_to_maturity"].between(0, 365, inclusive="both")]["principal_mn_krw"].sum()
     total_debt = debt_schedule["principal_mn_krw"].sum()
@@ -138,7 +138,7 @@ def add_score_rule(rows, category, driver, triggered, score_delta, weight, curre
 
 
 def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.DataFrame, assets: pd.DataFrame) -> pd.DataFrame:
-    """REIT 수준 규칙 기반 점수의 산정 원인을 설명합니다."""
+    """REITs 수준 규칙 기반 점수의 산정 원인을 설명합니다."""
     rows = []
     weights = {
         "Income / Lease Stability Risk": 0.25,
@@ -237,18 +237,18 @@ def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.Data
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "이자 감당력 2.0배 미만",
+        "FFO 이자감당력 proxy 2.0배 미만",
         pd.notna(icr) and icr < 2.0,
         30,
         weights["Refinancing / Debt Service Risk"],
         format_ratio(icr),
         "< 2.0x",
-        "이자 감당력이 낮으면 금리 상승 시 차입금 이자 부담을 흡수할 여력이 제한됩니다.",
+        "FFO 이자감당력 proxy가 낮으면 금리 상승 시 차입금 이자 부담을 흡수할 여력이 제한됩니다.",
     )
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "이자 감당력 2.0배 이상 2.5배 미만",
+        "FFO 이자감당력 proxy 2.0배 이상 2.5배 미만",
         pd.notna(icr) and 2.0 <= icr < 2.5,
         20,
         weights["Refinancing / Debt Service Risk"],
@@ -292,7 +292,7 @@ def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.Data
     add_score_rule(
         rows,
         "Refinancing / Debt Service Risk",
-        "평균 차입금리 4.5% 초과",
+        "기말잔액 기준 차입비용률 proxy 4.5% 초과",
         pd.notna(avg_rate) and avg_rate > 4.5,
         10,
         weights["Refinancing / Debt Service Risk"],
@@ -331,7 +331,7 @@ def build_reit_score_decomposition(latest_kpi: pd.Series, debt_schedule: pd.Data
         weights["Valuation / NAV Sensitivity Risk"],
         format_pct_from_100(cap_rate_mean),
         "< 4.0%",
-        "낮은 Cap rate는 가치 민감도가 높다는 뜻이며, 수익률 상승 시 NAV 하락 폭이 커질 수 있습니다.",
+        "낮은 Cap rate proxy는 가치 민감도가 높다는 뜻이며, 수익률 상승 시 장부NAV proxy 하락 폭이 커질 수 있습니다.",
     )
     add_score_rule(
         rows,
@@ -589,7 +589,7 @@ def build_interactive_scenario_outputs(
     cap_rate_shock_bp: int,
     scenario_metadata: dict | None = None,
 ) -> dict:
-    """Build beginner-friendly scenario outputs for FFO, ICR, dividend cushion, NAV and cap-rate sensitivity."""
+    """Build scenario outputs for FFO proxy, ICR, dividend cushion, book NAV proxy and cap-rate sensitivity."""
     principal = debt_schedule["principal_mn_krw"].sum()
     floating = debt_schedule.loc[debt_schedule["rate_type"] == "변동", "principal_mn_krw"].sum()
     avg_rate_pct = latest_kpi.get("avg_borrowing_rate_pct", pd.NA)
@@ -601,10 +601,10 @@ def build_interactive_scenario_outputs(
     # Use disclosed interest coverage when possible because it ties directly to reported KPI basis.
     if pd.notna(base_ffo) and pd.notna(reported_icr) and reported_icr:
         base_interest = base_ffo / reported_icr
-        interest_basis = "공시 이자 감당력(ICR)"
+        interest_basis = "FFO 이자감당력 proxy"
     elif pd.notna(avg_rate_pct):
         base_interest = principal * avg_rate_pct / 100
-        interest_basis = "평균 차입금리"
+        interest_basis = "기말잔액 기준 차입비용률 proxy"
     else:
         base_interest = pd.NA
         interest_basis = "확인 불가"
@@ -679,10 +679,10 @@ def build_interactive_scenario_outputs(
         stressed_ltv_proxy = principal / stressed_asset_value * 100 if stressed_asset_value else pd.NA
 
     ffo_bridge = pd.DataFrame([
-        {"step": "현재 현금흐름", "mn_krw": base_ffo, "display_order": 1},
-        {"step": "영업 하락", "mn_krw": -operating_ffo_loss, "display_order": 2},
+        {"step": "현재 FFO proxy", "mn_krw": base_ffo, "display_order": 1},
+        {"step": "FFO proxy stress", "mn_krw": -operating_ffo_loss, "display_order": 2},
         {"step": "추가 이자비용", "mn_krw": -incremental_interest, "display_order": 3},
-        {"step": "시나리오 후 현금흐름", "mn_krw": stressed_ffo, "display_order": 4},
+        {"step": "시나리오 후 FFO proxy", "mn_krw": stressed_ffo, "display_order": 4},
     ])
 
     kpi_summary = pd.DataFrame([
@@ -702,6 +702,10 @@ def build_interactive_scenario_outputs(
         "refinancing_share_pct": refinancing_share_pct,
         "ffo_haircut_pct": ffo_haircut_pct,
         "cap_rate_shock_bp": cap_rate_shock_bp,
+        "policy_rate_change_bp": (scenario_metadata or {}).get("policy_rate_change_bp", pd.NA),
+        "credit_spread_change_bp": (scenario_metadata or {}).get("credit_spread_change_bp", pd.NA),
+        "rate_shock_formula": (scenario_metadata or {}).get("rate_shock_formula", "기준금리 변화 + 추가 신용스프레드 변화"),
+        "affected_debt_basis": "변동금리 차입금 + 차환 대상 이자부 차입부채",
         "base_ffo": base_ffo,
         "stressed_ffo": stressed_ffo,
         "ffo_decline_pct": (stressed_ffo / base_ffo - 1) * 100 if pd.notna(stressed_ffo) and pd.notna(base_ffo) and base_ffo else pd.NA,
@@ -741,9 +745,9 @@ def scenario_verdict(scenario: dict) -> tuple[str, str, str]:
         red_flags.append("시나리오 후 현금흐름이 음수로 전환")
     if pd.notna(stressed_icr):
         if stressed_icr < 1.5:
-            red_flags.append("이자 감당력이 1.5배 미만으로 하락")
+            red_flags.append("FFO 이자감당력 proxy가 1.5배 미만으로 하락")
         elif stressed_icr < 2.0:
-            yellow_flags.append("이자 감당력이 2.0배 미만으로 하락")
+            yellow_flags.append("FFO 이자감당력 proxy가 2.0배 미만으로 하락")
     if pd.notna(stressed_payout):
         if stressed_payout > 100:
             red_flags.append("배당금이 시나리오 후 현금흐름을 초과")
@@ -751,9 +755,9 @@ def scenario_verdict(scenario: dict) -> tuple[str, str, str]:
             yellow_flags.append("배당 부담률이 높아짐")
     if pd.notna(nav_change_pct):
         if nav_change_pct <= -15:
-            red_flags.append("순자산가치 하락폭이 15% 초과")
+            red_flags.append("장부NAV proxy 하락폭이 15% 초과")
         elif nav_change_pct <= -8:
-            yellow_flags.append("순자산가치 하락폭이 8% 초과")
+            yellow_flags.append("장부NAV proxy 하락폭이 8% 초과")
 
     if red_flags:
         return "압박이 큼", "High", "; ".join(red_flags)
@@ -828,11 +832,11 @@ def build_watchlist(asset_risk: pd.DataFrame, debt_schedule: pd.DataFrame, lates
 
     if pd.notna(latest_kpi.get("interest_coverage_x")) and latest_kpi["interest_coverage_x"] < 2.5:
         rows.append({
-            "watch_item": "이자 감당력",
+            "watch_item": "FFO 이자감당력 proxy",
             "category": "차입금 상환능력",
             "priority_score": 75 if latest_kpi["interest_coverage_x"] < 2.0 else 60,
-            "why_it_matters": f"공시 이자 감당력은 {latest_kpi['interest_coverage_x']:.2f}배입니다.",
-            "recommended_next_step": "FFO 하락과 차환 스프레드 민감도를 계산하고 내부 허용수준과 비교합니다.",
+            "why_it_matters": f"FFO 이자감당력 proxy는 {latest_kpi['interest_coverage_x']:.2f}배입니다.",
+            "recommended_next_step": "FFO proxy 하락과 차환 스프레드 민감도를 계산하고 내부 허용수준과 비교합니다.",
             "source_confidence": latest_kpi.get("source_confidence", "high_disclosed_kpi"),
         })
 
@@ -846,13 +850,13 @@ def build_due_diligence_questions(risk_scores: dict, latest_kpi: pd.Series) -> p
     rows = []
     question_bank = {
         "거래 / FDD": [
-            "공시 FFO에 일회성 취득, 차환, 매각, 임차인 교체 효과가 포함되어 있나요?",
+            "FFO proxy에 일회성 취득, 차환, 매각, 임차인 교체 효과가 포함되어 있나요?",
             "포트폴리오 가치와 임대수익을 주도하는 자산은 무엇이며, 해당 현금흐름은 장기 임대차계약으로 뒷받침되나요?",
             "특수관계자 또는 마스터리스 조건이 시장조건에 부합하나요, 아니면 스폰서 지원 효과가 포함되어 있나요?",
         ],
         "가치평가": [
             "자산별 Cap rate가 취득일 또는 평가일 가정뿐 아니라 현재 시장 근거와도 일관되나요?",
-            "자산 유형별 Cap rate가 +50bp 또는 +100bp 상승할 때 NAV 민감도는 어느 정도인가요?",
+            "자산 유형별 Cap rate proxy가 +50bp 또는 +100bp 상승할 때 장부NAV proxy 민감도는 어느 정도인가요?",
             "평가상승은 실제 임대료 상승, 위험프리미엄 하락, 또는 단순 시장 Cap rate 하락 중 무엇으로 설명되나요?",
         ],
         "차환 / 신용": [

@@ -142,7 +142,7 @@ def build_property_tax_cash_flow_scenarios(
     scenario: dict,
     ffo_annualization_factor: float = 4.0,
 ) -> pd.DataFrame:
-    """Compare incremental holding-tax outflows with REIT FFO and dividend buffer."""
+    """Compare incremental holding-tax outflows with REITs FFO proxy and dividend buffer."""
     if annual_summary is None or annual_summary.empty:
         return pd.DataFrame()
 
@@ -192,7 +192,7 @@ def build_reit_tax_workflow_checklist(
     cash_flow_scenarios: pd.DataFrame,
     price_data_status: str,
 ) -> pd.DataFrame:
-    """REIT 세무, 보유세, Tax Technology 업무를 위한 실무형 체크리스트입니다."""
+    """REITs 세무, 보유세, Tax Technology 업무를 위한 실무형 체크리스트입니다."""
     latest_tax = pd.NA
     latest_growth = pd.NA
     if annual_summary is not None and not annual_summary.empty:
@@ -225,11 +225,11 @@ def build_reit_tax_workflow_checklist(
             "완료": False,
         },
         {
-            "업무영역": "FFO·배당 현금세무 계획",
-            "자동화 툴": "보유세 인상 시나리오별 FFO 커버리지 분석",
-            "리츠 실무 체크": f"최대 추가 현금유출 {_format_metric(max_stress_outflow, '백만원')}이 FFO와 배당 후 여유를 잠식하는지 확인",
-            "데이터 입력": "FFO, 배당총액, 보유세 추정액, 공시가격/과표 인상률, 금리·임대료 스트레스",
-            "자동 산출물": "추가 현금유출, FFO 대비 부담률, 배당 후 여유, CFO/이사회 보고 문구",
+            "업무영역": "FFO proxy·배당 현금세무 계획",
+            "자동화 툴": "보유세 인상 시나리오별 FFO proxy 커버리지 분석",
+            "리츠 실무 체크": f"최대 추가 현금유출 {_format_metric(max_stress_outflow, '백만원')}이 FFO proxy와 배당 후 여유를 잠식하는지 확인",
+            "데이터 입력": "FFO proxy, 배당총액, 보유세 추정액, 공시가격/과표 인상률, 금리·임대료 스트레스",
+            "자동 산출물": "추가 현금유출, FFO proxy 대비 부담률, 배당 후 여유, CFO/이사회 보고 문구",
             "우선순위": "높음",
             "완료": False,
         },
@@ -311,7 +311,7 @@ def build_tax_risk_register(
         {
             "리스크/기회": "보유세 급증",
             "신호": f"전년대비 {_format_metric(latest_growth, '%')}",
-            "영향": "FFO·배당가능재원 감소, 예산/공시 설명 필요",
+            "영향": "FFO proxy·배당가능재원 감소, 예산/공시 설명 필요",
             "권장 자동화": "전년대비 변동분 attribution 및 CFO 보고서 자동 생성",
             "등급": "높음" if not _is_na(latest_growth) and abs(float(latest_growth)) >= 10 else "중간",
         },
@@ -323,10 +323,10 @@ def build_tax_risk_register(
             "등급": "중간",
         },
         {
-            "리스크/기회": "FFO 커버리지 부족",
+            "리스크/기회": "FFO proxy 커버리지 부족",
             "신호": "스트레스 시나리오 검토 필요" if stress_issue else "현재 시나리오 감당 가능",
             "영향": "배당정책, 투자자 커뮤니케이션, 차환계획에 영향",
-            "권장 자동화": "보유세 인상률별 FFO·배당 buffer 알림",
+            "권장 자동화": "보유세 인상률별 FFO proxy·배당 buffer 알림",
             "등급": "높음" if stress_issue else "중간",
         },
         {
@@ -344,7 +344,7 @@ def build_tax_automation_backlog() -> pd.DataFrame:
     rows = [
         ("1", "공시가격·고지서 수집", "공시가격 API, 지방세 고지서, CSV 업로드를 자산 master에 자동 매칭", "수작업 수집 시간 감소, 오류 조기 발견"),
         ("2", "세무 캘린더", "재산세, 종부세, 법인세, VAT, 원천세 신고·납부 마감과 담당자 관리", "누락 방지와 업무 현황 가시화"),
-        ("3", "FFO 보유세 Stress", "보유세·금리·임대료 시나리오가 FFO와 배당가능재원에 미치는 영향 산출", "CFO/이사회 보고 자동화"),
+        ("3", "FFO proxy 보유세 Stress", "보유세·금리·임대료 시나리오가 FFO proxy와 배당가능재원에 미치는 영향 산출", "CFO/이사회 보고 자동화"),
         ("4", "경정청구 탐지", "고지세액과 자체 산출세액 차이를 자산·세목별로 분해", "환급기회 및 불복 쟁점 발굴"),
         ("5", "Tax DD(세무 실사) 팩", "취득/매각 자산의 취득세·부가세·법인세·지방세 체크리스트 생성", "거래 전 세무 이슈 누락 방지"),
         ("6", "세무 리스크 통제", "자료 원천, 산식 변경, 검토자 승인, 증빙 링크를 추적", "세무조사 대응과 내부통제 강화"),

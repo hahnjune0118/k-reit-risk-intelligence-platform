@@ -92,6 +92,7 @@ def _apply_selected_company_financials(
 
     kpi_mapping = {
         "ffo_proxy": "ffo_mn_krw",
+        "book_nav_proxy": "nav_mn_krw",
         "nav": "nav_mn_krw",
         "dividends": "common_dividend_total_mn_krw",
         "operating_revenue": "revenue_mn_krw",
@@ -100,11 +101,14 @@ def _apply_selected_company_financials(
     fin_mapping = {
         "total_assets": "total_assets_mn_krw",
         "investment_property": "investment_property_mn_krw",
+        "total_liabilities": "total_liabilities_mn_krw",
+        "cash_and_cash_equivalents": "cash_and_cash_equivalents_mn_krw",
+        "short_term_financial_assets": "short_term_financial_assets_mn_krw",
         "borrowings_total": "interest_bearing_debt_mn_krw",
         "operating_revenue": "revenue_mn_krw",
         "operating_income": "operating_income_mn_krw",
         "net_income": "net_income_mn_krw",
-        "nav": "total_equity_mn_krw",
+        "book_nav_proxy": "total_equity_mn_krw",
     }
     for source, target in kpi_mapping.items():
         if pd.notna(selected_latest_fin.get(source, pd.NA)):
@@ -123,6 +127,17 @@ def _apply_selected_company_financials(
         kpi["interest_coverage_x"] = ffo / interest_expense
     elif not keep_detail_metrics:
         kpi["interest_coverage_x"] = pd.NA
+    for meta_field in [
+        "financial_statement_scope",
+        "source_note",
+        "ffo_proxy_calculation_method",
+        "nav_calculation_method",
+        "net_debt_calculation_method",
+        "is_fallback",
+    ]:
+        if meta_field in selected_latest_fin.index:
+            kpi[meta_field] = selected_latest_fin.get(meta_field)
+            fin[meta_field] = selected_latest_fin.get(meta_field)
     return kpi, fin
 
 

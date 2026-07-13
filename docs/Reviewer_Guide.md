@@ -2,12 +2,12 @@
 
 ## 1. 3분 리뷰 순서
 
-1. `README.md`에서 프로젝트 목적과 현재 v14 범위를 확인합니다.
+1. `README.md`에서 프로젝트 목적과 현재 v14.1 범위를 확인합니다.
 2. 앱을 실행하고 사이드바가 `분석 모드 → 분석 대상회사 → 시나리오 → 데이터 연결 상태` 순서로 보이는지 확인합니다.
 3. 활성 모드가 일반 정보, Tax, Assurance, Methodology 네 가지인지 확인합니다.
 4. 비-SK 리츠를 선택하고 `Tax: 보유세 분석`에서 Tax Summary부터 Export까지 표시되는지 확인합니다.
 5. `Assurance: 감사위험 분석`에서 source/scope banner와 회사 단위 proxy 표가 선택 회사 기준으로 표시되는지 확인합니다.
-6. `분석 방법론 및 데이터 출처`에서 v14 Tax Workflow Control 구조와 source_type taxonomy를 확인합니다.
+6. `분석 방법론 및 데이터 출처`에서 v14.1 metric definition, source lineage, source_type taxonomy를 확인합니다.
 
 ## 2. 공개 앱에서 확인할 화면
 
@@ -27,7 +27,7 @@
 - 사이드바의 공시 기준일 선택기
 - 별도 종목코드 입력 필드
 
-## 3. v14에서 특히 볼 부분
+## 3. v14.1에서 특히 볼 부분
 
 Tax 화면은 다음 순서로 표시됩니다.
 
@@ -38,7 +38,7 @@ Tax 화면은 다음 순서로 표시됩니다.
 5. 보유세 추정 브리지
 6. Tax Issue Matrix
 7. 보유세 정합성 검토
-8. FFO 현금유출 스트레스
+8. FFO proxy 현금유출 스트레스
 9. Tax Request List
 10. Tax Review Memo Draft
 11. Export Tax Review Pack
@@ -52,7 +52,7 @@ Tax 화면은 다음 순서로 표시됩니다.
 - 보유세 추정 브리지
 - Tax Issue Matrix
 - 보유세 정합성 검토
-- FFO 현금유출 스트레스
+- FFO proxy 현금유출 스트레스
 - Issue 기반 요청자료 리스트
 - Tax Review Memo 초안
 - Memo, Issue Matrix, Reconciliation, Request List export
@@ -84,6 +84,12 @@ Tax Review Memo 초안에는 항상 다음 6개 섹션이 포함되어야 합니
 - 정식 가치평가 의견
 
 Snapshot 또는 예시 데이터는 공개 리뷰 안정성을 위해 포함되어 있으며, 공식 확정 데이터로 과도하게 해석하지 않아야 합니다.
+
+v14.1에서는 FFO와 NAV를 다음처럼 해석해야 합니다.
+
+- FFO proxy: 공식 공시 FFO가 아니라 확보 가능한 공시 계정과 Snapshot을 이용한 비교 목적 proxy
+- 장부기준 NAV proxy: 총자산 - 총부채 기준의 장부가액 proxy이며 시가평가 NAV가 아님
+- Gross LTV: 이자부 차입부채 / 총자산이며 충당부채는 분자에서 제외
 
 ## 6. 테스트
 
