@@ -393,7 +393,6 @@ def render_general_dashboard(
         )
     else:
         total_appraised = asset_risk["appraised_value_mn_krw_20251231"].sum()
-        office_value = asset_risk[asset_risk["asset_type"].str.contains("office", case=False, na=False)]["appraised_value_mn_krw_20251231"].sum()
         top_asset = concentration_table.sort_values("appraised_value_mn_krw_20251231", ascending=False).iloc[0]
         top3_share = concentration_table.head(3)["portfolio_value_share_pct"].sum()
         hhi = concentration_table["hhi_component"].sum()

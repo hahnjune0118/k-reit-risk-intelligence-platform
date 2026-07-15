@@ -1,0 +1,300 @@
+﻿request_id,reit_name,taxpayer_id,asset_id,issue_code,issue,request_document,request_reason,priority,calculation_status,reviewer_status
+8c2c9e6eaefe9791,SK리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+3cb59b98c28492b8,SK리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+e05292fc480de399,SK리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+ef816fc3679db578,롯데리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+871a868c61811734,롯데리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+a401aae1f83aa4be,롯데리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+10d122a3247945ce,한화리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+ce13d67d193884b9,한화리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+9091c48a2a4d89e2,한화리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+4f5ead417697f8af,ESR켄달스퀘어리츠,TP-729af1be4e67,365550-ESR-001,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+a70f501be905ee7c,ESR켄달스퀘어리츠,TP-729af1be4e67,365550-ESR-001,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+4b5011055c66d7e6,ESR켄달스퀘어리츠,,365550-ESR-001,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+f546c968a3d612cc,ESR켄달스퀘어리츠,,365550-ESR-001,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+89376bdeaa2b2959,ESR켄달스퀘어리츠,,365550-ESR-001,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+b83fb8a1782d6a8c,ESR켄달스퀘어리츠,,365550-ESR-001,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+85474d62d2061f0d,ESR켄달스퀘어리츠,,365550-ESR-001,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+4bc32bef8a0871a8,ESR켄달스퀘어리츠,TP-735582351853,365550-ESR-002,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+90bce195bedb5d70,ESR켄달스퀘어리츠,TP-735582351853,365550-ESR-002,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+7c4f60b3c1d16fac,ESR켄달스퀘어리츠,,365550-ESR-002,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+2ac85a6665dfba9c,ESR켄달스퀘어리츠,,365550-ESR-002,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+87674be95e4b8b35,ESR켄달스퀘어리츠,,365550-ESR-002,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+54087f7ccc56ac0f,ESR켄달스퀘어리츠,,365550-ESR-002,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+df1be36f9fe1ab6f,ESR켄달스퀘어리츠,,365550-ESR-002,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+e7da373420ade66c,ESR켄달스퀘어리츠,TP-6b77029f696f,365550-ESR-003,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+9ccb73ff1343aecb,ESR켄달스퀘어리츠,TP-6b77029f696f,365550-ESR-003,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+af76d08ee500fb21,ESR켄달스퀘어리츠,,365550-ESR-003,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+578909d669644921,ESR켄달스퀘어리츠,,365550-ESR-003,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+f8aeff8c39444cac,ESR켄달스퀘어리츠,,365550-ESR-003,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+f147857a7cf6d62a,ESR켄달스퀘어리츠,,365550-ESR-003,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+8a78736ec041162c,ESR켄달스퀘어리츠,,365550-ESR-003,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+e4b38e94efe67b43,ESR켄달스퀘어리츠,TP-85211d4583fa,365550-ESR-004,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+f13c73ae1ddfc0a7,ESR켄달스퀘어리츠,TP-85211d4583fa,365550-ESR-004,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+497d4eba0a511852,ESR켄달스퀘어리츠,,365550-ESR-004,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+fc7b46ea1d17d72a,ESR켄달스퀘어리츠,,365550-ESR-004,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+b8b49b5b23be5d5b,ESR켄달스퀘어리츠,,365550-ESR-004,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+62f6be13309f8573,ESR켄달스퀘어리츠,,365550-ESR-004,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+11dd3c20ea66855d,ESR켄달스퀘어리츠,,365550-ESR-004,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+635158370ad078a5,ESR켄달스퀘어리츠,TP-4caa39164421,365550-ESR-005,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+66da22b03e2cd3b0,ESR켄달스퀘어리츠,TP-4caa39164421,365550-ESR-005,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+07dca8bd06db6de3,ESR켄달스퀘어리츠,,365550-ESR-005,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+c2c12cdff25a9947,ESR켄달스퀘어리츠,,365550-ESR-005,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+a156939ee20d6d93,ESR켄달스퀘어리츠,,365550-ESR-005,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+1cceb205353e0b72,ESR켄달스퀘어리츠,,365550-ESR-005,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+3b9ad24265e47c23,ESR켄달스퀘어리츠,,365550-ESR-005,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+3c57e74492fca3cf,ESR켄달스퀘어리츠,TP-0affebc1928e,365550-ESR-006,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+9616cf616def009d,ESR켄달스퀘어리츠,TP-0affebc1928e,365550-ESR-006,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+dcbaeedbff77cec2,ESR켄달스퀘어리츠,,365550-ESR-006,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+6c6e310557d7c343,ESR켄달스퀘어리츠,,365550-ESR-006,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+1ce5cf395d44ce1b,ESR켄달스퀘어리츠,,365550-ESR-006,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+dd1bfd0859f68540,ESR켄달스퀘어리츠,,365550-ESR-006,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+5a098fb5d99cbc0d,ESR켄달스퀘어리츠,,365550-ESR-006,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+6d90b7f0b66603b8,ESR켄달스퀘어리츠,TP-e9477fd28340,365550-ESR-007,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+bf8cbc9c5bc46401,ESR켄달스퀘어리츠,TP-e9477fd28340,365550-ESR-007,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+7b8d9cda0f0738d9,ESR켄달스퀘어리츠,,365550-ESR-007,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+454e7d89361b672e,ESR켄달스퀘어리츠,,365550-ESR-007,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+741bd685590dfb77,ESR켄달스퀘어리츠,,365550-ESR-007,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+22519d8de7d39fdc,ESR켄달스퀘어리츠,,365550-ESR-007,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+c6b5bc613dbd6585,ESR켄달스퀘어리츠,,365550-ESR-007,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+590b75ab7846c5af,ESR켄달스퀘어리츠,TP-e03f462db3ec,365550-ESR-008,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+4b99516036d62601,ESR켄달스퀘어리츠,TP-e03f462db3ec,365550-ESR-008,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+ed490c58cfe169e5,ESR켄달스퀘어리츠,,365550-ESR-008,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+72d13bb41e5d921b,ESR켄달스퀘어리츠,,365550-ESR-008,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+917247bcd8db85e9,ESR켄달스퀘어리츠,,365550-ESR-008,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+44148037935b4add,ESR켄달스퀘어리츠,,365550-ESR-008,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+78c03b9a6b19d003,ESR켄달스퀘어리츠,,365550-ESR-008,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+bc564d269e6bbe1c,ESR켄달스퀘어리츠,TP-a8cd66996ecd,365550-ESR-009,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+6d19865280071f5b,ESR켄달스퀘어리츠,TP-a8cd66996ecd,365550-ESR-009,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+2f3a0c3ae0082f75,ESR켄달스퀘어리츠,,365550-ESR-009,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+50780a9ab2852f5b,ESR켄달스퀘어리츠,,365550-ESR-009,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+7654d17c69aca68a,ESR켄달스퀘어리츠,,365550-ESR-009,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+5b6a8a842e8cab54,ESR켄달스퀘어리츠,,365550-ESR-009,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+f43e8c7e2fb42301,ESR켄달스퀘어리츠,,365550-ESR-009,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+ed33ea8a4d30f9d7,ESR켄달스퀘어리츠,TP-4d4784bea15b,365550-ESR-010,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+58d31972c0780a53,ESR켄달스퀘어리츠,TP-4d4784bea15b,365550-ESR-010,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+c221304f70739a6d,ESR켄달스퀘어리츠,,365550-ESR-010,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+8fff443d686e70f5,ESR켄달스퀘어리츠,,365550-ESR-010,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+6f62d59e43de4137,ESR켄달스퀘어리츠,,365550-ESR-010,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+94a83576ab5b2d06,ESR켄달스퀘어리츠,,365550-ESR-010,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+faf6283f79bf42d1,ESR켄달스퀘어리츠,,365550-ESR-010,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+155cb2f96a433b37,ESR켄달스퀘어리츠,TP-95f462aa61f6,365550-ESR-011,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+e2487df9bcd696ed,ESR켄달스퀘어리츠,TP-95f462aa61f6,365550-ESR-011,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+3cd2d4b764331f5d,ESR켄달스퀘어리츠,,365550-ESR-011,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+d3cbf4426e11f7a0,ESR켄달스퀘어리츠,,365550-ESR-011,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+2f800cefd26d63e2,ESR켄달스퀘어리츠,,365550-ESR-011,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+dc38b2dfca43ce8e,ESR켄달스퀘어리츠,,365550-ESR-011,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+0e19386c1218027d,ESR켄달스퀘어리츠,,365550-ESR-011,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+608cdc883d310529,ESR켄달스퀘어리츠,TP-c45d964dd501,365550-ESR-012,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+edd502d3ba7b8ded,ESR켄달스퀘어리츠,TP-c45d964dd501,365550-ESR-012,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+2ccaddcc4b1bd8bd,ESR켄달스퀘어리츠,,365550-ESR-012,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+0b6eb3b1cd236253,ESR켄달스퀘어리츠,,365550-ESR-012,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+ce0b8698fbc34973,ESR켄달스퀘어리츠,,365550-ESR-012,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+b9da62616a562b29,ESR켄달스퀘어리츠,,365550-ESR-012,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+01bd06a7c3de403b,ESR켄달스퀘어리츠,,365550-ESR-012,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+c6c5b52043ac78b6,ESR켄달스퀘어리츠,TP-42486f7a9dfb,365550-ESR-013,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+e75004b4670640fc,ESR켄달스퀘어리츠,TP-42486f7a9dfb,365550-ESR-013,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+61941d7ecaffabd1,ESR켄달스퀘어리츠,,365550-ESR-013,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+8e1a0c6d2ac9d248,ESR켄달스퀘어리츠,,365550-ESR-013,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+03aaf7a9efb1579c,ESR켄달스퀘어리츠,,365550-ESR-013,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+441c1cb331ec5f46,ESR켄달스퀘어리츠,,365550-ESR-013,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+eb28baedf3b495d9,ESR켄달스퀘어리츠,,365550-ESR-013,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+2116b5b53c79ea26,ESR켄달스퀘어리츠,TP-f35c0dd6088b,365550-ESR-014,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+8a84e163686c5dad,ESR켄달스퀘어리츠,TP-f35c0dd6088b,365550-ESR-014,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+318633737f488f62,ESR켄달스퀘어리츠,,365550-ESR-014,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+92c3f4f44325f88a,ESR켄달스퀘어리츠,,365550-ESR-014,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+77cdb04fcb3a5421,ESR켄달스퀘어리츠,,365550-ESR-014,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+f826d4dc1bece8ae,ESR켄달스퀘어리츠,,365550-ESR-014,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+94c06349569157cc,ESR켄달스퀘어리츠,,365550-ESR-014,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+eea1773372f1b8d4,ESR켄달스퀘어리츠,TP-c301e85c9cde,365550-ESR-015,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+581ec428881f0fed,ESR켄달스퀘어리츠,TP-c301e85c9cde,365550-ESR-015,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+dd9d79d409b09313,ESR켄달스퀘어리츠,,365550-ESR-015,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+1d375aa9f1c29dc0,ESR켄달스퀘어리츠,,365550-ESR-015,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+b3acc9e007e60e21,ESR켄달스퀘어리츠,,365550-ESR-015,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+afa09affa5f3bdf8,ESR켄달스퀘어리츠,,365550-ESR-015,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+4bc1c90ee0121ca7,ESR켄달스퀘어리츠,,365550-ESR-015,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+ca7017b1fb97b9eb,ESR켄달스퀘어리츠,TP-b0ecddc79c1d,365550-ESR-016,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+500aa34c69165454,ESR켄달스퀘어리츠,TP-b0ecddc79c1d,365550-ESR-016,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+5458d1cf9895f15a,ESR켄달스퀘어리츠,,365550-ESR-016,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+1a389a6409ca8b2c,ESR켄달스퀘어리츠,,365550-ESR-016,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+52901e935c0c87e4,ESR켄달스퀘어리츠,,365550-ESR-016,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+e229d260db972781,ESR켄달스퀘어리츠,,365550-ESR-016,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+571b1a25421ec052,ESR켄달스퀘어리츠,,365550-ESR-016,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+f582fd4529e4b951,ESR켄달스퀘어리츠,TP-8edaf38e7112,365550-ESR-017,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+bea616e110900064,ESR켄달스퀘어리츠,TP-8edaf38e7112,365550-ESR-017,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+da18d9d9b6e6a2b0,ESR켄달스퀘어리츠,,365550-ESR-017,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+365365fc9ce9b5fd,ESR켄달스퀘어리츠,,365550-ESR-017,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+22c0ec3ddf1624d3,ESR켄달스퀘어리츠,,365550-ESR-017,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+573c0c598f443a55,ESR켄달스퀘어리츠,,365550-ESR-017,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+30f4a596c2ae654d,ESR켄달스퀘어리츠,,365550-ESR-017,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+f97e8f76e360fe9b,ESR켄달스퀘어리츠,TP-2d34d3889869,365550-ESR-018,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+b1092074f795b2d0,ESR켄달스퀘어리츠,TP-2d34d3889869,365550-ESR-018,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+831c8ea3c38f45d6,ESR켄달스퀘어리츠,,365550-ESR-018,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+cf77423538cf8c80,ESR켄달스퀘어리츠,,365550-ESR-018,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+add0c213169d907f,ESR켄달스퀘어리츠,,365550-ESR-018,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+00c37e435daf33c2,ESR켄달스퀘어리츠,,365550-ESR-018,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+33f507113a0bf874,ESR켄달스퀘어리츠,,365550-ESR-018,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+1d812ea220a31c56,ESR켄달스퀘어리츠,TP-94d699294842,365550-ESR-019,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+974815a44844ddfb,ESR켄달스퀘어리츠,TP-94d699294842,365550-ESR-019,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+c3463db8f4549c60,ESR켄달스퀘어리츠,,365550-ESR-019,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+0cf006843392045b,ESR켄달스퀘어리츠,,365550-ESR-019,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+8c52b27186aede6a,ESR켄달스퀘어리츠,,365550-ESR-019,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+8d150e5a3ab07d94,ESR켄달스퀘어리츠,,365550-ESR-019,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+9978deb524397acf,ESR켄달스퀘어리츠,,365550-ESR-019,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+e63e513991a487b5,ESR켄달스퀘어리츠,TP-bf1f8097e308,365550-ESR-020,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+2d5a640e08d7df09,ESR켄달스퀘어리츠,TP-bf1f8097e308,365550-ESR-020,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+f88ccc019046929f,ESR켄달스퀘어리츠,,365550-ESR-020,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+2e56a5cf9f487821,ESR켄달스퀘어리츠,,365550-ESR-020,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+8b602a78ccf2d21e,ESR켄달스퀘어리츠,,365550-ESR-020,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+4f61295e75b0810c,ESR켄달스퀘어리츠,,365550-ESR-020,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+a6900fe07fab1a79,ESR켄달스퀘어리츠,,365550-ESR-020,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+04d872123fb7d0de,ESR켄달스퀘어리츠,TP-e322d62a2d54,365550-ESR-021,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,자산별 등기부등본,법적 소유자 확인,P0,manual_review_required,open
+6da5fd8f13b6d3b0,ESR켄달스퀘어리츠,TP-e322d62a2d54,365550-ESR-021,taxpayer_verification,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,신탁원부 및 신탁계약서,신탁재산 납세의무자 확인,P0,manual_review_required,open
+8a4147e38a755743,ESR켄달스퀘어리츠,,365550-ESR-021,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,분리과세 코드가 표시된 재산세 과세내역서,실제 과세구분 확인,P0,manual_review_required,open
+09ac8f122e48ea24,ESR켄달스퀘어리츠,,365550-ESR-021,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,공모부동산투자회사 또는 법정 자회사 해당 근거,법적 주체 요건 확인,P0,manual_review_required,open
+999a24bb8360299a,ESR켄달스퀘어리츠,,365550-ESR-021,separation_tax_eligibility,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,자산의 목적사업 사용 증빙,분리과세 목적사업 사용 요건 확인,P0,manual_review_required,open
+1bd67b6a609d986d,ESR켄달스퀘어리츠,,365550-ESR-021,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 토지대장·지적도·PNU 목록,필지 단위 과세표준 산출,P0,manual_review_required,open
+ef1fd952fe032ed0,ESR켄달스퀘어리츠,,365550-ESR-021,parcel_registry,자산에 연결된 공식 PNU·필지 목록이 없습니다.,자산별 소유지분 자료,필지별 과세면적 및 지분 확인,P0,manual_review_required,open
+930fe68235e0c337,ESR켄달스퀘어리츠,,365550-ESR-001,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+97ba3d984204c851,ESR켄달스퀘어리츠,,365550-ESR-001,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+ddb9f9e7766bf0a3,ESR켄달스퀘어리츠,,365550-ESR-001,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+23d4007c104a5d40,ESR켄달스퀘어리츠,,365550-ESR-001,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+bd95f8fe925eba11,ESR켄달스퀘어리츠,,365550-ESR-002,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+2e81f500c0203458,ESR켄달스퀘어리츠,,365550-ESR-002,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+b84792c23176faf9,ESR켄달스퀘어리츠,,365550-ESR-002,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+c7ee2a2705c01401,ESR켄달스퀘어리츠,,365550-ESR-002,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+1e10b9f97ba0285a,ESR켄달스퀘어리츠,,365550-ESR-003,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+183b81a020e52620,ESR켄달스퀘어리츠,,365550-ESR-003,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+a2332feaf5699e7a,ESR켄달스퀘어리츠,,365550-ESR-003,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+4207ffa58b9be930,ESR켄달스퀘어리츠,,365550-ESR-003,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+2579b78855280b75,ESR켄달스퀘어리츠,,365550-ESR-004,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+78651b3d13043e99,ESR켄달스퀘어리츠,,365550-ESR-004,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+812f593e13431519,ESR켄달스퀘어리츠,,365550-ESR-004,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+d0948dc8793b282a,ESR켄달스퀘어리츠,,365550-ESR-004,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+2eaba64fa15be90f,ESR켄달스퀘어리츠,,365550-ESR-005,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+33abbfc9a11a3f14,ESR켄달스퀘어리츠,,365550-ESR-005,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+4a953d661708747a,ESR켄달스퀘어리츠,,365550-ESR-005,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+216ab8f6586d27f6,ESR켄달스퀘어리츠,,365550-ESR-005,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+53d871e548dd4234,ESR켄달스퀘어리츠,,365550-ESR-006,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+3685a5051a18e201,ESR켄달스퀘어리츠,,365550-ESR-006,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+4d3479b893c1fd1e,ESR켄달스퀘어리츠,,365550-ESR-006,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+7eec7cb8f607fdc5,ESR켄달스퀘어리츠,,365550-ESR-006,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+447dccef8e124a2d,ESR켄달스퀘어리츠,,365550-ESR-007,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+d824ac193009c98b,ESR켄달스퀘어리츠,,365550-ESR-007,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+eb0d5c38ab96b681,ESR켄달스퀘어리츠,,365550-ESR-007,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+7d5593794bf6d186,ESR켄달스퀘어리츠,,365550-ESR-007,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+7991b2825bfb5bec,ESR켄달스퀘어리츠,,365550-ESR-008,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+3a9e3424d23f87a0,ESR켄달스퀘어리츠,,365550-ESR-008,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+3c3e529ea75d1af2,ESR켄달스퀘어리츠,,365550-ESR-008,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+82815270b4e865b7,ESR켄달스퀘어리츠,,365550-ESR-008,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+92e465b8691fb8e0,ESR켄달스퀘어리츠,,365550-ESR-009,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+93c44b68eae039ee,ESR켄달스퀘어리츠,,365550-ESR-009,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+38e2b2f2d872f351,ESR켄달스퀘어리츠,,365550-ESR-009,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+0130c219f57ee69a,ESR켄달스퀘어리츠,,365550-ESR-009,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+4bb90ad8c20da2c1,ESR켄달스퀘어리츠,,365550-ESR-010,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+ba295c3f12015edd,ESR켄달스퀘어리츠,,365550-ESR-010,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+014fb27633e8b5a2,ESR켄달스퀘어리츠,,365550-ESR-010,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+ccc04c738f03a71f,ESR켄달스퀘어리츠,,365550-ESR-010,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+c29ac98c211aa385,ESR켄달스퀘어리츠,,365550-ESR-011,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+5fc26573ef744c78,ESR켄달스퀘어리츠,,365550-ESR-011,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+3bec8435d648f7e3,ESR켄달스퀘어리츠,,365550-ESR-011,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+aa1fd7aa59ad0d33,ESR켄달스퀘어리츠,,365550-ESR-011,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+f5ce958f91a12a49,ESR켄달스퀘어리츠,,365550-ESR-012,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+e665b23af63604e3,ESR켄달스퀘어리츠,,365550-ESR-012,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+08743abf34474294,ESR켄달스퀘어리츠,,365550-ESR-012,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+3cdd1d46f1e4428c,ESR켄달스퀘어리츠,,365550-ESR-012,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+b71de5238f65dc06,ESR켄달스퀘어리츠,,365550-ESR-013,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+e2becd4f6f3c58e3,ESR켄달스퀘어리츠,,365550-ESR-013,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+4084e27b9ba33e4c,ESR켄달스퀘어리츠,,365550-ESR-013,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+27a9d0027f40b0bf,ESR켄달스퀘어리츠,,365550-ESR-013,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+294ac313bd15effb,ESR켄달스퀘어리츠,,365550-ESR-014,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+a8dea52939f3c6f7,ESR켄달스퀘어리츠,,365550-ESR-014,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+5c51bac6ab58b399,ESR켄달스퀘어리츠,,365550-ESR-014,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+7f048942d2e377e0,ESR켄달스퀘어리츠,,365550-ESR-014,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+5f2733ab0107c093,ESR켄달스퀘어리츠,,365550-ESR-015,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+28528d118cd64476,ESR켄달스퀘어리츠,,365550-ESR-015,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+e419a225420745d8,ESR켄달스퀘어리츠,,365550-ESR-015,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+bc70639a9f1cd827,ESR켄달스퀘어리츠,,365550-ESR-015,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+f31f493c060d12ba,ESR켄달스퀘어리츠,,365550-ESR-016,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+27f2f6e6bf233a59,ESR켄달스퀘어리츠,,365550-ESR-016,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+2e7a9f126ca7b617,ESR켄달스퀘어리츠,,365550-ESR-016,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+ab8f9fce05010ab4,ESR켄달스퀘어리츠,,365550-ESR-016,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+629eec8ccbfa264d,ESR켄달스퀘어리츠,,365550-ESR-017,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+79d95bd9abc886b2,ESR켄달스퀘어리츠,,365550-ESR-017,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+f3769af6bb4f79b3,ESR켄달스퀘어리츠,,365550-ESR-017,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+2cd710a4fb652092,ESR켄달스퀘어리츠,,365550-ESR-017,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+852add315def53ad,ESR켄달스퀘어리츠,,365550-ESR-018,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+1d5a6c271b639f75,ESR켄달스퀘어리츠,,365550-ESR-018,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+a7e08787e2fe1469,ESR켄달스퀘어리츠,,365550-ESR-018,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+cb2e4ec33271fe76,ESR켄달스퀘어리츠,,365550-ESR-018,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+9276400e50d10e88,ESR켄달스퀘어리츠,,365550-ESR-019,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+45712b97d7a36df1,ESR켄달스퀘어리츠,,365550-ESR-019,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+45506387b90d0a31,ESR켄달스퀘어리츠,,365550-ESR-019,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+f7a6a49410b2f5a7,ESR켄달스퀘어리츠,,365550-ESR-019,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+0c133f34e0488cc9,ESR켄달스퀘어리츠,,365550-ESR-020,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+bb05f358eaafbbce,ESR켄달스퀘어리츠,,365550-ESR-020,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+98656ecdfcb83a3f,ESR켄달스퀘어리츠,,365550-ESR-020,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+210e67b16489c87d,ESR켄달스퀘어리츠,,365550-ESR-020,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+d3c04679c7ee804d,ESR켄달스퀘어리츠,,365550-ESR-021,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물 시가표준액 산출내역,건축물 재산세 과세표준 확인,P0,manual_review_required,open
+b19c45bd45ee2767,ESR켄달스퀘어리츠,,365550-ESR-021,building_standard_value,공식 건축물 시가표준액이 없습니다.,건축물대장,용도·구조·연면적 확인,P0,manual_review_required,open
+bec7a89af5f16053,ESR켄달스퀘어리츠,,365550-ESR-021,fire_risk_classification,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,소방분 용도·가중배율 판정자료,100%·200%·300% 가중배율 확인,P0,manual_review_required,open
+5731a1ca58f75ac6,ESR켄달스퀘어리츠,,365550-ESR-021,urban_area_applicability,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,도시지역분 적용 내역 및 관련 조례,도시지역분 적용 여부와 세율 확인,P1,manual_review_required,open
+6a3702666bd801be,ESR켄달스퀘어리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+fb21fb9863910e59,ESR켄달스퀘어리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+0553e3dc789598e1,신한알파리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+53340033fc8f87a9,신한알파리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+878506520c0d85b8,신한알파리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+898f9fb9b684809f,삼성FN리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+b428cec22fd7ecdf,삼성FN리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+50bb8b67a1522515,삼성FN리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+12f88f9f9abf398c,코람코더원리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+bb46a558378847d9,코람코더원리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+31ba55521097befb,코람코더원리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+46c311ca3c7b26cf,코람코라이프인프라리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+710795c5ea216e48,코람코라이프인프라리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+1e6cce95ceb0e8c7,코람코라이프인프라리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+74efc6d860c0237f,이지스밸류플러스리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+b52a1d8dfe341dc2,이지스밸류플러스리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+7e5520320f63b2b4,이지스밸류플러스리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+0cc97657d866c546,제이알글로벌리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+189afa9cdd95cfc8,제이알글로벌리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+0249f107fa12cfee,제이알글로벌리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+ac719e8cb6e89ade,대신밸류리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+ab05a3cb115a9e75,대신밸류리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+a933898d691cbb92,대신밸류리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+cb0dee47fe6af848,신한서부티엔디리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+d0276357740fd94e,신한서부티엔디리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+7d1869919d8bb5ff,신한서부티엔디리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+a8a9257547ca94f0,KB스타리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+5652df68fd1c8aca,KB스타리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+2f1c25aa5ef78961,KB스타리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+beb9ed0f8b0aac93,이리츠코크렙,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+2bc55639b88e3745,이리츠코크렙,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+2c367b70ff3b3400,이리츠코크렙,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+fc2908b5b1a148ba,디앤디플랫폼리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+8cb0484befb5443c,디앤디플랫폼리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+3858650d17dae9b6,디앤디플랫폼리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+bb0188f36b64baf7,NH올원리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+844c8191bfdfb655,NH올원리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+8735068ba9bdcb0b,NH올원리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+4c1c27b62cc1ad66,이지스레지던스리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+c2ffaeb8c75847ea,이지스레지던스리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+9007d2f51d1c917a,이지스레지던스리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+09f12d3691bd98c2,NH프라임리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+041d22b296b2fbcf,NH프라임리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+9695239ad1607de4,NH프라임리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+7d70f5090d24c0f9,미래에셋글로벌리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+85812b772f8df7a5,미래에셋글로벌리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+5bc6500f2bd75569,미래에셋글로벌리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+234be6e70db9fb7e,미래에셋맵스리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+917aa4b874fb1144,미래에셋맵스리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+4d8d20861110a174,미래에셋맵스리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+1fa3a9033f7cd43e,신한글로벌액티브리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+cf0c133366035cc9,신한글로벌액티브리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+9c6b0bffd31d7161,신한글로벌액티브리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+0fc7764c36fc5301,케이탑리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+c38f9dd381eb0c76,케이탑리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+179c13a26208feec,케이탑리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open
+bd34daf00a48243c,마스턴프리미어리츠,,,asset_registry,공식자료에서 식별된 자산이 없습니다.,자산 현황 및 편입·매각 내역,공시 자산 수와 Asset Registry 완전성 확인,P0,manual_review_required,open
+0628917cf2e1bc0f,마스턴프리미어리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,자산별 재산세 납세고지서 및 과세내역서,계산 결과와 실제 고지세액 대사,P0,manual_review_required,open
+7869a835c3fe278a,마스턴프리미어리츠,,,tax_notice,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,종합부동산세 납부고지서 및 과세물건 명세,전국 합산 과세표준과 공제액 확인,P0,manual_review_required,open

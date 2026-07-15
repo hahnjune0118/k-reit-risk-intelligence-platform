@@ -9,10 +9,10 @@ from formatting import _is_na, format_pct_from_100, format_ratio
 USER_MODE_CONFIG = {
     "General Info & Scenario": {
         "title": PUBLIC_MODE_LABELS["General Info & Scenario"],
-        "goal": "REITs의 기본 재무상태, 거시경제 Scenario 민감도, 자산 집중도, 차입금 만기, 장부기준 NAV proxy, FFO proxy, 배당 여력을 함께 검토합니다.",
+        "goal": "REITs의 기본 재무상태, 거시경제 Scenario 민감도, 자산 집중도, 차입금 만기, 장부기준 NAV proxy, 영업활동현금흐름 proxy, 배당 여력을 함께 검토합니다.",
         "decision": "Assurance 또는 Tax 화면으로 이동하기 전에 공통 분석 기준을 잡는 화면입니다.",
         "questions": [
-            "선택한 거시경제 Scenario에서 FFO proxy, 장부기준 NAV proxy, 이자감당력, 투자부동산 가치 기준 차입비율이 얼마나 흔들리나요?",
+            "선택한 거시경제 Scenario에서 영업활동현금흐름 proxy, 장부기준 NAV proxy, 이자감당력, 투자부동산 가치 기준 차입비율이 얼마나 흔들리나요?",
             "어떤 자산, 임차인, 차입금 만기, 보유세 항목이 가장 먼저 확인해야 할 압박 요인인가요?",
             "어떤 공시자료 또는 원천문서를 먼저 대사해야 하나요?",
         ],
@@ -29,12 +29,12 @@ USER_MODE_CONFIG = {
     },
     "Tax": {
         "title": PUBLIC_MODE_LABELS["Tax"],
-        "goal": "공시가격, 기준시가, Snapshot 또는 추정치(proxy) 가정을 사용해 보유세 부담을 Tax Issue Matrix, 요청자료 리스트, Tax Review Memo 초안으로 연결합니다.",
-        "decision": "보유세 부담, 공시가격/장부가액 정합성, FFO proxy 현금유출, 추가 요청자료와 메모 초안 생성 가능성을 확인합니다.",
+        "goal": "공식 자산·필지·납세의무자 자료를 재산세·종합부동산세 검토, 요청자료 리스트, Tax Review Memo로 연결합니다.",
+        "decision": "공식 입력값으로 계산 가능한 세목과 추가 공식자료가 필요한 세목을 구분합니다.",
         "questions": [
-            "어떤 자산이 가장 큰 보유세 부담을 만들고 있나요?",
-            "공시가격 또는 지가 상승 시 추가 현금 유출이 FFO와 배당 여력을 얼마나 줄이나요?",
-            "Tax Issue Matrix와 요청자료 리스트에서 어떤 항목을 먼저 follow-up 해야 하나요?",
+            "자산별 법적 납세의무자와 과세구분이 확인되었나요?",
+            "PNU·개별공시지가·건축물 시가표준액의 공식 출처가 연결되었나요?",
+            "계산을 차단한 이슈를 해소하려면 어떤 자료를 먼저 요청해야 하나요?",
         ],
     },
     "Methodology & Data Sources": {
@@ -44,7 +44,7 @@ USER_MODE_CONFIG = {
         "questions": [
             "DART, ECOS, V-World, 내부 CSV 중 어떤 자료가 어느 표에 사용되나요?",
             "어떤 계산은 정식 의견이 아니라 예비 분석 또는 추정치인가요?",
-            "v14 공개 버전의 Tax workflow control 구조와 데이터 한계는 무엇인가요?",
+            "v15 자산·납세의무자 단위 Tax 구조와 데이터 한계는 무엇인가요?",
         ],
     },
 }
@@ -68,8 +68,8 @@ def render_user_mode_panel(selected_mode: str):
 def mode_specific_action_items(selected_mode: str) -> pd.DataFrame:
     rows = {
         "General Info & Scenario": [
-            ("기준 상태", "장부기준 NAV proxy, FFO proxy, FFO 이자감당력 proxy, 투자부동산 가치 기준 차입비율, 자산 집중도, 임차인 비중, 차입금 만기를 함께 확인합니다."),
-            ("시나리오", "ECOS 기반 금리와 전망 입력값이 FFO proxy, 장부기준 NAV proxy, 이자감당력, 투자부동산 가치 기준 차입비율 proxy에 미치는 영향을 확인합니다."),
+            ("기준 상태", "장부기준 NAV proxy, 영업활동현금흐름 proxy, 영업활동현금흐름 이자감당력 proxy, 투자부동산 가치 기준 차입비율, 자산 집중도, 임차인 비중, 차입금 만기를 함께 확인합니다."),
+            ("시나리오", "ECOS 기반 금리와 전망 입력값이 영업활동현금흐름 proxy, 장부기준 NAV proxy, 이자감당력, 투자부동산 가치 기준 차입비율 proxy에 미치는 영향을 확인합니다."),
             ("다음 업무", "감사위험 매핑은 Assurance 화면, 보유세 현금 유출 분석은 Tax 화면에서 이어서 검토합니다."),
         ],
         "Assurance": [
@@ -78,8 +78,8 @@ def mode_specific_action_items(selected_mode: str) -> pd.DataFrame:
             ("내부통제", "평가 입력자료, 차입약정 모니터링, 공시 작성 프로세스에 대한 핵심 통제를 검토합니다."),
         ],
         "Tax": [
-            ("Tax Issue Matrix", "Peer Red Flag, 보유세 정합성, FFO proxy 스트레스를 하나의 실무 검토 표로 확인합니다."),
-            ("요청자료", "재산세 고지서, 토지대장, 건축물대장, FFO proxy 산정자료 등 우선 요청 항목을 확인합니다."),
+            ("Tax Issue Matrix", "Peer Red Flag, 보유세 정합성, 영업활동현금흐름 감소 스트레스를 하나의 실무 검토 표로 확인합니다."),
+            ("요청자료", "재산세 고지서, 토지대장, 건축물대장, 영업활동현금흐름 대사자료 등 우선 요청 항목을 확인합니다."),
             ("Memo", "Tax Review Memo 초안을 검토하고 신고 목적 세액이 아닌 예비 분석임을 확인합니다."),
         ],
         "Methodology & Data Sources": [

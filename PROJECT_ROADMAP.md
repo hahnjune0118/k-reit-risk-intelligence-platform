@@ -2,59 +2,42 @@
 
 ## 현재 위치
 
-현재 활성 개발 및 공개 포트폴리오 버전은 **v14.1 - Metric Definition & Source Lineage Stabilization**입니다.
+현재 활성 개발 및 공개 포트폴리오 버전은 **v15.0.0 - Asset & Taxpayer-Level Holding Tax**입니다.
 
-v14.1은 상장리츠의 공시자료, 거시경제 지표, Peer Snapshot, Tax Snapshot을 연결하여 Tax 업무에서 반복적으로 수행되는 보유세 검토, 요청자료 정리, Memo 초안 작성, 데이터 검증을 하나의 workflow로 안정화하고, FFO proxy·장부기준 NAV proxy·총자산 기준 차입비율 등 핵심 지표의 정의와 출처 계보를 명확히 한 버전입니다.
+v15는 보유세 검토를 회사 전체 추정치에서 자산·납세의무자·필지·건축물 단위로 전환하고, 공식 근거가 없는 숫자를 차단하는 Tax Technology 통제 구조를 구현합니다.
 
-## v14.1 현재 범위
+## 현재 범위
 
-활성 Streamlit 모드는 네 가지입니다.
+- 공식 상장리츠 목록과 리츠별 Coverage Manifest
+- 공식 홈페이지·IR·PDF Source Manifest
+- Asset, Parcel, Building, Taxpayer Registry
+- 공식 법령 기반 Tax Rule Master
+- 토지·건축물 재산세와 부가세목 계산
+- 분리과세 토지의 종부세 제외 및 전국 합산 검증 통제
+- Validation, Reconciliation, Request List와 Tax Review Memo
+- 14단계 문서형 Streamlit Tax UI와 검토팩 다운로드
 
-1. 일반 정보 및 시나리오
-2. Tax: 보유세 분석
-3. Assurance: 감사위험 분석
-4. 분석 방법론 및 데이터 출처
-
-v14의 중심 기능:
-
-- 상장리츠 Peer Benchmark
-- Tax 보유세 부담 Benchmark
-- Source reliability framework
-- Holding Tax Bridge
-- Tax Issue Matrix
-- Holding Tax Reconciliation
-- Issue 기반 Tax Request List
-- Tax Review Memo 초안
-- Tax 입력 검증 패널
-- CSV/Markdown/ZIP export
-- Assurance Red Flag Engine 유지
-- DART API-first, Snapshot fallback 기반 공개 리뷰 경험
-- 핵심 지표 정의 및 source lineage 설명
-
-## 공개 버전에서 제외된 범위
-
-다음 기능은 현재 공개 런타임에서 비활성화되어 있습니다.
-
-- Deals mode
-- KRX API 기반 시장가격 수집
-- KRX 기반 market-implied valuation
-- 거래 목적 가치평가
-
-위 기능은 공개 포트폴리오 버전의 시작 경로에서 제외되어 있으며, v14는 Tax workflow의 통제, 검증, source transparency를 우선합니다.
+General, Assurance와 Methodology 화면은 유지합니다. Deals와 KRX API는 공개 런타임에서 비활성화되어 있습니다.
 
 ## 다음 후보
 
-향후 버전에서는 다음 항목을 검토할 수 있습니다.
+### v15.x 안정화
 
-- Tax Snapshot 갱신 프로세스 고도화
-- 여러 회계연도 trend 기반 Tax Red Flag
-- 공시가격·고지세액 대사 자동화
-- 보유세 민감도 분석의 자산별 상세화
-- source_type별 데이터 품질 리포트 자동 생성
+- 전체 상장리츠 DART 고유번호와 최신 투자보고서 수집 Coverage 확대
+- 자산별 법적 소유자·신탁관계·PNU 검증
+- 기준연도 개별공시지가와 건축물 시가표준액 Snapshot 확대
+- 실제 고지서 기반 Golden Dataset과 Reconciliation
+- OCR 런타임과 PDF 표 추출 정확도 개선
+
+### v16 후보
+
+- 검토자 승인 Workflow와 변경 이력
+- 과세연도별 법령 Diff와 Rule Master 승인 절차
+- 자산 매입·매각에 따른 기간별 보유세 Bridge
+- Power BI용 v15 Asset/Taxpayer 모델 Export
 
 ## 버전 관리 원칙
 
-- 현재 버전은 `VERSION` 파일에 기록합니다.
-- 화면 표시 버전은 `config.py`에서 관리합니다.
-- 주요 기능 추가 시 `CHANGELOG.md`를 업데이트합니다.
-- 공개 UI에서 비활성화된 기능은 앱 시작 경로에 의존하지 않도록 유지합니다.
+- 현재 버전은 `VERSION`과 `config.py`에서 관리합니다.
+- 기능과 데이터 계약 변경은 `CHANGELOG.md`에 기록합니다.
+- Coverage가 부족한 항목은 완료로 표시하지 않고 `docs/v15/COVERAGE_REPORT.md`에 차단사유를 남깁니다.

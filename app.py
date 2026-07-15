@@ -24,7 +24,7 @@ from calculations_transmission import (
 )
 from data_loader import load_data
 from data_availability import get_company_data_availability, has_asset_level_data
-from red_flag_engine import build_assurance_red_flags, build_tax_red_flags, load_red_flag_rules
+from red_flag_engine import build_assurance_red_flags, load_red_flag_rules
 from ui_general import render_general_dashboard
 from ui_layout import apply_page_config, render_intro, render_mode_selector
 from ui_professional import render_professional_page
@@ -91,6 +91,7 @@ def _apply_selected_company_financials(
     fin["source_document"] = "선택 회사 Peer Snapshot / 최근 5년 재무 흐름"
 
     kpi_mapping = {
+        "operating_cash_flow_proxy": "operating_cash_flow_proxy_mn_krw",
         "ffo_proxy": "ffo_mn_krw",
         "book_nav_proxy": "nav_mn_krw",
         "nav": "nav_mn_krw",
@@ -113,6 +114,11 @@ def _apply_selected_company_financials(
     for source, target in kpi_mapping.items():
         if pd.notna(selected_latest_fin.get(source, pd.NA)):
             kpi[target] = selected_latest_fin.get(source)
+    if pd.isna(selected_latest_fin.get("ffo_proxy", pd.NA)) and pd.notna(
+        selected_latest_fin.get("operating_cash_flow_proxy", pd.NA)
+    ):
+        kpi["ffo_mn_krw"] = selected_latest_fin.get("operating_cash_flow_proxy")
+        kpi["ffo_compatibility_status"] = "deprecated_alias_to_operating_cash_flow_proxy"
     for source, target in fin_mapping.items():
         if pd.notna(selected_latest_fin.get(source, pd.NA)):
             fin[target] = selected_latest_fin.get(source)
@@ -120,17 +126,23 @@ def _apply_selected_company_financials(
     total_assets = pd.to_numeric(pd.Series([selected_latest_fin.get("total_assets", pd.NA)]), errors="coerce").iloc[0]
     borrowings = pd.to_numeric(pd.Series([selected_latest_fin.get("borrowings_total", pd.NA)]), errors="coerce").iloc[0]
     interest_expense = pd.to_numeric(pd.Series([selected_latest_fin.get("interest_expense", pd.NA)]), errors="coerce").iloc[0]
-    ffo = pd.to_numeric(pd.Series([selected_latest_fin.get("ffo_proxy", pd.NA)]), errors="coerce").iloc[0]
+    operating_cash_flow_proxy = pd.to_numeric(
+        pd.Series([selected_latest_fin.get("operating_cash_flow_proxy", pd.NA)]), errors="coerce"
+    ).iloc[0]
     if pd.notna(total_assets) and total_assets:
         kpi["leverage_pct"] = borrowings / total_assets * 100 if pd.notna(borrowings) else pd.NA
-    if pd.notna(ffo) and pd.notna(interest_expense) and interest_expense:
-        kpi["interest_coverage_x"] = ffo / interest_expense
+    if pd.notna(operating_cash_flow_proxy) and pd.notna(interest_expense) and interest_expense:
+        kpi["interest_coverage_x"] = operating_cash_flow_proxy / interest_expense
     elif not keep_detail_metrics:
         kpi["interest_coverage_x"] = pd.NA
     for meta_field in [
         "financial_statement_scope",
         "source_note",
         "ffo_proxy_calculation_method",
+        "operating_cash_flow_proxy_calculation_method",
+        "cash_flow_metric_type",
+        "ffo_status",
+        "ffo_limitation",
         "nav_calculation_method",
         "net_debt_calculation_method",
         "is_fallback",
@@ -242,7 +254,6 @@ transmission_table = build_macro_transmission_table(historical_panel)
 transmission_corr = build_transmission_correlation_table(historical_panel)
 transmission_narrative = build_transmission_narrative(transmission_table, transmission_corr)
 assurance_red_flags = build_assurance_red_flags(target_company, peer_metrics, red_flag_rules)
-tax_red_flags = build_tax_red_flags(target_company, peer_metrics, red_flag_rules)
 peer_summary = summarize_peer_position(peer_metrics, target_company)
 peer_context = {
     "target_company": target_company,
@@ -258,7 +269,6 @@ peer_context = {
     "peer_metrics": peer_metrics,
     "peer_summary": peer_summary,
     "assurance_red_flags": assurance_red_flags,
-    "tax_red_flags": tax_red_flags,
     "red_flag_rules": red_flag_rules,
 }
 

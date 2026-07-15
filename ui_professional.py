@@ -4,7 +4,7 @@ import streamlit as st
 from api_manager import sanitize_secret_text
 from ui_assurance import render_assurance_mode
 from ui_methodology import render_methodology_page
-from ui_tax import render_tax_mode
+from ui_tax_v15 import render_tax_mode
 
 
 def _display_api_status(status: str) -> str:
@@ -67,8 +67,20 @@ def render_professional_page(
         )
         return
 
+    if selected_user_mode == "Tax":
+        render_professional_mode_section(
+            selected_user_mode,
+            asset_risk,
+            debt_schedule,
+            latest_kpi,
+            scenario,
+            professional_assumptions,
+            peer_context,
+        )
+        return
+
     st.markdown("## 업무별 리스크 분석")
-    st.caption("좌측 사이드바에서 선택한 거시경제 Scenario 가정은 Assurance와 Tax 화면에 동일하게 적용됩니다.")
+    st.caption("좌측 사이드바에서 선택한 거시경제 Scenario 가정은 Assurance 화면에 적용됩니다.")
     render_professional_mode_section(
         selected_user_mode,
         asset_risk,
