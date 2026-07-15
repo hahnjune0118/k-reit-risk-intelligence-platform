@@ -151,30 +151,52 @@ def render_data_sidebar(
     macro_context = build_macro_context(ecos_conn.key)
 
     if selected_user_mode == "Tax":
-        macro_scenario = macro_scenario_parameters(
-            macro_context,
-            FORECAST_WEIGHTED_SCENARIO_NAME,
-            DEFAULT_MACRO_FORECAST.copy(),
-        )
+        macro_scenario = {
+            "selected_scenario": "SK서린빌딩 Tax Case Study",
+            "scenario_explain": (
+                "Tax 화면은 거시경제 Scenario와 분리된 자산별 공시가격·시가표준액 "
+                "민감도 분석을 사용합니다."
+            ),
+            "scenario_probabilities": {},
+            "scenario_base_rate_note": "Tax 전용 민감도는 Tax 화면에서 설정합니다.",
+            "rate_shock_bp": 0,
+            "refinancing_share_pct": 0.0,
+            "ffo_haircut_pct": 0.0,
+            "cap_rate_shock_bp": 0,
+            "policy_rate_change_bp": 0,
+            "credit_spread_change_bp": 0,
+            "rate_shock_formula": "Tax Case Study에는 적용하지 않음",
+        }
         reit_master = load_reit_master()
         options = company_options(reit_master)
-        selected_company_option = st.session_state.get("selected_company_option", options[0])
-        if selected_company_option not in options:
-            selected_company_option = options[0]
-        st.session_state["selected_company_option"] = selected_company_option
-        company_profile = get_selected_company_profile(selected_company_option, reit_master, peer_snapshot)
+        sk_option = next(
+            (option for option in options if "395400" in str(option)),
+            None,
+        )
+        if sk_option is None:
+            raise ValueError("Tax Case Study의 SK리츠 종목코드 395400을 찾을 수 없습니다.")
+        company_profile = get_selected_company_profile(
+            sk_option,
+            reit_master,
+            peer_snapshot,
+        )
         target_company = company_profile["company_name"]
         recent_5y_financials = pd.DataFrame()
-        recent_5y_status = "Tax v15는 자산·납세의무자 데이터 레지스트리를 사용합니다."
+        recent_5y_status = "SK서린빌딩 Golden Asset Snapshot 기준"
         st.session_state["selected_company"] = target_company
         st.session_state["selected_stock_code"] = company_profile.get("stock_code", "")
         st.session_state["selected_dart_corp_code"] = company_profile.get("dart_corp_code", "")
         st.session_state["selected_company_profile"] = company_profile
         st.session_state["recent_5y_financials"] = recent_5y_financials
         dart_status = "Snapshot 기준: v15 Asset Registry"
+        with _sidebar_slot("company"):
+            st.write("**SK서린빌딩 Tax Case Study**")
+            st.caption("SK서린빌딩 Tax Case Study의 분석단계를 아래에서 확인하세요.")
+            st.write("SK리츠 · SK서린빌딩 · 2026년")
+            st.divider()
         with _sidebar_slot("data_status"):
             data_connection_status = _render_data_status(macro_context, dart_status, ecos_conn, dart_conn, realty_conn)
-            st.caption("Tax 계산은 실시간 연결 여부와 별개로 공식 출처가 연결된 v15 Snapshot만 사용합니다.")
+            st.caption("Tax 계산은 공식 출처가 연결된 SK서린빌딩 v15 Snapshot만 사용합니다.")
         return {
             "mode": selected_user_mode,
             "selected_mode": selected_user_mode,
@@ -185,7 +207,7 @@ def render_data_sidebar(
             "target_company": target_company,
             "selected_stock_code": company_profile.get("stock_code", ""),
             "selected_dart_corp_code": company_profile.get("dart_corp_code", ""),
-            "peer_group": "전체 상장리츠",
+            "peer_group": "Tax Case Study 범위 외",
             "selected_company_profile": company_profile,
             "recent_5y_financials": recent_5y_financials,
             "recent_5y_status": recent_5y_status,

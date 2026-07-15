@@ -1,43 +1,47 @@
 # PROJECT ROADMAP
 
-## 현재 위치
+## 현재 릴리스
 
-현재 활성 개발 및 공개 포트폴리오 버전은 **v15.0.0 - Asset & Taxpayer-Level Holding Tax**입니다.
+현재 공개 포트폴리오 버전은 **v15.0.0 - SK Seorin Golden Asset Tax Case Study**입니다.
 
-v15는 보유세 검토를 회사 전체 추정치에서 자산·납세의무자·필지·건축물 단위로 전환하고, 공식 근거가 없는 숫자를 차단하는 Tax Technology 통제 구조를 구현합니다.
+공개 Tax UI는 SK리츠의 SK서린빌딩 한 건을 대상으로 주소, PNU, 공식 시가표준액, 신탁구조와 납세의무자를 연결하여 보유세 표준 산식을 재계산합니다. 범용 Asset·Parcel·Building·Taxpayer 스키마는 유지하지만, 증빙 수준이 동일하지 않은 다른 리츠 결과는 공개 화면에 표시하지 않습니다.
 
-## 현재 범위
+## v15.0.0 완료 범위
 
-- 공식 상장리츠 목록과 리츠별 Coverage Manifest
-- 공식 홈페이지·IR·PDF Source Manifest
-- Asset, Parcel, Building, Taxpayer Registry
-- 공식 법령 기반 Tax Rule Master
-- 토지·건축물 재산세와 부가세목 계산
-- 분리과세 토지의 종부세 제외 및 전국 합산 검증 통제
-- Validation, Reconciliation, Request List와 Tax Review Memo
-- 14단계 문서형 Streamlit Tax UI와 검토팩 다운로드
+- SK리츠·SK서린빌딩·2026년 Case Scope 고정
+- 공식 입력자료 기반 보유세 산식 재계산
+- Tax Rule Master 기반 토지·건축물·부가세목 계산
+- Base, Moderate, Severe, Custom Tax Sensitivity Scenario
+- P0/P1 우선순위 기반 Tax Issue Matrix
+- Validation, Reconciliation과 Request List 연결
+- 17단계 Tax Review 화면과 Markdown·HTML·Excel Export
+- 실제 고지세액 미확인, 고지서 대사 미완료 상태의 Fail-closed 표시
 
-General, Assurance와 Methodology 화면은 유지합니다. Deals와 KRX API는 공개 런타임에서 비활성화되어 있습니다.
+General, Assurance와 Methodology 화면은 기존 다회사 기능을 유지합니다. Deals와 KRX API는 공개 런타임에서 계속 비활성화합니다.
 
-## 다음 후보
+## v15.x 안정화 후보
 
-### v15.x 안정화
+- 2026년 실제 재산세·지역자원시설세 고지서 확보 및 재계산액 대사
+- 분리과세 코드가 표시된 과세내역서로 실제 과세구분 검증
+- 과세기준일 현재 등기부등본·신탁원부로 납세의무자 판정 검증
+- 토지대장·부속지번 자료로 5.3㎡ 면적 차이 해소
+- 소방분 실제 위험유형 코드와 300% 배율 대사
+- 법정 절사, 감면, 세부담상한과 지방자치단체 조정 반영 검토
 
-- 전체 상장리츠 DART 고유번호와 최신 투자보고서 수집 Coverage 확대
-- 자산별 법적 소유자·신탁관계·PNU 검증
-- 기준연도 개별공시지가와 건축물 시가표준액 Snapshot 확대
-- 실제 고지서 기반 Golden Dataset과 Reconciliation
-- OCR 런타임과 PDF 표 추출 정확도 개선
+## v16 확장 조건
 
-### v16 후보
+다른 자산 또는 리츠로 확대하기 전 다음 조건을 충족해야 합니다.
 
-- 검토자 승인 Workflow와 변경 이력
-- 과세연도별 법령 Diff와 Rule Master 승인 절차
-- 자산 매입·매각에 따른 기간별 보유세 Bridge
-- Power BI용 v15 Asset/Taxpayer 모델 Export
+1. 자산과 필지별 공식 주소·PNU 증빙 확보
+2. 기준연도 개별공시지가와 건축물 시가표준액 확보
+3. 법적 소유자, 신탁구조와 납세의무자 검증
+4. 분리과세 등 법적 분류에 대한 검토 근거 확보
+5. 실제 고지서 또는 과세내역서와의 Reconciliation 수행
+6. Golden Asset과 동일한 자동 테스트와 Evidence Review 통과
 
 ## 버전 관리 원칙
 
 - 현재 버전은 `VERSION`과 `config.py`에서 관리합니다.
-- 기능과 데이터 계약 변경은 `CHANGELOG.md`에 기록합니다.
-- Coverage가 부족한 항목은 완료로 표시하지 않고 `docs/v15/COVERAGE_REPORT.md`에 차단사유를 남깁니다.
+- 기능, 데이터 계약과 공개 범위 변경은 `CHANGELOG.md`에 기록합니다.
+- 증빙이 부족한 항목은 완료로 표시하지 않고 `docs/v15/COVERAGE_REPORT.md`에 제한사항을 남깁니다.
+- main 병합과 운영 배포는 별도 Release 검토 후 수행합니다.

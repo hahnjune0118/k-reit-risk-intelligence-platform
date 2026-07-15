@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 APP_VERSION = "v15.0.0"
-APP_VERSION_NAME = "Asset & Taxpayer-Level Holding Tax"
+APP_VERSION_NAME = "SK Seorin Golden Asset Tax Case Study"
 APP_VERSION_LABEL = f"{APP_VERSION} - {APP_VERSION_NAME}"
 APP_TITLE = "K-REITs Risk Intelligence Platform"
 APP_SUBTITLE = (

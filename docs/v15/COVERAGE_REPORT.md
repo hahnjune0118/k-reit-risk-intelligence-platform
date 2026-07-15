@@ -1,62 +1,63 @@
-# v15 Coverage Report
+# v15 Golden Asset Case Study Coverage Report
 
-생성시각(UTC): 2026-07-15T06:30:00+00:00
+기준일: 2026-07-15
 
-## 전체 요약
+## 공개 Tax 범위
 
-- 공식 상장리츠 목록: 23개
-- 공식자료에서 식별한 자산: 22건
-- 19자리 PNU 검증: 1건
-- 공식 개별공시지가 확인: 1건
-- 공식 건축물 시가표준액 확인: 1건
-- 계산상태 분포: {'data_insufficient': 84, 'manual_review_required': 42, 'official_source_calculated': 8, 'not_applicable': 2}
+| 항목 | Coverage |
+|---|---:|
+| 리츠 | SK리츠 1개 |
+| 자산 | SK서린빌딩 1건 |
+| 자산 ID | `SKR-SEOUL-SEORIN-001` |
+| 현행 유효 PNU | 1건 |
+| 건축물 | 1건 |
+| 납세의무자 | 1건 |
+| 기준연도 | 2026년 |
+| 공식 입력 Evidence | 5/5, 100% |
+| 실제 고지서 Coverage | 0% |
 
-> 현재 Coverage는 전체 상장리츠의 자산·필지·세액 검증 완료를 의미하지 않습니다. 공식 근거가 없는 값은 계산에서 차단됩니다.
+공식 입력 Evidence 5개 항목은 주소, PNU, 개별공시지가, 건축물 시가표준액과 납세의무자 연결입니다. 이 비율은 실제 고지서 대사 또는 법적 결론의 완결성을 의미하지 않습니다.
 
-## 리츠별 Coverage
+## 계산 Coverage
 
-| reit_name | stock_code | official_website_found | ir_documents_checked | dart_documents_checked | asset_count_identified | address_count_verified | parcel_count_verified | land_price_coverage | building_value_coverage | taxpayer_coverage | tax_calculation_status | blocking_reason | next_action |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| SK리츠 | 395400 | True | True | True | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% | official_source_calculated | 추가 차단사항 없음 | 고지서 대사 및 reviewer sign-off |
-| 롯데리츠 | 330590 | True | True | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 한화리츠 | 451800 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| ESR켄달스퀘어리츠 | 365550 | True | False | False | 21 | 18 | 0 | 0.0% | 0.0% | 0.0% | official_partial | PNU·필지 목록 미확인; 건축물 시가표준액 미확인; 법적 납세의무자·분리과세 요건 미검증 | 토지대장·지적도·PNU 매핑 확보; 건축물 시가표준액 산출내역 확보; 등기·신탁·목적사업 사용·과세내역서 확인 |
-| 신한알파리츠 | 293940 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 삼성FN리츠 | 448730 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 코람코더원리츠 | 417310 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 코람코라이프인프라리츠 | 357120 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 이지스밸류플러스리츠 | 334890 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 제이알글로벌리츠 | 348950 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 대신밸류리츠 | 0030R0 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 신한서부티엔디리츠 | 404990 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| KB스타리츠 | 432320 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 이리츠코크렙 | 088260 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 디앤디플랫폼리츠 | 377190 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| NH올원리츠 | 400760 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 이지스레지던스리츠 | 350520 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| NH프라임리츠 | 338100 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 미래에셋글로벌리츠 | 396690 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 미래에셋맵스리츠 | 357250 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 신한글로벌액티브리츠 | 481850 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 케이탑리츠 | 145270 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
-| 마스턴프리미어리츠 | 357430 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
+- 공식 입력자료 기반 산식 재계산액: `1,250,710,968.55472원`
+- 화면 표시금액: 약 `12.51억원`
+- 계산 완료 세목: 9개
+- 실제 고지세액: 미확인
+- 고지서 대사: 미완료
+- 계산 상태: `official_source_calculated`
+- 실제 고지 확인 상태: `verified_notice` 아님
 
-## 데이터 품질 점검
+## Open Issue Coverage
 
-| 파일 | 행 수 | 기대 Grain Key | Key 누락 행 | 중복 Key 행 |
-|---|---:|---|---:|---:|
-| reit_master.csv | 23 | stock_code | 0 | 0 |
-| asset_master.csv | 22 | asset_id | 0 | 0 |
-| parcel_master.csv | 1 | parcel_id | 0 | 0 |
-| building_master.csv | 22 | building_id | 0 | 0 |
-| taxpayer_structure.csv | 22 | taxpayer_id, asset_id | 0 | 0 |
-| tax_calculation_detail.csv | 136 | tax_year, reit_name, taxpayer_id, asset_id, parcel_id, building_id, tax_name | 0 | 0 |
+| 우선순위 | Issue | 상태 | 필요한 증빙 |
+|---|---|---|---|
+| P0 | 실제 재산세 고지 과세구분 미확인 | Open | 분리과세 코드가 표시된 과세내역서 |
+| P0 | 실제 고지세액 미대사 | Open | 2026 재산세·지역자원시설세 고지서 |
+| P0 | 6월 1일 현재 등기·신탁상태 미확인 | Open | 등기부등본·신탁원부 |
+| P1 | 토지면적 5.3㎡ 차이 | Open | 최신 토지대장·지적도 및 부속지번 자료 |
+| P1 | 소방분 실제 위험유형 코드 미대사 | Open | 실제 고지내역·과세코드 |
+| P1 | 법정 절사·감면·세부담상한 미반영 | Open | 과세내역서와 관련 적용자료 |
 
-## 주요 차단사항
+요약 KPI는 P0 Open 3건, P1 Open 3건, 미대사 항목 6건입니다.
 
-- 법적 소유자·신탁관계와 과세기준일 현재 납세의무자 확인
-- 자산별 전체 PNU·필지면적·소유지분 확인
-- 기준연도 개별공시지가와 건축물 시가표준액 확인
-- 도시지역분 조례, 소방분 위험유형 및 가중배율 확인
-- 납세의무자별 전국 합산 종부세 과세자료와 재산세 공제액 확인
-- 실제 고지서·과세내역서 대사
+## 범위 제한
+
+공개 Tax UI는 다음 결과를 제공하지 않습니다.
+
+- SK리츠 전체 자산의 총 보유세
+- 다른 상장리츠에 자동 적용한 확정 계산
+- 장부가액이나 Peer 비율을 사용한 보유세 추정
+- 실제 고지서로 확인된 결정세액
+- 법정 절사, 감면, 세부담상한과 지방자치단체 조정을 반영한 납부세액
+
+범용 v15 데이터 스키마와 파이프라인은 향후 확장을 위해 저장소에 유지됩니다. 그러나 검증 Evidence가 Golden Asset과 동일한 수준에 도달하지 않은 다른 자산 데이터는 공개 Tax 화면의 계산 Coverage로 주장하지 않습니다.
+
+## 다음 검증 단계
+
+1. 2026년 실제 재산세·지역자원시설세 고지서 확보
+2. 분리과세 코드가 표시된 과세내역서 대사
+3. 2026년 6월 1일 현재 등기부등본·신탁원부 확인
+4. 토지대장과 부속지번으로 5.3㎡ 차이 조정
+5. 소방분 실제 과세코드와 300% 배율 대사
+6. 절사, 감면, 세부담상한과 지방자치단체 조정 확인
