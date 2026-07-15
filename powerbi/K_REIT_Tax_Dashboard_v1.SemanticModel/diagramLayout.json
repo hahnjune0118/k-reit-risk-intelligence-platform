@@ -1,0 +1,177 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 1473,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 0,
+            "y": 0
+          },
+          "nodeIndex": "DimREIT",
+          "nodeLineageTag": "effa7a59-3e84-4e17-8c49-bc6e9cda6f07",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 284,
+            "y": 26
+          },
+          "nodeIndex": "DimSource",
+          "nodeLineageTag": "8511b9c7-35fb-4cb3-8150-52bfd98d9aa7",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 568,
+            "y": 0
+          },
+          "nodeIndex": "FactKPI",
+          "nodeLineageTag": "ffb8e821-f07a-4d0a-a4a8-442a1873b9b8",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 852,
+            "y": 0
+          },
+          "nodeIndex": "FactBridge",
+          "nodeLineageTag": "3017994b-adca-40df-8936-cd76f64dbdd0",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 1136,
+            "y": 0
+          },
+          "nodeIndex": "FactIssue",
+          "nodeLineageTag": "f26bd1e4-bac1-467c-928a-eefcd0cbcf1b",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 1420,
+            "y": 0
+          },
+          "nodeIndex": "FactRequest",
+          "nodeLineageTag": "521706d8-7310-4a85-a199-a32bc1e3185e",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 1704,
+            "y": 0
+          },
+          "nodeIndex": "FactReconciliation",
+          "nodeLineageTag": "c2bf7bdf-7b18-4faa-8587-6d291fd27dbd",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 1988,
+            "y": 0
+          },
+          "nodeIndex": "FactStress",
+          "nodeLineageTag": "6d6d9729-610f-4268-ac07-3356ffcef8b0",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 2272,
+            "y": 2
+          },
+          "nodeIndex": "FactValidation",
+          "nodeLineageTag": "158f51dd-6801-4b1d-aa16-973c646e354b",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 9
+        },
+        {
+          "location": {
+            "x": 2556,
+            "y": 50
+          },
+          "nodeIndex": "_Measures",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 10
+        },
+        {
+          "location": {
+            "x": 2840,
+            "y": 50
+          },
+          "nodeIndex": "pFFODecline",
+          "nodeLineageTag": "auto-pffodecline",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 3124,
+            "y": 50
+          },
+          "nodeIndex": "pHoldingTaxIncrease",
+          "nodeLineageTag": "auto-pholdingtaxincrease",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "모든 테이블",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "모든 테이블",
+  "defaultDiagram": "모든 테이블"
+}

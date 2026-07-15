@@ -42,7 +42,7 @@ def render_methodology_page(
 
     st.markdown("### v14.1 안정화 범위")
     st.info(
-        "v14.1은 새로운 분석 기능을 크게 늘리기보다 FFO proxy, 장부기준 NAV proxy, Gross LTV, "
+        "v14.1은 새로운 분석 기능을 크게 늘리기보다 FFO proxy, 장부기준 NAV proxy, 총자산 기준 차입비율, "
         "Cap rate proxy, WALE, 이자감당력처럼 화면에 노출되는 핵심 지표의 계산식과 출처 계보를 명확히 하는 버전입니다."
     )
 
@@ -117,8 +117,8 @@ def render_methodology_page(
     st.markdown("### 지표별 데이터 계보")
     st.dataframe(metric_lineage_table(), hide_index=True, width="stretch", height=230)
     st.caption(
-        "장부기준 NAV proxy는 총부채 전체를 차감하지만, Gross LTV와 금리충격은 이자부 차입부채만 사용합니다. "
-        "충당부채, 이연법인세부채, 일반 영업채무는 LTV 분자와 차입 스프레드·리파이낸싱 금리 shock 대상에서 제외합니다."
+        "장부기준 NAV proxy는 총부채 전체를 차감하지만, 총자산 기준 차입비율과 금리충격은 이자부 차입부채만 사용합니다. "
+        "충당부채, 이연법인세부채, 일반 영업채무는 차입비율 분자와 차입 스프레드·리파이낸싱 금리 shock 대상에서 제외합니다."
     )
 
     st.markdown("### 사용 데이터")

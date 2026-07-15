@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "K_REIT_Tax_Dashboard_v1"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "f8dda030-1ef8-416d-81a6-f5daebea5ebf"
+  }
+}

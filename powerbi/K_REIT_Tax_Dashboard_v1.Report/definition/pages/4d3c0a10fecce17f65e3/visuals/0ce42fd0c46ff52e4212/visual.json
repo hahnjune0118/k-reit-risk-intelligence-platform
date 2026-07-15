@@ -1,0 +1,147 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "0ce42fd0c46ff52e4212",
+  "position": {
+    "x": 730,
+    "y": 600,
+    "z": 920,
+    "height": 90,
+    "width": 520,
+    "tabOrder": 920
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DimREIT"
+                    }
+                  },
+                  "Property": "company_name"
+                }
+              },
+              "queryRef": "DimREIT.company_name",
+              "nativeQueryRef": "company_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "reporting_period"
+                }
+              },
+              "queryRef": "FactKPI.reporting_period",
+              "nativeQueryRef": "reporting_period"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "financial_statement_scope"
+                }
+              },
+              "queryRef": "FactKPI.financial_statement_scope",
+              "nativeQueryRef": "financial_statement_scope"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "source_label"
+                }
+              },
+              "queryRef": "FactKPI.source_label",
+              "nativeQueryRef": "source_label"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "source_note"
+                }
+              },
+              "queryRef": "FactKPI.source_note",
+              "nativeQueryRef": "source_note"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "stock_code"
+                }
+              },
+              "queryRef": "FactKPI.stock_code",
+              "nativeQueryRef": "stock_code"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "FactKPI"
+                  }
+                },
+                "Property": "source_note"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'데이터 기준 및 출처'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

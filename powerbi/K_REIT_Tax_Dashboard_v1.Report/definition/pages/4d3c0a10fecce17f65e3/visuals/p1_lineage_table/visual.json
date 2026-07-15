@@ -1,0 +1,130 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "p1_lineage_table",
+  "position": {
+    "x": 930,
+    "y": 235,
+    "z": 320,
+    "height": 340,
+    "width": 320,
+    "tabOrder": 320
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DimREIT"
+                    }
+                  },
+                  "Property": "company_name"
+                }
+              },
+              "queryRef": "DimREIT.company_name",
+              "nativeQueryRef": "company_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "source_label"
+                }
+              },
+              "queryRef": "FactKPI.source_label",
+              "nativeQueryRef": "source_label"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "source_name"
+                }
+              },
+              "queryRef": "FactKPI.source_name",
+              "nativeQueryRef": "source_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "source_date"
+                }
+              },
+              "queryRef": "FactKPI.source_date",
+              "nativeQueryRef": "source_date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "financial_statement_scope"
+                }
+              },
+              "queryRef": "FactKPI.financial_statement_scope",
+              "nativeQueryRef": "financial_statement_scope"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactKPI"
+                    }
+                  },
+                  "Property": "calculation_method"
+                }
+              },
+              "queryRef": "FactKPI.calculation_method",
+              "nativeQueryRef": "calculation_method"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'핵심 지표 Source Lineage'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

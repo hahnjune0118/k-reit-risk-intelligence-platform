@@ -1,0 +1,136 @@
+table FactIssue
+	lineageTag: auto-factissue
+
+	column stock_code
+		dataType: string
+		lineageTag: d586d65f-0aba-451e-b1e5-f98493d4b90b
+		summarizeBy: none
+		sourceColumn: stock_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_name
+		dataType: string
+		lineageTag: cdafbd8c-cb36-4189-98eb-28b7f6c33e3e
+		summarizeBy: none
+		sourceColumn: company_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column tax_issue
+		dataType: string
+		lineageTag: 1aeb069b-255e-4a90-baec-e7d6265a40d4
+		summarizeBy: none
+		sourceColumn: tax_issue
+
+		annotation SummarizationSetBy = Automatic
+
+	column risk_level
+		dataType: string
+		lineageTag: 84d1cd47-d7a9-4a33-adc8-da90db5adc15
+		summarizeBy: none
+		sourceColumn: risk_level
+
+		annotation SummarizationSetBy = Automatic
+
+	column risk_sort
+		dataType: int64
+		formatString: 0
+		lineageTag: 2dfcf206-e395-4f38-9e3e-d82abb20c635
+		summarizeBy: none
+		sourceColumn: risk_sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column occurrence_basis
+		dataType: string
+		lineageTag: 8d9a0757-c520-4549-9574-eb06d0464a41
+		summarizeBy: none
+		sourceColumn: occurrence_basis
+
+		annotation SummarizationSetBy = Automatic
+
+	column affected_metric
+		dataType: string
+		lineageTag: 81492aac-d15a-47fb-beca-7acb48810cac
+		summarizeBy: none
+		sourceColumn: affected_metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column threshold
+		dataType: string
+		lineageTag: 2d4ae20b-d07d-5afc-943d-fc37c40dd5fd
+		summarizeBy: none
+		sourceColumn: threshold
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_direction
+		dataType: string
+		lineageTag: bf025d6d-88e9-4784-a1fe-c0651ae98f91
+		summarizeBy: none
+		sourceColumn: review_direction
+
+		annotation SummarizationSetBy = Automatic
+
+	column evidence_request
+		dataType: string
+		lineageTag: 79ab92ba-2de5-4cbf-bc83-ad9e7e4d2cd6
+		summarizeBy: none
+		sourceColumn: evidence_request
+
+		annotation SummarizationSetBy = Automatic
+
+	column work_type
+		dataType: string
+		lineageTag: 1207d7ad-62ad-4cee-a6c2-9d1c2bac18d4
+		summarizeBy: none
+		sourceColumn: work_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_basis
+		dataType: string
+		lineageTag: 7438bcb8-ccc0-43c7-a864-e40be1e2fa4e
+		summarizeBy: none
+		sourceColumn: data_basis
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_limitation
+		dataType: string
+		lineageTag: 56f57875-42af-57ae-83fe-0254b4d226f5
+		summarizeBy: none
+		sourceColumn: source_limitation
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_type
+		dataType: string
+		lineageTag: 47327b6a-4c53-45f3-a614-ee29bf4b0b70
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 91007040-59b9-4c64-8ada-d7aea56cf492
+		summarizeBy: none
+		sourceColumn: latest_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactIssue = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\fact_tax_issue.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"stock_code", type text}, {"company_name", type text}, {"tax_issue", type text}, {"risk_level", type text}, {"risk_sort", Int64.Type}, {"occurrence_basis", type text}, {"affected_metric", type text}, {"threshold", type text}, {"review_direction", type text}, {"evidence_request", type text}, {"work_type", type text}, {"data_basis", type text}, {"source_limitation", type text}, {"source_type", type text}, {"latest_year", Int64.Type}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,174 @@
+table FactReconciliation
+	lineageTag: auto-factreconciliation
+
+	column stock_code
+		dataType: string
+		lineageTag: 1c998d8f-5455-457a-be37-12da183880dc
+		summarizeBy: none
+		sourceColumn: stock_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_name
+		dataType: string
+		lineageTag: 412d73c8-f0a5-46c3-a117-0ea86b480180
+		summarizeBy: none
+		sourceColumn: company_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column asset_name
+		dataType: string
+		lineageTag: 59909570-1362-486b-8b2b-d8edecb98a2e
+		summarizeBy: none
+		sourceColumn: asset_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: c3fb9293-f54d-4667-b5e2-178402594f3f
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column book_value_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 4fa2ff93-d5be-4b77-9989-634d9a0dcd8d
+		summarizeBy: sum
+		sourceColumn: book_value_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column official_price_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 6e940fc1-c4ea-4482-905c-c2879f2b7ef8
+		summarizeBy: sum
+		sourceColumn: official_price_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column official_price_to_book
+		dataType: double
+		formatString: 0.0%
+		lineageTag: cc0bde89-ebd1-4d6f-83fa-72578f991cd9
+		summarizeBy: none
+		sourceColumn: official_price_to_book
+
+		annotation SummarizationSetBy = Automatic
+
+	column estimated_tax_base_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: f7cc856d-38b9-4bf6-afd2-a25ce53371d0
+		summarizeBy: sum
+		sourceColumn: estimated_tax_base_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column estimated_holding_tax_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 63baed20-c40d-4ea2-9ed4-b0aba7f45fec
+		summarizeBy: sum
+		sourceColumn: estimated_holding_tax_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column holding_tax_to_ffo
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 4482b3d8-e2f8-472e-a215-f0536cbce3d0
+		summarizeBy: none
+		sourceColumn: holding_tax_to_ffo
+
+		annotation SummarizationSetBy = Automatic
+
+	column official_price_growth_5y
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 5df0de7c-9f1e-4300-80a9-68887b950e09
+		summarizeBy: none
+		sourceColumn: official_price_growth_5y
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_required
+		dataType: string
+		lineageTag: ccdd43d9-d7e0-4679-a691-9d004b883d7b
+		summarizeBy: none
+		sourceColumn: review_required
+
+		annotation SummarizationSetBy = Automatic
+
+	column calculation_model
+		dataType: string
+		lineageTag: dbdecf75-2eaa-56c2-9d89-2387d8453797
+		summarizeBy: none
+		sourceColumn: calculation_model
+
+		annotation SummarizationSetBy = Automatic
+
+	column tax_scope
+		dataType: string
+		lineageTag: b0a89e43-bd87-5487-938c-a3a53a5bc3af
+		summarizeBy: none
+		sourceColumn: tax_scope
+
+		annotation SummarizationSetBy = Automatic
+
+	column tax_component_status
+		dataType: string
+		lineageTag: 52b51dec-afff-5cc1-a011-5936211cf533
+		summarizeBy: none
+		sourceColumn: tax_component_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column taxpayer_status
+		dataType: string
+		lineageTag: 4b029371-82af-5dc5-94f2-76643ac016ef
+		summarizeBy: none
+		sourceColumn: taxpayer_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_type
+		dataType: string
+		lineageTag: e9066d4e-3b0b-4ff2-9c4c-60b7a83fb2c9
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_note
+		dataType: string
+		lineageTag: 2dcbe207-6208-4cad-b557-9718c8af5900
+		summarizeBy: none
+		sourceColumn: source_note
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_year
+		dataType: int64
+		formatString: 0
+		lineageTag: a0c8263e-bc46-4292-b479-b2462582f9f7
+		summarizeBy: none
+		sourceColumn: latest_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactReconciliation = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\fact_tax_reconciliation.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"stock_code", type text}, {"company_name", type text}, {"asset_name", type text}, {"region", type text}, {"book_value_eok", type number}, {"official_price_eok", type number}, {"official_price_to_book", type number}, {"estimated_tax_base_eok", type number}, {"estimated_holding_tax_eok", type number}, {"holding_tax_to_ffo", type number}, {"official_price_growth_5y", type number}, {"review_required", type text}, {"calculation_model", type text}, {"tax_scope", type text}, {"tax_component_status", type text}, {"taxpayer_status", type text}, {"source_type", type text}, {"source_note", type text}, {"latest_year", Int64.Type}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

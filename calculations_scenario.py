@@ -155,6 +155,6 @@ def korean_metric_label(name: str) -> str:
         "Interest coverage": "FFO 이자감당력 proxy",
         "Dividend payout": "배당 부담률",
         "NAV": "장부기준 NAV proxy",
-        "LTV proxy": "LTV proxy",
+        "LTV proxy": "투자부동산 가치 기준 차입비율 proxy",
     }
     return mapping.get(name, name)

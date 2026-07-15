@@ -1,0 +1,17 @@
+table pHoldingTaxIncrease
+	lineageTag: auto-pholdingtaxincrease
+
+	column pHoldingTaxIncrease
+		dataType: int64
+		formatString: 0
+		lineageTag: 330d9c1b-51ac-42c8-bc14-bd6c3b3bde63
+		summarizeBy: none
+		sourceColumn: [pHoldingTaxIncrease]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition pHoldingTaxIncrease = calculated
+		mode: import
+		source = SELECTCOLUMNS(GENERATESERIES(0, 30, 1), "pHoldingTaxIncrease", [Value])
+
+	annotation PBI_ResultType = Table

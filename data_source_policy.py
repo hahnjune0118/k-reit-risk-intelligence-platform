@@ -71,7 +71,7 @@ SOURCE_TYPE_ALIASES = {
     "unknown": "data_insufficient",
     "data_missing": "data_insufficient",
     "missing": "data_insufficient",
-    "sample_snapshot": "api_snapshot",
+    "sample_snapshot": "sample_estimate",
     "dart_optional_refresh": "api_snapshot",
     "dart_api_selected_company": "official_disclosure",
     "high_disclosed_kpi": "official_disclosure",

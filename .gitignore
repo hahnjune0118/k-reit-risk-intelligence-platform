@@ -47,3 +47,8 @@ coverage.xml
 dist/
 build/
 *.egg-info/
+
+powerbi/_backup_before_codex_automation/
+powerbi/*_backup*.pbix
+powerbi/**/.pbi/
+_backup/

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "p3_request_list",
+  "position": {
+    "x": 20,
+    "y": 130,
+    "z": 300,
+    "height": 390,
+    "width": 590,
+    "tabOrder": 300
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRequest"
+                    }
+                  },
+                  "Property": "priority"
+                }
+              },
+              "queryRef": "FactRequest.priority",
+              "nativeQueryRef": "priority"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRequest"
+                    }
+                  },
+                  "Property": "request_item"
+                }
+              },
+              "queryRef": "FactRequest.request_item",
+              "nativeQueryRef": "request_item"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRequest"
+                    }
+                  },
+                  "Property": "request_purpose"
+                }
+              },
+              "queryRef": "FactRequest.request_purpose",
+              "nativeQueryRef": "request_purpose"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRequest"
+                    }
+                  },
+                  "Property": "related_issue"
+                }
+              },
+              "queryRef": "FactRequest.related_issue",
+              "nativeQueryRef": "related_issue"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRequest"
+                    }
+                  },
+                  "Property": "review_area"
+                }
+              },
+              "queryRef": "FactRequest.review_area",
+              "nativeQueryRef": "review_area"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRequest"
+                    }
+                  },
+                  "Property": "note"
+                }
+              },
+              "queryRef": "FactRequest.note",
+              "nativeQueryRef": "note"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Tax 요청자료'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

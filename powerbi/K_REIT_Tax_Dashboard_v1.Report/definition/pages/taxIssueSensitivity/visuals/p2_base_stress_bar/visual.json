@@ -1,0 +1,84 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "p2_base_stress_bar",
+  "position": {
+    "x": 800,
+    "y": 460,
+    "z": 320,
+    "height": 210,
+    "width": 430,
+    "tabOrder": 320
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactStress"
+                    }
+                  },
+                  "Property": "scenario"
+                }
+              },
+              "queryRef": "FactStress.scenario",
+              "nativeQueryRef": "scenario",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "FactStress"
+                        }
+                      },
+                      "Property": "amount_eok"
+                    }
+                  },
+                  "Function": 0
+                }
+              },
+              "queryRef": "Sum(FactStress.amount_eok)",
+              "nativeQueryRef": "금액(억원)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'기준·스트레스 보유세'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

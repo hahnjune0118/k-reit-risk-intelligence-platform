@@ -16,6 +16,7 @@ PEER_METRIC_COLUMNS = [
     "holding_tax_to_ffo",
     "holding_tax_to_operating_revenue",
     "official_price_to_investment_property",
+    "official_price_growth_5y",
     "operating_cash_flow_to_dividends",
 ]
 
@@ -50,9 +51,21 @@ def load_peer_snapshot(path: str | Path = DEFAULT_PEER_SNAPSHOT_PATH) -> pd.Data
     numeric_cols = [
         "year",
         "total_assets",
+        "total_liabilities",
+        "current_assets",
+        "cash_and_cash_equivalents",
+        "short_term_financial_assets",
         "investment_property",
+        "current_liabilities",
         "borrowings_total",
         "borrowings_current",
+        "short_term_borrowings",
+        "current_portion_long_term_debt",
+        "long_term_borrowings",
+        "bonds",
+        "lease_liabilities",
+        "provisions",
+        "deferred_tax_liabilities",
         "interest_expense",
         "operating_revenue",
         "operating_income",
@@ -62,10 +75,13 @@ def load_peer_snapshot(path: str | Path = DEFAULT_PEER_SNAPSHOT_PATH) -> pd.Data
         "dividends",
         "estimated_holding_tax",
         "official_price_total",
+        "official_price_growth_5y",
     ]
     for col in numeric_cols:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
+    if "stock_code" in df.columns:
+        df["stock_code"] = df["stock_code"].astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(6)
     return df
 
 
@@ -76,6 +92,11 @@ def calculate_peer_metrics(df: pd.DataFrame) -> pd.DataFrame:
     metrics = _latest_per_company(df).copy()
     metrics["investment_property_to_total_assets"] = _safe_divide(metrics["investment_property"], metrics["total_assets"])
     metrics["debt_to_assets"] = _safe_divide(metrics["borrowings_total"], metrics["total_assets"])
+    total_liabilities = pd.to_numeric(
+        metrics.get("total_liabilities", pd.Series(pd.NA, index=metrics.index)), errors="coerce"
+    )
+    metrics["book_nav_proxy"] = pd.to_numeric(metrics["total_assets"], errors="coerce") - total_liabilities
+    metrics.loc[total_liabilities.isna(), "book_nav_proxy"] = pd.NA
     metrics["current_debt_to_total_debt"] = _safe_divide(metrics["borrowings_current"], metrics["borrowings_total"])
     metrics["interest_expense_to_ffo"] = _safe_divide(metrics["interest_expense"], metrics["ffo_proxy"])
     metrics["dividend_to_ffo"] = _safe_divide(metrics["dividends"], metrics["ffo_proxy"])
@@ -157,6 +178,15 @@ def generate_red_flags(metrics_df: pd.DataFrame, company_name: str, rules: dict 
         value = company_row.get(metric, pd.NA)
         percentile = company_row.get(f"{metric}_percentile", pd.NA)
         level = classify_metric_risk(value, percentile, rule)
+        metric_source_type = company_row.get(
+            "tax_source_type" if category.lower() == "tax" else "source_type",
+            company_row.get("source_type", "data_insufficient"),
+        )
+        threshold = (
+            f"주의 {rule.get('yellow_absolute')} / 높음 {rule.get('red_absolute')}"
+            if rule.get("yellow_absolute") is not None or rule.get("red_absolute") is not None
+            else "Peer percentile 기준"
+        )
         flags.append({
             "id": rule.get("id"),
             "label": rule.get("label", metric),
@@ -164,6 +194,13 @@ def generate_red_flags(metrics_df: pd.DataFrame, company_name: str, rules: dict 
             "value": value,
             "percentile": percentile,
             "risk_level": level,
+            "threshold": threshold,
+            "source_type": metric_source_type,
+            "source_limitation": (
+                "회사 전체 Snapshot 또는 추정 입력을 사용하므로 원자료 대사 전 수치 결론을 확정하지 않습니다."
+                if metric_source_type in {"peer_snapshot_estimate", "sample_estimate", "data_insufficient"}
+                else "공식 공시 기반이라도 기간·재무제표 범위와 계산방법을 확인해야 합니다."
+            ),
             "explanation_ko": rule.get("explanation_ko", ""),
             "audit_response": rule.get("audit_response", []),
             "tax_review_points": rule.get("tax_review_points", []),

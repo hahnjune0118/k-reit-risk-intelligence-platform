@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "p1_tax_burden_bar",
+  "position": {
+    "x": 20,
+    "y": 235,
+    "z": 300,
+    "height": 340,
+    "width": 560,
+    "tabOrder": 300
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DimREIT"
+                    }
+                  },
+                  "Property": "company_name"
+                }
+              },
+              "queryRef": "DimREIT.company_name",
+              "nativeQueryRef": "company_name",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "보유세 / FFO proxy"
+                }
+              },
+              "queryRef": "_Measures.보유세 / FFO proxy",
+              "nativeQueryRef": "보유세 / FFO proxy"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Peer 보유세 / FFO proxy'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

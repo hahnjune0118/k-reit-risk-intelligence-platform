@@ -12,7 +12,7 @@ USER_MODE_CONFIG = {
         "goal": "REITs의 기본 재무상태, 거시경제 Scenario 민감도, 자산 집중도, 차입금 만기, 장부기준 NAV proxy, FFO proxy, 배당 여력을 함께 검토합니다.",
         "decision": "Assurance 또는 Tax 화면으로 이동하기 전에 공통 분석 기준을 잡는 화면입니다.",
         "questions": [
-            "선택한 거시경제 Scenario에서 FFO proxy, 장부기준 NAV proxy, 이자감당력, LTV가 얼마나 흔들리나요?",
+            "선택한 거시경제 Scenario에서 FFO proxy, 장부기준 NAV proxy, 이자감당력, 투자부동산 가치 기준 차입비율이 얼마나 흔들리나요?",
             "어떤 자산, 임차인, 차입금 만기, 보유세 항목이 가장 먼저 확인해야 할 압박 요인인가요?",
             "어떤 공시자료 또는 원천문서를 먼저 대사해야 하나요?",
         ],
@@ -68,8 +68,8 @@ def render_user_mode_panel(selected_mode: str):
 def mode_specific_action_items(selected_mode: str) -> pd.DataFrame:
     rows = {
         "General Info & Scenario": [
-            ("기준 상태", "장부기준 NAV proxy, FFO proxy, FFO 이자감당력 proxy, LTV, 자산 집중도, 임차인 비중, 차입금 만기를 함께 확인합니다."),
-            ("시나리오", "ECOS 기반 금리와 전망 입력값이 FFO proxy, 장부기준 NAV proxy, 이자감당력, LTV proxy에 미치는 영향을 확인합니다."),
+            ("기준 상태", "장부기준 NAV proxy, FFO proxy, FFO 이자감당력 proxy, 투자부동산 가치 기준 차입비율, 자산 집중도, 임차인 비중, 차입금 만기를 함께 확인합니다."),
+            ("시나리오", "ECOS 기반 금리와 전망 입력값이 FFO proxy, 장부기준 NAV proxy, 이자감당력, 투자부동산 가치 기준 차입비율 proxy에 미치는 영향을 확인합니다."),
             ("다음 업무", "감사위험 매핑은 Assurance 화면, 보유세 현금 유출 분석은 Tax 화면에서 이어서 검토합니다."),
         ],
         "Assurance": [

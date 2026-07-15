@@ -1,0 +1,71 @@
+table DimSource
+	lineageTag: auto-dimsource
+
+	column source_type
+		dataType: string
+		lineageTag: 1c7ddd91-a9be-4ae7-ad16-ac2a1b27cbdc
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column korean_label
+		dataType: string
+		lineageTag: f7ddf0bc-5e01-4a8e-ae2d-6b386d1dca61
+		summarizeBy: none
+		sourceColumn: korean_label
+
+		annotation SummarizationSetBy = Automatic
+
+	column reliability_level
+		dataType: string
+		lineageTag: e54b2513-d1e8-4af5-841e-af3d24a24c05
+		summarizeBy: none
+		sourceColumn: reliability_level
+
+		annotation SummarizationSetBy = Automatic
+
+	column reliability_sort
+		dataType: int64
+		formatString: 0
+		lineageTag: 19fdb9c4-858b-4a43-85d5-cd611f216956
+		summarizeBy: none
+		sourceColumn: reliability_sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column allowed_outputs
+		dataType: string
+		lineageTag: 0375a97c-9d4a-44ef-beee-e2585b304580
+		summarizeBy: none
+		sourceColumn: allowed_outputs
+
+		annotation SummarizationSetBy = Automatic
+
+	column memo_limitation_text
+		dataType: string
+		lineageTag: 95889aba-461f-4d40-ae98-ac45bc67a3c3
+		summarizeBy: none
+		sourceColumn: memo_limitation_text
+
+		annotation SummarizationSetBy = Automatic
+
+	column ui_warning_text
+		dataType: string
+		lineageTag: 0579f234-793f-45e9-a2fd-e7d2b797550b
+		summarizeBy: none
+		sourceColumn: ui_warning_text
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimSource = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\dim_source_policy.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"source_type", type text}, {"korean_label", type text}, {"reliability_level", type text}, {"reliability_sort", Int64.Type}, {"allowed_outputs", type text}, {"memo_limitation_text", type text}, {"ui_warning_text", type text}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

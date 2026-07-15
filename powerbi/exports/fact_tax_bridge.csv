@@ -1,41 +1,41 @@
-﻿stock_code,company_name,stage_order,stage_label,value,unit,interpretation,source_type,source_note,latest_year
-395400,SK리츠,1,공시가격 또는 장부가액,28779.7,억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 검토 필요,peer_snapshot_estimate,자산별 상세자료 부족 시 회사 전체 Snapshot 기반 추정값으로 사용,2026
-395400,SK리츠,2,과세표준 추정,20145.79,억원,공정시장가액비율 70.0% 기준,peer_snapshot_estimate,자산별 상세자료 부족 시 회사 전체 Snapshot 기반 추정값으로 사용,2026
-395400,SK리츠,3,추정 보유세,295.0,억원,실효 보유세율 1.1% 또는 Snapshot 추정값,peer_snapshot_estimate,자산별 상세자료 부족 시 회사 전체 Snapshot 기반 추정값으로 사용,2026
-395400,SK리츠,4,FFO proxy 대비,0.3331977952471311,decimal,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족 시 회사 전체 Snapshot 기반 추정값으로 사용,2026
-395400,SK리츠,5,영업수익 대비,0.11638136793476331,decimal,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족 시 회사 전체 Snapshot 기반 추정값으로 사용,2026
-365550,ESR켄달스퀘어리츠,1,공시가격 또는 장부가액,14870.0,억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 검토 필요,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-365550,ESR켄달스퀘어리츠,2,과세표준 추정,10409.0,억원,공정시장가액비율 70.0% 기준,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-365550,ESR켄달스퀘어리츠,3,추정 보유세,186.0,억원,실효 보유세율 1.1% 또는 Snapshot 추정값,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-365550,ESR켄달스퀘어리츠,4,FFO proxy 대비,0.2503364737550471,decimal,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-365550,ESR켄달스퀘어리츠,5,영업수익 대비,0.12054439403758911,decimal,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-330590,롯데리츠,1,공시가격 또는 장부가액,13200.0,억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 검토 필요,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-330590,롯데리츠,2,과세표준 추정,9240.0,억원,공정시장가액비율 70.0% 기준,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-330590,롯데리츠,3,추정 보유세,158.0,억원,실효 보유세율 1.1% 또는 Snapshot 추정값,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-330590,롯데리츠,4,FFO proxy 대비,0.30326295585412666,decimal,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-330590,롯데리츠,5,영업수익 대비,0.13435374149659865,decimal,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-348950,제이알글로벌리츠,1,공시가격 또는 장부가액,9050.0,억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 높음,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-348950,제이알글로벌리츠,2,과세표준 추정,6335.0,억원,공정시장가액비율 70.0% 기준,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-348950,제이알글로벌리츠,3,추정 보유세,172.0,억원,실효 보유세율 1.1% 또는 Snapshot 추정값,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-348950,제이알글로벌리츠,4,FFO proxy 대비,0.38478747203579416,decimal,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-348950,제이알글로벌리츠,5,영업수익 대비,0.15565610859728507,decimal,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-293940,신한알파리츠,1,공시가격 또는 장부가액,9140.0,억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 검토 필요,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-293940,신한알파리츠,2,과세표준 추정,6398.0,억원,공정시장가액비율 70.0% 기준,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-293940,신한알파리츠,3,추정 보유세,121.0,억원,실효 보유세율 1.1% 또는 Snapshot 추정값,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-293940,신한알파리츠,4,FFO proxy 대비,0.24845995893223818,decimal,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-293940,신한알파리츠,5,영업수익 대비,0.11932938856015779,decimal,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-357120,코람코라이프인프라리츠,1,공시가격 또는 장부가액,8550.0,억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 높음,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-357120,코람코라이프인프라리츠,2,과세표준 추정,5985.0,억원,공정시장가액비율 70.0% 기준,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-357120,코람코라이프인프라리츠,3,추정 보유세,142.0,억원,실효 보유세율 1.1% 또는 Snapshot 추정값,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-357120,코람코라이프인프라리츠,4,FFO proxy 대비,0.36787564766839376,decimal,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-357120,코람코라이프인프라리츠,5,영업수익 대비,0.15434782608695652,decimal,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-400760,NH올원리츠,1,공시가격 또는 장부가액,5760.0,억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 주의,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-400760,NH올원리츠,2,과세표준 추정,4032.0,억원,공정시장가액비율 70.0% 기준,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-400760,NH올원리츠,3,추정 보유세,91.0,억원,실효 보유세율 1.1% 또는 Snapshot 추정값,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-400760,NH올원리츠,4,FFO proxy 대비,0.3382899628252788,decimal,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-400760,NH올원리츠,5,영업수익 대비,0.14869281045751634,decimal,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-334890,이지스밸류리츠,1,공시가격 또는 장부가액,5140.0,억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 주의,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-334890,이지스밸류리츠,2,과세표준 추정,3598.0,억원,공정시장가액비율 70.0% 기준,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-334890,이지스밸류리츠,3,추정 보유세,83.0,억원,실효 보유세율 1.1% 또는 Snapshot 추정값,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-334890,이지스밸류리츠,4,FFO proxy 대비,0.3547008547008547,decimal,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
-334890,이지스밸류리츠,5,영업수익 대비,0.13973063973063973,decimal,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정,2026
+﻿stock_code,company_name,stage_order,stage_label,value,display_value,unit,interpretation,source_type,source_note,latest_year
+395400,SK리츠,1,공시가격 또는 장부가액,28779.7,"28,779.7억원",억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 검토 필요,peer_snapshot_estimate,공개 검증자료에 자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+395400,SK리츠,2,과세표준 추정,20145.79,"20,145.8억원",억원,effective-rate estimate / 회사 전체 screening 과세표준,peer_snapshot_estimate,공개 검증자료에 자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+395400,SK리츠,3,추정 보유세,295.0,295.0억원,억원,적용 실효세율 0.014643257971020248 / Snapshot 세액 / 추정 과세표준 역산 / 추정 과세표준 × 역산 실효세율,peer_snapshot_estimate,공개 검증자료에 자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+395400,SK리츠,4,FFO proxy 대비,0.1791358552894362,17.9%,%,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,공개 검증자료에 자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+395400,SK리츠,5,영업수익 대비,0.11638138777511382,11.6%,%,영업수익 대비 보유세 부담,peer_snapshot_estimate,공개 검증자료에 자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+365550,ESR켄달스퀘어리츠,1,공시가격 또는 장부가액,14870.0,"14,870.0억원",억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 높음,peer_snapshot_estimate,자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+365550,ESR켄달스퀘어리츠,2,과세표준 추정,10409.0,"10,409.0억원",억원,effective-rate estimate / 회사 전체 screening 과세표준,peer_snapshot_estimate,자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+365550,ESR켄달스퀘어리츠,3,추정 보유세,186.0,186.0억원,억원,적용 실효세율 0.017869151695647997 / Snapshot 세액 / 추정 과세표준 역산 / 추정 과세표준 × 역산 실효세율,peer_snapshot_estimate,자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+365550,ESR켄달스퀘어리츠,4,FFO proxy 대비,1.0525059800195486,105.3%,%,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+365550,ESR켄달스퀘어리츠,5,영업수익 대비,0.15615135175606662,15.6%,%,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 PNU·고지서가 없어 회사 전체 Snapshot 기반 effective-rate estimate로 사용,2026
+330590,롯데리츠,1,공시가격 또는 장부가액,13200.0,"13,200.0억원",억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 검토 필요,peer_snapshot_estimate,자산별 PNU·고지서 및 임대차별 세부담 귀속 확인 전 회사 전체 Snapshot 기반 estimate,2026
+330590,롯데리츠,2,과세표준 추정,9240.0,"9,240.0억원",억원,effective-rate estimate / 회사 전체 screening 과세표준,peer_snapshot_estimate,자산별 PNU·고지서 및 임대차별 세부담 귀속 확인 전 회사 전체 Snapshot 기반 estimate,2026
+330590,롯데리츠,3,추정 보유세,158.0,158.0억원,억원,적용 실효세율 0.0170995670995671 / Snapshot 세액 / 추정 과세표준 역산 / 추정 과세표준 × 역산 실효세율,peer_snapshot_estimate,자산별 PNU·고지서 및 임대차별 세부담 귀속 확인 전 회사 전체 Snapshot 기반 estimate,2026
+330590,롯데리츠,4,FFO proxy 대비,0.12340330035833864,12.3%,%,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,자산별 PNU·고지서 및 임대차별 세부담 귀속 확인 전 회사 전체 Snapshot 기반 estimate,2026
+330590,롯데리츠,5,영업수익 대비,0.11145644969044072,11.1%,%,영업수익 대비 보유세 부담,peer_snapshot_estimate,자산별 PNU·고지서 및 임대차별 세부담 귀속 확인 전 회사 전체 Snapshot 기반 estimate,2026
+348950,제이알글로벌리츠,1,공시가격 또는 장부가액,19680.0,"19,680.0억원",억원,data_insufficient / 데이터 부족 / 데이터 부족,data_insufficient,해외자산 중심 회사이므로 국내 공시가격·보유세 산식을 적용하지 않고 데이터 부족으로 처리,2026
+348950,제이알글로벌리츠,2,과세표준 추정,,데이터 부족,억원,data_insufficient / 회사 전체 screening 과세표준,data_insufficient,해외자산 중심 회사이므로 국내 공시가격·보유세 산식을 적용하지 않고 데이터 부족으로 처리,2026
+348950,제이알글로벌리츠,3,추정 보유세,,데이터 부족,억원,적용 실효세율  / data_insufficient / 데이터 부족,data_insufficient,해외자산 중심 회사이므로 국내 공시가격·보유세 산식을 적용하지 않고 데이터 부족으로 처리,2026
+348950,제이알글로벌리츠,4,FFO proxy 대비,,데이터 부족,%,FFO proxy 대비 보유세 부담,data_insufficient,해외자산 중심 회사이므로 국내 공시가격·보유세 산식을 적용하지 않고 데이터 부족으로 처리,2026
+348950,제이알글로벌리츠,5,영업수익 대비,,데이터 부족,%,영업수익 대비 보유세 부담,data_insufficient,해외자산 중심 회사이므로 국내 공시가격·보유세 산식을 적용하지 않고 데이터 부족으로 처리,2026
+293940,신한알파리츠,1,공시가격 또는 장부가액,9140.0,"9,140.0억원",억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 검토 필요,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+293940,신한알파리츠,2,과세표준 추정,6398.0,"6,398.0억원",억원,effective-rate estimate / 회사 전체 screening 과세표준,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+293940,신한알파리츠,3,추정 보유세,121.0,121.0억원,억원,적용 실효세율 0.01891216005001563 / Snapshot 세액 / 추정 과세표준 역산 / 추정 과세표준 × 역산 실효세율,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+293940,신한알파리츠,4,FFO proxy 대비,0.2619047619047619,26.2%,%,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+293940,신한알파리츠,5,영업수익 대비,0.11932938856015779,11.9%,%,영업수익 대비 보유세 부담,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+357120,코람코라이프인프라리츠,1,공시가격 또는 장부가액,8550.0,"8,550.0억원",억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 주의,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+357120,코람코라이프인프라리츠,2,과세표준 추정,5985.0,"5,985.0억원",억원,effective-rate estimate / 회사 전체 screening 과세표준,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+357120,코람코라이프인프라리츠,3,추정 보유세,142.0,142.0억원,억원,적용 실효세율 0.023725981620718463 / Snapshot 세액 / 추정 과세표준 역산 / 추정 과세표준 × 역산 실효세율,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+357120,코람코라이프인프라리츠,4,FFO proxy 대비,0.4034090909090909,40.3%,%,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+357120,코람코라이프인프라리츠,5,영업수익 대비,0.15434782608695652,15.4%,%,영업수익 대비 보유세 부담,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+400760,NH올원리츠,1,공시가격 또는 장부가액,5760.0,"5,760.0억원",억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 주의,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+400760,NH올원리츠,2,과세표준 추정,4032.0,"4,032.0억원",억원,effective-rate estimate / 회사 전체 screening 과세표준,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+400760,NH올원리츠,3,추정 보유세,91.0,91.0억원,억원,적용 실효세율 0.022569444444444444 / Snapshot 세액 / 추정 과세표준 역산 / 추정 과세표준 × 역산 실효세율,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+400760,NH올원리츠,4,FFO proxy 대비,0.3775933609958506,37.8%,%,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+400760,NH올원리츠,5,영업수익 대비,0.14869281045751634,14.9%,%,영업수익 대비 보유세 부담,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+334890,이지스밸류리츠,1,공시가격 또는 장부가액,5140.0,"5,140.0억원",억원,peer estimated_holding_tax / Peer 기반 회사 전체 추정 / 높음,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+334890,이지스밸류리츠,2,과세표준 추정,3598.0,"3,598.0억원",억원,effective-rate estimate / 회사 전체 screening 과세표준,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+334890,이지스밸류리츠,3,추정 보유세,83.0,83.0억원,억원,적용 실효세율 0.023068371317398556 / Snapshot 세액 / 추정 과세표준 역산 / 추정 과세표준 × 역산 실효세율,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+334890,이지스밸류리츠,4,FFO proxy 대비,0.41089108910891087,41.1%,%,FFO proxy 대비 보유세 부담,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026
+334890,이지스밸류리츠,5,영업수익 대비,0.13973063973063973,14.0%,%,영업수익 대비 보유세 부담,peer_snapshot_estimate,회사 전체 예시 Snapshot 기반 effective-rate estimate,2026

@@ -1,0 +1,552 @@
+table FactKPI
+	lineageTag: auto-factkpi
+
+	column stock_code
+		dataType: string
+		lineageTag: 8c1cd465-a343-481a-a147-1972abca9870
+		summarizeBy: none
+		sourceColumn: stock_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_name
+		dataType: string
+		lineageTag: 1d6e923d-9caa-4ec7-b3da-898b011edb56
+		summarizeBy: none
+		sourceColumn: company_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column analysis_year
+		dataType: int64
+		formatString: 0
+		lineageTag: f43ac273-6ecb-548d-abfe-8fd040fe2373
+		summarizeBy: none
+		sourceColumn: analysis_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: e9629192-ea71-426f-a7c7-9fc4b08eebc1
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = Automatic
+
+	column period
+		dataType: string
+		lineageTag: 3634b384-b05a-5778-85e0-8e7ee8d2c703
+		summarizeBy: none
+		sourceColumn: period
+
+		annotation SummarizationSetBy = Automatic
+
+	column period_end
+		dataType: string
+		lineageTag: a09b541e-61d6-5e0a-a742-a5c3c588b7db
+		summarizeBy: none
+		sourceColumn: period_end
+
+		annotation SummarizationSetBy = Automatic
+
+	column reporting_period
+		dataType: string
+		lineageTag: 68bd7729-c70d-5a0d-b93d-6abb569f2069
+		summarizeBy: none
+		sourceColumn: reporting_period
+
+		annotation SummarizationSetBy = Automatic
+
+	column flow_months
+		dataType: int64
+		formatString: 0
+		lineageTag: 51edfaef-49e2-5508-8284-185eed16579c
+		summarizeBy: none
+		sourceColumn: flow_months
+
+		annotation SummarizationSetBy = Automatic
+
+	column annualized
+		dataType: boolean
+		lineageTag: 544058f6-24d4-5dd0-a30a-58643b33d157
+		summarizeBy: none
+		sourceColumn: annualized
+
+		annotation SummarizationSetBy = Automatic
+
+	column annualization_factor
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a4e3e231-bb16-5549-ae15-d6ab42a53afe
+		summarizeBy: sum
+		sourceColumn: annualization_factor
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_assets_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 4a48b868-3ef8-43de-9027-1d653574c307
+		summarizeBy: sum
+		sourceColumn: total_assets_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_liabilities_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a2bb5192-830c-417a-9383-517745c7c720
+		summarizeBy: sum
+		sourceColumn: total_liabilities_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_assets_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: e278a39d-d929-54a4-aa41-44ddccff66b1
+		summarizeBy: sum
+		sourceColumn: current_assets_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_liabilities_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 8869db90-d0ca-59ff-b65c-5cdf28beeb2f
+		summarizeBy: sum
+		sourceColumn: current_liabilities_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column investment_property_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a3299a5f-1330-4e0a-9f9e-878c5f7aece7
+		summarizeBy: sum
+		sourceColumn: investment_property_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column borrowings_total_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 88664ae2-bed3-4549-a39a-4947a01c1f6c
+		summarizeBy: sum
+		sourceColumn: borrowings_total_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column borrowings_current_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a0b6a0af-8d2d-4703-9d58-fc25cffa4596
+		summarizeBy: sum
+		sourceColumn: borrowings_current_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column short_term_borrowings_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 1cc39a10-3af0-5454-b503-7d42a5a126ca
+		summarizeBy: sum
+		sourceColumn: short_term_borrowings_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_portion_long_term_debt_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 116dcdfd-f68b-5af9-acee-ad3fcea9f22f
+		summarizeBy: sum
+		sourceColumn: current_portion_long_term_debt_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column long_term_borrowings_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: ae68c562-ee0e-5d86-b2cc-85fa596fcb13
+		summarizeBy: sum
+		sourceColumn: long_term_borrowings_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column bonds_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a6e85411-a88e-5d59-952f-4bbb9fda89ac
+		summarizeBy: sum
+		sourceColumn: bonds_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column lease_liabilities_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 6a81e7a2-a2ce-5f2b-ba52-0b12eb02cefd
+		summarizeBy: sum
+		sourceColumn: lease_liabilities_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column short_term_financial_assets_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 35d7b02e-6196-5bdb-92d7-74c14dccd537
+		summarizeBy: sum
+		sourceColumn: short_term_financial_assets_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column interest_expense_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: d1ec11aa-8e78-4497-ab90-01674b45a62b
+		summarizeBy: sum
+		sourceColumn: interest_expense_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column operating_revenue_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 438c1006-dba7-4ce3-97de-605e50de99eb
+		summarizeBy: sum
+		sourceColumn: operating_revenue_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column operating_income_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: f1423cdd-cd39-436b-9bcc-b44ab3303bba
+		summarizeBy: sum
+		sourceColumn: operating_income_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column net_income_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 87b88b80-2059-40d6-a791-e36757848933
+		summarizeBy: sum
+		sourceColumn: net_income_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column operating_cash_flow_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 5548aa19-dcbe-4d9a-9e86-ac0218e2313a
+		summarizeBy: sum
+		sourceColumn: operating_cash_flow_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column ffo_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: b04ec4a3-fb14-4e97-958c-cdbc7e069e82
+		summarizeBy: sum
+		sourceColumn: ffo_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column dividends_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 3eb9b832-d6ed-4f81-8578-da4c85a42129
+		summarizeBy: sum
+		sourceColumn: dividends_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column estimated_holding_tax_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: f44b8fa1-9364-42d9-b7c3-20bb61b87bd2
+		summarizeBy: sum
+		sourceColumn: estimated_holding_tax_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column official_price_total_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 99017a67-9178-4173-8c2d-6c6d399082e9
+		summarizeBy: sum
+		sourceColumn: official_price_total_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column interest_bearing_debt_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 7dad96ab-152e-49b6-b733-804a524da393
+		summarizeBy: sum
+		sourceColumn: interest_bearing_debt_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column provisions_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 778125d1-2f21-49a3-a7cb-566c5a116ed5
+		summarizeBy: sum
+		sourceColumn: provisions_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column deferred_tax_liabilities_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 50db2cb1-6b26-5fa8-bfa5-cf6d60afe544
+		summarizeBy: sum
+		sourceColumn: deferred_tax_liabilities_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column cash_and_cash_equivalents_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 4af1c072-03c5-449b-8c2a-be404c37f658
+		summarizeBy: sum
+		sourceColumn: cash_and_cash_equivalents_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column net_debt_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 5e73f4bf-a562-5bb3-b5b2-8774ba03801d
+		summarizeBy: sum
+		sourceColumn: net_debt_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column book_nav_proxy_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 232d5ee5-585a-4c59-af3b-5d9e092cd24f
+		summarizeBy: sum
+		sourceColumn: book_nav_proxy_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column ffo_proxy_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 3d3ad3ab-1aca-4758-bd8b-859b57e96164
+		summarizeBy: sum
+		sourceColumn: ffo_proxy_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column holding_tax_to_ffo
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 596f48d4-303a-4f0e-a24d-32f35b741266
+		summarizeBy: none
+		sourceColumn: holding_tax_to_ffo
+
+		annotation SummarizationSetBy = Automatic
+
+	column holding_tax_to_operating_revenue
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 656635b2-bff4-4ead-917b-c0d822b4e512
+		summarizeBy: none
+		sourceColumn: holding_tax_to_operating_revenue
+
+		annotation SummarizationSetBy = Automatic
+
+	column official_price_to_investment_property
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 7c3abf0b-3427-4598-9800-872d2feaefc6
+		summarizeBy: none
+		sourceColumn: official_price_to_investment_property
+
+		annotation SummarizationSetBy = Automatic
+
+	column debt_to_assets
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 1482e0e7-f859-46a0-9999-1cf4030baa66
+		summarizeBy: none
+		sourceColumn: debt_to_assets
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_debt_to_total_debt
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 272fbdd5-ff74-4512-b72c-0767029a2b32
+		summarizeBy: none
+		sourceColumn: current_debt_to_total_debt
+
+		annotation SummarizationSetBy = Automatic
+
+	column interest_expense_to_ffo
+		dataType: double
+		formatString: 0.0%
+		lineageTag: a6ed513b-876c-435b-98b4-8235abfbb4d5
+		summarizeBy: none
+		sourceColumn: interest_expense_to_ffo
+
+		annotation SummarizationSetBy = Automatic
+
+	column dividend_to_ffo
+		dataType: double
+		formatString: 0.0%
+		lineageTag: a86126ba-486d-423c-abbc-b29d5d75f734
+		summarizeBy: none
+		sourceColumn: dividend_to_ffo
+
+		annotation SummarizationSetBy = Automatic
+
+	column holding_tax_to_ffo_percentile
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 5ec6a892-6d3d-4465-8a7d-a93fe4a1a8ae
+		summarizeBy: none
+		sourceColumn: holding_tax_to_ffo_percentile
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_type
+		dataType: string
+		lineageTag: 8466000a-4fa2-4fd0-b9dc-b8221312ce87
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_label
+		dataType: string
+		lineageTag: 326dff8e-4de7-590b-83ac-023e9f6a8eac
+		summarizeBy: none
+		sourceColumn: source_label
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_name
+		dataType: string
+		lineageTag: e16f3b75-c89b-4055-9fda-e561228a3bc6
+		summarizeBy: none
+		sourceColumn: source_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_date
+		dataType: string
+		lineageTag: 9d50384a-b051-4e67-92ee-b8c7567f8a39
+		summarizeBy: none
+		sourceColumn: source_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_note
+		dataType: string
+		lineageTag: 9b019c20-6a94-4e9a-8fcf-29b0b09badc4
+		summarizeBy: none
+		sourceColumn: source_note
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_statement_scope
+		dataType: string
+		lineageTag: 3423bbd2-9d16-4f9e-ab64-7c30d0ce4796
+		summarizeBy: none
+		sourceColumn: financial_statement_scope
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_source_type
+		dataType: string
+		lineageTag: a7bf4ada-7bfe-521b-9f55-adf6764f48eb
+		summarizeBy: none
+		sourceColumn: financial_source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column tax_source_type
+		dataType: string
+		lineageTag: 5ad3cb4b-4b4a-5e1e-9bfd-02b50601c61a
+		summarizeBy: none
+		sourceColumn: tax_source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column ffo_method
+		dataType: string
+		lineageTag: 2d1345c4-4661-591f-9062-db871edbf290
+		summarizeBy: none
+		sourceColumn: ffo_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column ffo_limitation
+		dataType: string
+		lineageTag: 47f1c84d-f95a-5ab6-9383-4f3bd7077723
+		summarizeBy: none
+		sourceColumn: ffo_limitation
+
+		annotation SummarizationSetBy = Automatic
+
+	column interest_bearing_debt_method
+		dataType: string
+		lineageTag: db18e3e0-22e1-5837-a62d-c1763023884e
+		summarizeBy: none
+		sourceColumn: interest_bearing_debt_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column interest_bearing_debt_completeness
+		dataType: string
+		lineageTag: c37779f7-3363-517c-84c1-43b36d61c1e4
+		summarizeBy: none
+		sourceColumn: interest_bearing_debt_completeness
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_fallback
+		dataType: boolean
+		lineageTag: 8a93e732-9298-48cc-88ce-2e7d6e739979
+		summarizeBy: none
+		sourceColumn: is_fallback
+
+		annotation SummarizationSetBy = Automatic
+
+	column calculation_method
+		dataType: string
+		lineageTag: 29de32b4-bb0c-4e78-a397-8e9ea14bdcb3
+		summarizeBy: none
+		sourceColumn: calculation_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_year
+		dataType: int64
+		formatString: 0
+		lineageTag: e5265cfd-8e72-4e4b-9250-55f7a721f4c1
+		summarizeBy: none
+		sourceColumn: latest_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactKPI = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\fact_reit_kpi.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"stock_code", type text}, {"company_name", type text}, {"analysis_year", Int64.Type}, {"year", Int64.Type}, {"period", type text}, {"period_end", type text}, {"reporting_period", type text}, {"flow_months", Int64.Type}, {"annualized", type logical}, {"annualization_factor", type number}, {"total_assets_eok", type number}, {"total_liabilities_eok", type number}, {"current_assets_eok", type number}, {"current_liabilities_eok", type number}, {"investment_property_eok", type number}, {"borrowings_total_eok", type number}, {"borrowings_current_eok", type number}, {"short_term_borrowings_eok", type number}, {"current_portion_long_term_debt_eok", type number}, {"long_term_borrowings_eok", type number}, {"bonds_eok", type number}, {"lease_liabilities_eok", type number}, {"short_term_financial_assets_eok", type number}, {"interest_expense_eok", type number}, {"operating_revenue_eok", type number}, {"operating_income_eok", type number}, {"net_income_eok", type number}, {"operating_cash_flow_eok", type number}, {"ffo_eok", type number}, {"dividends_eok", type number}, {"estimated_holding_tax_eok", type number}, {"official_price_total_eok", type number}, {"interest_bearing_debt_eok", type number}, {"provisions_eok", type number}, {"deferred_tax_liabilities_eok", type number}, {"cash_and_cash_equivalents_eok", type number}, {"net_debt_eok", type number}, {"book_nav_proxy_eok", type number}, {"ffo_proxy_eok", type number}, {"holding_tax_to_ffo", type number}, {"holding_tax_to_operating_revenue", type number}, {"official_price_to_investment_property", type number}, {"debt_to_assets", type number}, {"current_debt_to_total_debt", type number}, {"interest_expense_to_ffo", type number}, {"dividend_to_ffo", type number}, {"holding_tax_to_ffo_percentile", type number}, {"source_type", type text}, {"source_label", type text}, {"source_name", type text}, {"source_date", type text}, {"source_note", type text}, {"financial_statement_scope", type text}, {"financial_source_type", type text}, {"tax_source_type", type text}, {"ffo_method", type text}, {"ffo_limitation", type text}, {"interest_bearing_debt_method", type text}, {"interest_bearing_debt_completeness", type text}, {"is_fallback", type logical}, {"calculation_method", type text}, {"latest_year", Int64.Type}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

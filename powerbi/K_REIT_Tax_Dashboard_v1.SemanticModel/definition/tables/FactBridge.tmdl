@@ -1,0 +1,105 @@
+table FactBridge
+	lineageTag: auto-factbridge
+
+	column stock_code
+		dataType: string
+		lineageTag: 3b0483ee-ed79-424d-a680-18688c34907e
+		summarizeBy: none
+		sourceColumn: stock_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_name
+		dataType: string
+		lineageTag: e2e9ed35-115e-4355-8802-48c224c7d857
+		summarizeBy: none
+		sourceColumn: company_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column stage_order
+		dataType: int64
+		formatString: 0
+		lineageTag: dae8e93e-c277-429a-a92f-d4610b57f558
+		summarizeBy: none
+		sourceColumn: stage_order
+
+		annotation SummarizationSetBy = Automatic
+
+	column stage_label
+		dataType: string
+		lineageTag: 4f5b34ad-ee40-441c-9208-81c1a465742d
+		summarizeBy: none
+		sourceColumn: stage_label
+
+		annotation SummarizationSetBy = Automatic
+
+	column value
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a584bf6e-bb45-43ab-b708-4cd018c56e77
+		summarizeBy: sum
+		sourceColumn: value
+
+		annotation SummarizationSetBy = Automatic
+
+	column display_value
+		dataType: string
+		lineageTag: 6e5e2654-3a1f-5113-a766-87096f37dc90
+		summarizeBy: none
+		sourceColumn: display_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit
+		dataType: string
+		lineageTag: 3635dd77-a81e-48a3-bf03-83aca8cfd5eb
+		summarizeBy: none
+		sourceColumn: unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column interpretation
+		dataType: string
+		lineageTag: e7b7f894-7862-43f4-a36c-b595611a1309
+		summarizeBy: none
+		sourceColumn: interpretation
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_type
+		dataType: string
+		lineageTag: 201f2fa2-3ae2-48f8-8118-c13ba2e15274
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_note
+		dataType: string
+		lineageTag: 0d26ed30-2571-4190-ad34-44f1d546fccc
+		summarizeBy: none
+		sourceColumn: source_note
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 39b6ef0d-da3a-4b4a-a43f-9a2c657c5409
+		summarizeBy: none
+		sourceColumn: latest_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactBridge = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\fact_tax_bridge.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"stock_code", type text}, {"company_name", type text}, {"stage_order", Int64.Type}, {"stage_label", type text}, {"value", type number}, {"display_value", type text}, {"unit", type text}, {"interpretation", type text}, {"source_type", type text}, {"source_note", type text}, {"latest_year", Int64.Type}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

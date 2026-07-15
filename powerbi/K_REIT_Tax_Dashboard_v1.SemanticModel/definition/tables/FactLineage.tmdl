@@ -1,0 +1,128 @@
+table FactLineage
+	lineageTag: auto-factlineage
+
+	column stock_code
+		dataType: string
+		lineageTag: 044896cc-8b2e-5c2b-8a5e-b6a155c77719
+		summarizeBy: none
+		sourceColumn: stock_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_name
+		dataType: string
+		lineageTag: 40a03f98-e5d3-5cf9-8037-b712bb364bb0
+		summarizeBy: none
+		sourceColumn: company_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column analysis_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 39aac0ad-5559-56f6-8ee1-f9f0bda19d97
+		summarizeBy: none
+		sourceColumn: analysis_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: int64
+		formatString: 0
+		lineageTag: e26b7a75-1845-50be-bfd5-f3673b56d6e7
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column reporting_period
+		dataType: string
+		lineageTag: 586ca8f1-de12-5d28-8390-31f1fab13d98
+		summarizeBy: none
+		sourceColumn: reporting_period
+
+		annotation SummarizationSetBy = Automatic
+
+	column metric_name
+		dataType: string
+		lineageTag: b28ee8a0-347f-5845-93f7-875f3c6e59e9
+		summarizeBy: none
+		sourceColumn: metric_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_type
+		dataType: string
+		lineageTag: 0919d0e9-bc25-5f5c-b231-f1a7d6e5dd16
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_name
+		dataType: string
+		lineageTag: 746d550b-0f64-53da-9f37-183fc6440c2a
+		summarizeBy: none
+		sourceColumn: source_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_date
+		dataType: string
+		lineageTag: 1828aa9f-d54b-50fb-ad36-8333c4587f40
+		summarizeBy: none
+		sourceColumn: source_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_note
+		dataType: string
+		lineageTag: 5c63848e-8414-5a4a-b029-6a35864f99d7
+		summarizeBy: none
+		sourceColumn: source_note
+
+		annotation SummarizationSetBy = Automatic
+
+	column statement_scope
+		dataType: string
+		lineageTag: c09ec606-2911-560e-9321-948d066b1fd7
+		summarizeBy: none
+		sourceColumn: statement_scope
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_fallback
+		dataType: boolean
+		lineageTag: 04b23d78-5081-59a5-b2fa-fe4aba03b024
+		summarizeBy: none
+		sourceColumn: is_fallback
+
+		annotation SummarizationSetBy = Automatic
+
+	column calculation_method
+		dataType: string
+		lineageTag: 444c3a3e-226e-50e1-b4b2-16673cf4a846
+		summarizeBy: none
+		sourceColumn: calculation_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column limitation
+		dataType: string
+		lineageTag: b0cc3745-4b69-5c27-800e-be8cf7b9215f
+		summarizeBy: none
+		sourceColumn: limitation
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactLineage = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\fact_metric_lineage.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"stock_code", type text}, {"company_name", type text}, {"analysis_year", Int64.Type}, {"financial_year", Int64.Type}, {"reporting_period", type text}, {"metric_name", type text}, {"source_type", type text}, {"source_name", type text}, {"source_date", type text}, {"source_note", type text}, {"statement_scope", type text}, {"is_fallback", type logical}, {"calculation_method", type text}, {"limitation", type text}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

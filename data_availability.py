@@ -45,9 +45,11 @@ def has_asset_level_data(company_name: str, company_profile: dict | None = None)
 
 
 def has_tax_asset_data(company_name: str, company_profile: dict | None = None) -> bool:
-    # The public sample only has detailed asset tables for SK리츠.
-    # They are never reused for other companies.
-    return _is_detailed_sample_company(company_name, company_profile)
+    rows = _company_tax_rows(company_name)
+    if rows.empty or "asset_name" not in rows.columns:
+        return False
+    names = rows["asset_name"].fillna("").astype(str).str.strip()
+    return bool(names.ne("").any() and names.ne("회사 전체 추정").any())
 
 
 def has_debt_maturity_data(company_name: str, company_profile: dict | None = None) -> bool:

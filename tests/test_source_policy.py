@@ -24,7 +24,7 @@ def test_source_policy_has_required_canonical_types():
 
 
 def test_source_policy_aliases_and_estimate_detection_are_safe():
-    assert dominant_source_type("sample_snapshot") == "api_snapshot"
+    assert dominant_source_type("sample_snapshot") == "sample_estimate"
     assert dominant_source_type("peer_snapshot_estimate, sample_snapshot") == "peer_snapshot_estimate"
     assert dominant_source_type("data_missing") == "data_insufficient"
     assert get_source_policy("investment_property_estimate").source_type == "peer_snapshot_estimate"

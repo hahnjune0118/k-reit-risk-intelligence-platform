@@ -1,0 +1,63 @@
+relationship rel_FactKPI_DimREIT
+	fromColumn: FactKPI.stock_code
+	toColumn: DimREIT.stock_code
+
+relationship rel_FactBridge_DimREIT
+	fromColumn: FactBridge.stock_code
+	toColumn: DimREIT.stock_code
+
+relationship rel_FactIssue_DimREIT
+	fromColumn: FactIssue.stock_code
+	toColumn: DimREIT.stock_code
+
+relationship rel_FactRequest_DimREIT
+	fromColumn: FactRequest.stock_code
+	toColumn: DimREIT.stock_code
+
+relationship rel_FactReconciliation_DimREIT
+	fromColumn: FactReconciliation.stock_code
+	toColumn: DimREIT.stock_code
+
+relationship rel_FactStress_DimREIT
+	fromColumn: FactStress.stock_code
+	toColumn: DimREIT.stock_code
+
+relationship rel_FactValidation_DimREIT
+	fromColumn: FactValidation.stock_code
+	toColumn: DimREIT.stock_code
+
+relationship rel_FactLineage_DimREIT
+	fromColumn: FactLineage.stock_code
+	toColumn: DimREIT.stock_code
+
+relationship rel_FactKPI_DimPeriod
+	fromColumn: FactKPI.analysis_year
+	toColumn: DimPeriod.analysis_year
+
+relationship rel_FactBridge_DimPeriod
+	fromColumn: FactBridge.latest_year
+	toColumn: DimPeriod.analysis_year
+
+relationship rel_FactIssue_DimPeriod
+	fromColumn: FactIssue.latest_year
+	toColumn: DimPeriod.analysis_year
+
+relationship rel_FactRequest_DimPeriod
+	fromColumn: FactRequest.latest_year
+	toColumn: DimPeriod.analysis_year
+
+relationship rel_FactReconciliation_DimPeriod
+	fromColumn: FactReconciliation.latest_year
+	toColumn: DimPeriod.analysis_year
+
+relationship rel_FactStress_DimPeriod
+	fromColumn: FactStress.latest_year
+	toColumn: DimPeriod.analysis_year
+
+relationship rel_FactValidation_DimPeriod
+	fromColumn: FactValidation.latest_year
+	toColumn: DimPeriod.analysis_year
+
+relationship rel_FactLineage_DimPeriod
+	fromColumn: FactLineage.analysis_year
+	toColumn: DimPeriod.analysis_year

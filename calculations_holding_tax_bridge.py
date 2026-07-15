@@ -98,6 +98,9 @@ def _fallback_dataset_from_peer(company_name: str, peer_row: pd.Series) -> pd.Da
                     "official_price": pd.NA,
                     "estimated_tax_base": pd.NA,
                     "estimated_holding_tax": pd.NA,
+                    "calculation_model": "data_insufficient",
+                    "tax_scope": "data_insufficient",
+                    "tax_component_status": "data_insufficient",
                     "source_type": "data_insufficient",
                     "source_note": "Peer Snapshot과 Tax Snapshot이 부족하여 보유세 추정이 제한됩니다.",
                     "latest_year": pd.NA,
@@ -109,6 +112,7 @@ def _fallback_dataset_from_peer(company_name: str, peer_row: pd.Series) -> pd.Da
     estimated_tax = peer_row.get("estimated_holding_tax", pd.NA)
     if pd.isna(_to_number(estimated_tax)):
         estimated_tax = calculate_estimated_holding_tax(tax_base, 1.1)
+    effective_rate = safe_ratio(estimated_tax, tax_base)
     return pd.DataFrame(
         [
             {
@@ -119,6 +123,14 @@ def _fallback_dataset_from_peer(company_name: str, peer_row: pd.Series) -> pd.Da
                 "official_price": official_price,
                 "estimated_tax_base": tax_base,
                 "estimated_holding_tax": estimated_tax,
+                "calculation_model": "effective-rate estimate" if pd.notna(_to_number(estimated_tax)) else "data_insufficient",
+                "fair_market_value_ratio": 0.70,
+                "effective_holding_tax_rate": effective_rate,
+                "formula_version": "holding_tax_screening_v14_1",
+                "tax_scope": "company_level_screening_total",
+                "tax_component_status": "data_insufficient",
+                "legal_owner_status": "data_insufficient",
+                "taxpayer_status": "data_insufficient",
                 "source_type": "peer_snapshot_estimate",
                 "source_note": "자산별 상세자료 부족으로 회사 전체 Snapshot 기반 추정",
                 "latest_year": peer_row.get("year", pd.NA),
@@ -175,8 +187,26 @@ def build_holding_tax_bridge(
             tax_base = calculate_estimated_tax_base(official_price, fair_market_value_ratio)
 
         estimated_tax = _to_number(row.get("estimated_holding_tax", pd.NA))
-        if pd.isna(estimated_tax):
+        calculation_model = str(row.get("calculation_model", "")).strip()
+        if pd.isna(estimated_tax) and policy.source_type != "data_insufficient":
             estimated_tax = calculate_estimated_holding_tax(tax_base, effective_tax_rate)
+            calculation_model = calculation_model or "effective-rate estimate"
+
+        stored_rate = _to_number(row.get("effective_holding_tax_rate", pd.NA))
+        if pd.notna(estimated_tax) and pd.notna(tax_base) and tax_base:
+            implied_rate = estimated_tax / tax_base
+            applied_rate = implied_rate
+            rate_basis = "Snapshot 세액 / 추정 과세표준 역산"
+        elif policy.source_type == "data_insufficient":
+            applied_rate = pd.NA
+            rate_basis = "data_insufficient"
+        elif pd.notna(stored_rate):
+            applied_rate = _ratio_to_fraction(stored_rate, 0.011)
+            rate_basis = "Snapshot effective rate"
+        else:
+            applied_rate = _ratio_to_fraction(effective_tax_rate, 0.011)
+            rate_basis = "Fallback 가정"
+        calculation_model = calculation_model or ("data_insufficient" if pd.isna(estimated_tax) else "effective-rate estimate")
 
         ffo = _to_number(peer_row.get("ffo_proxy", pd.NA))
         operating_revenue = _to_number(peer_row.get("operating_revenue", pd.NA))
@@ -197,12 +227,21 @@ def build_holding_tax_bridge(
                 "데이터 기준": basis,
                 "공시가격 또는 장부가액(억원)": official_price / 100 if pd.notna(official_price) else book_value / 100 if pd.notna(book_value) else pd.NA,
                 "과세표준 추정(억원)": tax_base / 100 if pd.notna(tax_base) else pd.NA,
-                "적용 세율": _ratio_to_fraction(effective_tax_rate, 0.011),
+                "적용 세율": applied_rate,
+                "세율 기준": rate_basis,
                 "추정 보유세(억원)": estimated_tax / 100 if pd.notna(estimated_tax) else pd.NA,
                 "FFO proxy 대비": tax_to_ffo,
                 "영업수익 대비": tax_to_revenue,
                 "Peer 대비 위치": peer_position,
                 "검토 필요 여부": "필요" if peer_position in {"높음", "주의", "검토 필요", "데이터 부족"} else "낮음",
+                "계산 모델": calculation_model,
+                "계산식": (
+                    "추정 과세표준 × 역산 실효세율"
+                    if pd.notna(estimated_tax) and pd.notna(tax_base)
+                    else "데이터 부족"
+                ),
+                "세목 범위": row.get("tax_component_status", "data_insufficient"),
+                "납세의무자 확인": row.get("taxpayer_status", "data_insufficient"),
                 "한계": policy.memo_limitation_text,
             }
         )

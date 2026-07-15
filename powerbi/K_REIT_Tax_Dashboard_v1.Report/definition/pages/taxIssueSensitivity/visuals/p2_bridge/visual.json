@@ -1,0 +1,102 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "p2_bridge",
+  "position": {
+    "x": 800,
+    "y": 240,
+    "z": 310,
+    "height": 200,
+    "width": 430,
+    "tabOrder": 310
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactBridge"
+                    }
+                  },
+                  "Property": "stage_order"
+                }
+              },
+              "queryRef": "FactBridge.stage_order",
+              "nativeQueryRef": "stage_order"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactBridge"
+                    }
+                  },
+                  "Property": "stage_label"
+                }
+              },
+              "queryRef": "FactBridge.stage_label",
+              "nativeQueryRef": "stage_label"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactBridge"
+                    }
+                  },
+                  "Property": "display_value"
+                }
+              },
+              "queryRef": "FactBridge.display_value",
+              "nativeQueryRef": "display_value"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactBridge"
+                    }
+                  },
+                  "Property": "interpretation"
+                }
+              },
+              "queryRef": "FactBridge.interpretation",
+              "nativeQueryRef": "interpretation"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Holding Tax Bridge'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

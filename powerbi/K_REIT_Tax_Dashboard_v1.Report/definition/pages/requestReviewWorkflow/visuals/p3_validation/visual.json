@@ -1,0 +1,116 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "p3_validation",
+  "position": {
+    "x": 630,
+    "y": 360,
+    "z": 320,
+    "height": 160,
+    "width": 590,
+    "tabOrder": 320
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactValidation"
+                    }
+                  },
+                  "Property": "validation_status"
+                }
+              },
+              "queryRef": "FactValidation.validation_status",
+              "nativeQueryRef": "validation_status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactValidation"
+                    }
+                  },
+                  "Property": "missing_fields"
+                }
+              },
+              "queryRef": "FactValidation.missing_fields",
+              "nativeQueryRef": "missing_fields"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactValidation"
+                    }
+                  },
+                  "Property": "fallback_used"
+                }
+              },
+              "queryRef": "FactValidation.fallback_used",
+              "nativeQueryRef": "fallback_used"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactValidation"
+                    }
+                  },
+                  "Property": "calculation_limitations"
+                }
+              },
+              "queryRef": "FactValidation.calculation_limitations",
+              "nativeQueryRef": "calculation_limitations"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactValidation"
+                    }
+                  },
+                  "Property": "source_note"
+                }
+              },
+              "queryRef": "FactValidation.source_note",
+              "nativeQueryRef": "source_note"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Tax 입력값 Validation'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

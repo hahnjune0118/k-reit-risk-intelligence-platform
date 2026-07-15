@@ -1,0 +1,119 @@
+table FactValidation
+	lineageTag: auto-factvalidation
+
+	column stock_code
+		dataType: string
+		lineageTag: 505a2060-eb5d-465f-8905-f995c5bf491a
+		summarizeBy: none
+		sourceColumn: stock_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_name
+		dataType: string
+		lineageTag: 295ab7f6-31e3-433a-a118-ccacc753bfaf
+		summarizeBy: none
+		sourceColumn: company_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column validation_status
+		dataType: string
+		lineageTag: c737a7f2-d5c8-4f32-9a1e-1312f6b0a4b6
+		summarizeBy: none
+		sourceColumn: validation_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column missing_fields
+		dataType: string
+		lineageTag: 51fd7fca-7c30-4f11-85be-2dfd3a2664ba
+		summarizeBy: none
+		sourceColumn: missing_fields
+
+		annotation SummarizationSetBy = Automatic
+
+	column fallback_used
+		dataType: boolean
+		lineageTag: b0e41e0b-1e3a-4e07-a4cc-81d96cb50874
+		summarizeBy: none
+		sourceColumn: fallback_used
+
+		annotation SummarizationSetBy = Automatic
+
+	column calculation_limitations
+		dataType: string
+		lineageTag: 189fcd5c-fc80-4a56-a0b6-b1c8584cbf93
+		summarizeBy: none
+		sourceColumn: calculation_limitations
+
+		annotation SummarizationSetBy = Automatic
+
+	column rate_reconciled
+		dataType: boolean
+		lineageTag: ea1d2532-7cb9-53bc-8ab7-53cf8c2a9a74
+		summarizeBy: none
+		sourceColumn: rate_reconciled
+
+		annotation SummarizationSetBy = Automatic
+
+	column period_aligned
+		dataType: boolean
+		lineageTag: d2f11fc0-2672-5d25-bd8c-116194b8388a
+		summarizeBy: none
+		sourceColumn: period_aligned
+
+		annotation SummarizationSetBy = Automatic
+
+	column taxpayer_confirmed
+		dataType: boolean
+		lineageTag: 954fe7a3-bad2-509f-8b0b-9077bc0ffc73
+		summarizeBy: none
+		sourceColumn: taxpayer_confirmed
+
+		annotation SummarizationSetBy = Automatic
+
+	column tax_components_complete
+		dataType: boolean
+		lineageTag: 4ceea6fc-7e87-5491-9c05-021065dae7be
+		summarizeBy: none
+		sourceColumn: tax_components_complete
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_type
+		dataType: string
+		lineageTag: 8a4b1cac-ec5d-4844-90e0-10f6172ac062
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_note
+		dataType: string
+		lineageTag: 7608604b-3044-4f57-b88b-40dfd4c79aff
+		summarizeBy: none
+		sourceColumn: source_note
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_year
+		dataType: int64
+		formatString: 0
+		lineageTag: f4524bfa-4fcd-4788-a71a-54a2bf8155e7
+		summarizeBy: none
+		sourceColumn: latest_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactValidation = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\fact_tax_validation.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"stock_code", type text}, {"company_name", type text}, {"validation_status", type text}, {"missing_fields", type text}, {"fallback_used", type logical}, {"calculation_limitations", type text}, {"rate_reconciled", type logical}, {"period_aligned", type logical}, {"taxpayer_confirmed", type logical}, {"tax_components_complete", type logical}, {"source_type", type text}, {"source_note", type text}, {"latest_year", Int64.Type}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

@@ -9,6 +9,7 @@ import streamlit as st
 
 from config import DART_CORP_CODE_ENDPOINT, DART_LIST_ENDPOINT, DART_SINGLE_FS_ENDPOINT
 from api_manager import sanitize_secret_text
+from metric_definitions import derive_interest_bearing_debt
 
 
 def _to_mn_krw_from_dart_amount(value):
@@ -87,9 +88,15 @@ def _select_single_account_amount(df: pd.DataFrame, patterns: list[str]):
     if df.empty:
         return pd.NA
     for pattern in patterns:
-        matched = _match_account_rows(df, [pattern])
-        if not matched.empty:
-            return _to_mn_krw_from_dart_amount(matched.iloc[0].get("thstrm_amount"))
+        for column in ["account_id", "account_nm", "account_detail"]:
+            if column not in df.columns:
+                continue
+            text = df[column].fillna("").astype(str)
+            matched = df[text.str.fullmatch(pattern, case=False, na=False)]
+            if matched.empty:
+                matched = df[text.str.contains(pattern, case=False, na=False, regex=True)]
+            if not matched.empty:
+                return _to_mn_krw_from_dart_amount(matched.iloc[0].get("thstrm_amount"))
     return pd.NA
 
 
@@ -130,18 +137,28 @@ def _select_interest_bearing_debt_components(rows: pd.DataFrame) -> dict:
         rows,
         ["리스부채", "Lease liabilities"],
     )
-    fallback_debt = _sum_account_amounts(
+    reported_total_debt = _select_single_account_amount(
         rows,
-        ["차입금", "^사채$", "일반사채", "리스부채", "Borrowings", "Bonds issued", "Lease liabilities"],
+        ["이자부.*부채", "총차입금", "Interest.?bearing debt", "Total borrowings"],
     )
-    components_total = _sum_values([
-        short_term_borrowings,
-        current_portion_long_term_debt,
-        long_term_borrowings,
-        bonds,
-        lease_liabilities,
-    ])
-    interest_bearing_debt = components_total if pd.notna(components_total) else fallback_debt
+    interest_bearing_debt, debt_method = derive_interest_bearing_debt(
+        short_term_borrowings=short_term_borrowings,
+        current_portion_long_term_debt=current_portion_long_term_debt,
+        long_term_borrowings=long_term_borrowings,
+        bonds=bonds,
+        lease_liabilities=lease_liabilities,
+        fallback_interest_bearing_debt=reported_total_debt,
+    )
+    completeness = "complete_components" if all(
+        pd.notna(value)
+        for value in [
+            short_term_borrowings,
+            current_portion_long_term_debt,
+            long_term_borrowings,
+            bonds,
+            lease_liabilities,
+        ]
+    ) else "reported_total_fallback" if pd.notna(reported_total_debt) else "data_insufficient"
     return {
         "short_term_borrowings_mn_krw": short_term_borrowings,
         "current_portion_long_term_debt_mn_krw": current_portion_long_term_debt,
@@ -149,11 +166,8 @@ def _select_interest_bearing_debt_components(rows: pd.DataFrame) -> dict:
         "bonds_mn_krw": bonds,
         "lease_liabilities_mn_krw": lease_liabilities,
         "interest_bearing_debt_mn_krw": interest_bearing_debt,
-        "interest_bearing_debt_method": (
-            "단기차입금+유동성장기차입금/사채+장기차입금+사채+리스부채"
-            if pd.notna(components_total)
-            else "차입금/사채/리스부채 fallback"
-        ),
+        "interest_bearing_debt_method": debt_method,
+        "interest_bearing_debt_completeness": completeness,
     }
 
 
@@ -287,10 +301,10 @@ def fetch_dart_annual_financial_history(api_key: str, stock_code: str = "395400"
     if not history.empty:
         history["gross_ltv_interest_debt_to_assets_pct"] = history["interest_bearing_debt_mn_krw"] / history["total_assets_mn_krw"] * 100
         cash = pd.to_numeric(history.get("cash_and_cash_equivalents_mn_krw", pd.Series(pd.NA, index=history.index)), errors="coerce")
-        short_assets = pd.to_numeric(history.get("short_term_financial_assets_mn_krw", pd.Series(0, index=history.index)), errors="coerce").fillna(0)
         debt = pd.to_numeric(history["interest_bearing_debt_mn_krw"], errors="coerce")
-        history["net_debt_mn_krw"] = debt - cash - short_assets
+        history["net_debt_mn_krw"] = debt - cash
         history.loc[cash.isna() | debt.isna(), "net_debt_mn_krw"] = pd.NA
+        history["net_debt_method"] = "이자부 차입부채 - 현금및현금성자산; 단기금융자산은 사용제한 미확인으로 차감 제외"
     status_msg = "connected" if not history.empty else "; ".join(messages)
     if report_status != "connected":
         status_msg = f"{status_msg}; report-list: {report_status}"

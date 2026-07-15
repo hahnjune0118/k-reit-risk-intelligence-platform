@@ -4,7 +4,7 @@
 
 현재 활성 개발 및 공개 포트폴리오 버전은 **v14.1 - Metric Definition & Source Lineage Stabilization**입니다.
 
-v14.1은 상장리츠의 공시자료, 거시경제 지표, Peer Snapshot, Tax Snapshot을 연결하여 Tax 업무에서 반복적으로 수행되는 보유세 검토, 요청자료 정리, Memo 초안 작성, 데이터 검증을 하나의 workflow로 안정화하고, FFO proxy·장부기준 NAV proxy·Gross LTV 등 핵심 지표의 정의와 출처 계보를 명확히 한 버전입니다.
+v14.1은 상장리츠의 공시자료, 거시경제 지표, Peer Snapshot, Tax Snapshot을 연결하여 Tax 업무에서 반복적으로 수행되는 보유세 검토, 요청자료 정리, Memo 초안 작성, 데이터 검증을 하나의 workflow로 안정화하고, FFO proxy·장부기준 NAV proxy·총자산 기준 차입비율 등 핵심 지표의 정의와 출처 계보를 명확히 한 버전입니다.
 
 ## v14.1 현재 범위
 

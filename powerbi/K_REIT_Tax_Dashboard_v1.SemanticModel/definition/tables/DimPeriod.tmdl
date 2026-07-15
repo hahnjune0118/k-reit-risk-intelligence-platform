@@ -1,0 +1,39 @@
+table DimPeriod
+	lineageTag: auto-dimperiod
+
+	column analysis_year
+		dataType: int64
+		formatString: 0
+		lineageTag: ce213771-f6ce-500a-9ca0-b270ac09a9f7
+		summarizeBy: none
+		sourceColumn: analysis_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column period_label
+		dataType: string
+		lineageTag: c5aa4b5f-9c5d-5412-a30e-d39cbd443d18
+		summarizeBy: none
+		sourceColumn: period_label
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_current_snapshot
+		dataType: boolean
+		lineageTag: e2b06ee1-2300-55c0-b6ae-9b84c81e0f66
+		summarizeBy: none
+		sourceColumn: is_current_snapshot
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimPeriod = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\dim_period.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"analysis_year", Int64.Type}, {"period_label", type text}, {"is_current_snapshot", type logical}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

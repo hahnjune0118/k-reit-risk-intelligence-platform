@@ -1,0 +1,112 @@
+table FactRequest
+	lineageTag: auto-factrequest
+
+	column stock_code
+		dataType: string
+		lineageTag: 01cafd7d-b3e3-491b-9e4f-0738ea0af949
+		summarizeBy: none
+		sourceColumn: stock_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_name
+		dataType: string
+		lineageTag: 88b2befd-4abc-4497-bcba-57f6a37a6e2c
+		summarizeBy: none
+		sourceColumn: company_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column request_item
+		dataType: string
+		lineageTag: bee5bb11-f948-4aba-9e6d-faa84b44114d
+		summarizeBy: none
+		sourceColumn: request_item
+
+		annotation SummarizationSetBy = Automatic
+
+	column request_purpose
+		dataType: string
+		lineageTag: 918a7ae8-8f53-4c3f-aee6-fbd40689e615
+		summarizeBy: none
+		sourceColumn: request_purpose
+
+		annotation SummarizationSetBy = Automatic
+
+	column related_issue
+		dataType: string
+		lineageTag: 6874f686-213e-4e51-b0d2-326ed6283169
+		summarizeBy: none
+		sourceColumn: related_issue
+
+		annotation SummarizationSetBy = Automatic
+
+	column priority
+		dataType: string
+		lineageTag: e2999022-bbac-4aac-8f61-10b74d6936eb
+		summarizeBy: none
+		sourceColumn: priority
+
+		annotation SummarizationSetBy = Automatic
+
+	column priority_sort
+		dataType: int64
+		formatString: 0
+		lineageTag: e0a7d579-4b2a-452c-a73b-ee9600121a76
+		summarizeBy: none
+		sourceColumn: priority_sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_area
+		dataType: string
+		lineageTag: 6dd20c9c-7809-487a-a06e-50027a1b21b0
+		summarizeBy: none
+		sourceColumn: review_area
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_trigger
+		dataType: string
+		lineageTag: 913f20c8-6631-4add-9eac-e2f9a3debc07
+		summarizeBy: none
+		sourceColumn: source_trigger
+
+		annotation SummarizationSetBy = Automatic
+
+	column note
+		dataType: string
+		lineageTag: accff94f-ecb4-4de3-b4c2-09d7528f69b3
+		summarizeBy: none
+		sourceColumn: note
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_type
+		dataType: string
+		lineageTag: 4158fa44-814d-43d2-a6e9-a8f6d2dbb930
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_year
+		dataType: int64
+		formatString: 0
+		lineageTag: fedce839-16ed-42b4-960b-b7a86f928832
+		summarizeBy: none
+		sourceColumn: latest_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactRequest = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\fact_tax_request.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"stock_code", type text}, {"company_name", type text}, {"request_item", type text}, {"request_purpose", type text}, {"related_issue", type text}, {"priority", type text}, {"priority_sort", Int64.Type}, {"review_area", type text}, {"source_trigger", type text}, {"note", type text}, {"source_type", type text}, {"latest_year", Int64.Type}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

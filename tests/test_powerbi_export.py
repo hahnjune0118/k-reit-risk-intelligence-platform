@@ -19,6 +19,7 @@ REQUIRED_COMPANY_FACTS = [
     "fact_tax_reconciliation.csv",
     "fact_ffo_stress.csv",
     "fact_tax_validation.csv",
+    "fact_metric_lineage.csv",
 ]
 RATIO_COLUMNS = {
     "holding_tax_to_ffo",
@@ -130,7 +131,10 @@ def test_powerbi_export_numeric_units_and_ratio_fields_are_powerbi_ready(powerbi
             or col.endswith("_sort")
             or col.endswith("_pct")
             or col in RATIO_COLUMNS
-            or col in {"year", "latest_year", "stage_order", "scenario_sort", "value"}
+            or col in {
+                "analysis_year", "financial_year", "year", "latest_year", "flow_months",
+                "annualization_factor", "stage_order", "scenario_sort", "value",
+            }
         ]
         for col in numeric_columns:
             values = _non_empty_values(df[col])
@@ -172,3 +176,62 @@ def test_powerbi_export_never_reuses_sk_asset_data_for_other_companies(powerbi_e
         assert "SK리츠" not in non_sk.get("company_name", pd.Series(dtype="object")).astype(str).tolist()
         for asset_name in sk_assets:
             assert asset_name not in rendered, f"{filename}:{asset_name}"
+
+
+def test_powerbi_export_ground_truth_schema_and_grain(powerbi_export):
+    output_dir, _ = powerbi_export
+    kpi = _read_csv(output_dir, "fact_reit_kpi.csv")
+    lineage = _read_csv(output_dir, "fact_metric_lineage.csv")
+    requests = _read_csv(output_dir, "fact_tax_request.csv")
+
+    assert not kpi.duplicated(["stock_code", "analysis_year", "period"]).any()
+    assert {"analysis_year", "period", "reporting_period", "financial_statement_scope"}.issubset(kpi.columns)
+    assert {"total_liabilities_eok", "book_nav_proxy_eok", "ffo_method", "financial_source_type", "tax_source_type"}.issubset(kpi.columns)
+    assert requests.duplicated(["stock_code", "latest_year", "request_item"]).sum() == 0
+    assert not lineage.duplicated(["stock_code", "analysis_year", "metric_name"]).any()
+    assert {
+        "metric_name", "source_type", "source_name", "source_date", "source_note",
+        "statement_scope", "is_fallback", "calculation_method", "limitation",
+    }.issubset(lineage.columns)
+
+
+def test_powerbi_export_matches_validated_representative_values(powerbi_export):
+    output_dir, _ = powerbi_export
+    kpi = _read_csv(output_dir, "fact_reit_kpi.csv").set_index("company_name")
+
+    assert kpi.loc["SK리츠", "borrowings_current_eok"] == pytest.approx(12_436.89893284)
+    assert kpi.loc["롯데리츠", "borrowings_current_eok"] == pytest.approx(6_032.73619875)
+    assert kpi.loc["ESR켄달스퀘어리츠", "borrowings_current_eok"] == pytest.approx(1_567.70141523)
+    assert kpi.loc["SK리츠", "book_nav_proxy_eok"] == pytest.approx((5_408_832.248718 - 3_382_988.684641) / 100)
+    assert pd.isna(kpi.loc["제이알글로벌리츠", "estimated_holding_tax_eok"])
+
+
+def test_powerbi_bridge_exports_display_ready_money_and_percent_values(powerbi_export):
+    output_dir, _ = powerbi_export
+    bridge = _read_csv(output_dir, "fact_tax_bridge.csv")
+
+    money_rows = bridge[bridge["unit"].eq("억원")]
+    ratio_rows = bridge[bridge["unit"].eq("%")]
+    assert not money_rows.empty
+    assert not ratio_rows.empty
+    assert money_rows["display_value"].astype(str).map(
+        lambda value: value.endswith("억원") or value == "데이터 부족"
+    ).all()
+    assert ratio_rows["display_value"].astype(str).map(
+        lambda value: value.endswith("%") or value == "데이터 부족"
+    ).all()
+
+
+def test_powerbi_page1_and_page2_base_holding_tax_values_reconcile(powerbi_export):
+    output_dir, _ = powerbi_export
+    kpi = _read_csv(output_dir, "fact_reit_kpi.csv").set_index("stock_code")
+    stress = _read_csv(output_dir, "fact_ffo_stress.csv")
+    base = stress[stress["scenario"].eq("기준 보유세")].set_index("stock_code")
+
+    for stock_code, kpi_row in kpi.iterrows():
+        if pd.isna(kpi_row["estimated_holding_tax_eok"]):
+            assert pd.isna(base.loc[stock_code, "amount_eok"])
+        else:
+            assert base.loc[stock_code, "amount_eok"] == pytest.approx(
+                kpi_row["estimated_holding_tax_eok"]
+            )

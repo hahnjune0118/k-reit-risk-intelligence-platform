@@ -41,25 +41,46 @@ def _snapshot_row_from_dart(master_row: pd.Series, history: pd.DataFrame) -> dic
     operating_revenue = latest.get("revenue_mn_krw")
     operating_income = latest.get("operating_income_mn_krw")
     net_income = latest.get("net_income_mn_krw")
-    ffo_proxy = net_income
+    operating_cash_flow = latest.get("operating_cash_flow_mn_krw")
+    ffo_proxy = operating_cash_flow
     return {
         "company_name": master_row["company_name"],
+        "stock_code": str(master_row.get("stock_code", "")).zfill(6),
+        "dart_corp_code": master_row.get("dart_corp_code", ""),
         "year": int(latest.get("year")),
         "period": f"{int(latest.get('year'))}A",
+        "period_end": latest.get("period_end", ""),
+        "reporting_period": f"{int(latest.get('year'))} annual",
+        "flow_months": 12,
+        "annualized": False,
+        "annualization_factor": 1,
+        "financial_statement_scope": latest.get("financial_statement_scope", ""),
         "total_assets": total_assets,
+        "total_liabilities": latest.get("total_liabilities_mn_krw", pd.NA),
+        "current_assets": latest.get("current_assets_mn_krw", pd.NA),
+        "cash_and_cash_equivalents": latest.get("cash_and_cash_equivalents_mn_krw", pd.NA),
+        "short_term_financial_assets": latest.get("short_term_financial_assets_mn_krw", pd.NA),
+        "short_term_financial_assets_unrestricted": False,
         "investment_property": investment_property,
         "borrowings_total": borrowings_total,
         "borrowings_current": pd.NA,
-        "interest_expense": pd.NA,
+        "interest_expense": latest.get("interest_expense_mn_krw", pd.NA),
         "operating_revenue": operating_revenue,
         "operating_income": operating_income,
         "net_income": net_income,
-        "operating_cash_flow": pd.NA,
+        "operating_cash_flow": operating_cash_flow,
         "ffo_proxy": ffo_proxy,
+        "ffo_method": "operating_cash_flow_proxy",
+        "ffo_limitation": "공식 FFO가 아니며 영업활동현금흐름 기반 proxy",
         "dividends": pd.NA,
         "estimated_holding_tax": pd.NA,
         "official_price_total": pd.NA,
-        "source_type": "dart_optional_refresh",
+        "source_type": "official_disclosure",
+        "source_name": latest.get("source_document", "OpenDART annual report"),
+        "source_date": latest.get("period_end", ""),
+        "source_note": "DART 연간 재무제표 자동 갱신. 보유세·공시가격은 별도 Tax Snapshot과 결합해야 합니다.",
+        "interest_bearing_debt_method": latest.get("interest_bearing_debt_method", ""),
+        "interest_bearing_debt_completeness": latest.get("interest_bearing_debt_completeness", "data_insufficient"),
         "last_updated": pd.Timestamp.today().strftime("%Y-%m-%d"),
     }
 

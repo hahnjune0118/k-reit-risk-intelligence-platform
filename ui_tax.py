@@ -49,7 +49,7 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
         c1, c2, c3, c4, c5 = st.columns(5)
         with c1:
             fair_market_value_ratio = st.slider(
-                "공정시장가액비율",
+                "Fallback 공정시장가액비율",
                 min_value=40.0,
                 max_value=100.0,
                 value=float(assumptions.get("fair_market_value_ratio", assumptions.get("land_fmv_ratio_pct", DEFAULT_TAX_ASSUMPTIONS_V14["fair_market_value_ratio"]))),
@@ -58,7 +58,7 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
             )
         with c2:
             effective_holding_tax_rate = st.slider(
-                "실효 보유세율",
+                "Fallback 실효 보유세율",
                 min_value=0.1,
                 max_value=3.0,
                 value=float(assumptions.get("effective_holding_tax_rate", DEFAULT_TAX_ASSUMPTIONS_V14["effective_holding_tax_rate"])),
@@ -94,7 +94,8 @@ def _render_tax_assumption_panel(assumptions: dict, scenario: dict) -> dict:
                 key="v14_ffo_stress_assumption",
             )
         st.caption(
-            "가정은 신고 목적 세액 계산이 아니라 보유세 부담 방향성, FFO proxy 현금유출, 요청자료 우선순위를 보기 위한 예비 분석 기준입니다."
+            "Fallback 세율은 저장된 추정세액이 없을 때만 적용합니다. Snapshot 세액이 있으면 과세표준에서 역산한 실효세율을 브리지에 표시합니다. "
+            "모든 가정은 신고 목적 세액 계산이 아닌 예비 분석 기준입니다."
         )
     return {
         "fair_market_value_ratio": fair_market_value_ratio,
@@ -161,11 +162,15 @@ def _render_validation_panel(validation: dict):
                     {"항목": "자산별 보유세 자료", "값": "있음" if validation.get("asset_level_tax_data_exists") else "부족"},
                     {"항목": "FFO denominator", "값": "있음" if validation.get("ffo_exists") else "부족"},
                     {"항목": "공시가격 입력값", "값": "있음" if validation.get("official_price_exists") else "부족"},
+                    {"항목": "세액·세율 reconciliation", "값": "일치" if validation.get("rate_reconciled") else "불일치"},
+                    {"항목": "기준기간 일치", "값": "일치" if validation.get("period_aligned") else "상이"},
+                    {"항목": "납세의무자 확인", "값": "확인" if validation.get("taxpayer_confirmed") else "미확인"},
+                    {"항목": "세목 범위 확인", "값": "확인" if validation.get("tax_components_complete") else "미확인"},
                 ]
             ),
             width="stretch",
             hide_index=True,
-            height=190,
+            height=300,
         )
         warnings = validation.get("warnings", [])
         if warnings:
@@ -252,21 +257,31 @@ def render_tax_mode(
     st.markdown("### Tax Summary")
     latest_year = int(tax_history["year"].max())
     first_year = int(tax_history["year"].min())
+    has_actual_history = tax_history["year"].nunique() > 1 and not tax_history.get(
+        "history_kind", pd.Series("", index=tax_history.index)
+    ).eq("snapshot_single_period").all()
     latest_total_tax = annual_summary.loc[annual_summary["year"] == latest_year, "보유세_추정_백만원"].iloc[0]
     first_total_tax = annual_summary.loc[annual_summary["year"] == first_year, "보유세_추정_백만원"].iloc[0]
-    cumulative_increase = (latest_total_tax / first_total_tax - 1) * 100 if first_total_tax else pd.NA
+    cumulative_increase = (
+        (latest_total_tax / first_total_tax - 1) * 100
+        if has_actual_history and pd.notna(first_total_tax) and first_total_tax != 0
+        else pd.NA
+    )
     latest_tax_base = annual_summary.loc[annual_summary["year"] == latest_year, "토지_과세표준_백만원"].iloc[0]
 
     m1, m2, m3, m4 = st.columns(4)
     m1.metric(f"{latest_year}E 보유세", format_bn_krw(latest_total_tax))
-    m2.metric("5년 누적 증가율", format_pct_from_100(cumulative_increase))
+    m2.metric("과거 추이", format_pct_from_100(cumulative_increase) if has_actual_history else "데이터 부족")
     m3.metric("추정 과세표준", format_bn_krw(latest_tax_base))
     m4.metric("자료 기준", source_summary.get("korean_label", source_summary["source_type"]))
 
     c1, c2 = st.columns([1.05, 0.95])
     with c1:
-        fig_tax_trend = px.line(annual_summary, x="year", y="보유세_추정_백만원", markers=True, title="최근 5년 보유세 추정액")
-        st.plotly_chart(compact_fig(fig_tax_trend, 260), width="stretch")
+        if has_actual_history:
+            fig_tax_trend = px.line(annual_summary, x="year", y="보유세_추정_백만원", markers=True, title="확인된 연도별 보유세 추이")
+            st.plotly_chart(compact_fig(fig_tax_trend, 260), width="stretch")
+        else:
+            st.info("실제 연도별 고지자료가 없어 과거 보유세 시계열을 생성하지 않습니다. 최근 가용 Snapshot만 표시합니다.")
     with c2:
         latest_asset_tax = tax_history[tax_history["year"] == latest_year].copy().sort_values("보유세_추정_백만원", ascending=False)
         fig_asset_tax = px.bar(
@@ -280,7 +295,7 @@ def render_tax_mode(
         st.plotly_chart(compact_fig(fig_asset_tax, 260), width="stretch")
 
     st.markdown("## 보유세 추정 브리지")
-    st.caption("source_type별 신뢰수준과 계산 한계를 함께 표시합니다. 회사 전체 추정 행은 자산별 고지세액 대사 전까지 예비 분석입니다.")
+    st.caption("source_type별 신뢰수준, 역산 실효세율, 계산 모델과 세목 범위를 함께 표시합니다. 회사 전체 추정 행은 자산별 고지세액 대사 전까지 예비 분석입니다.")
     st.dataframe(tax_bridge, width="stretch", hide_index=True, height=230)
 
     _render_peer_tax_section(peer_context)
@@ -367,6 +382,7 @@ def render_tax_mode(
         st.dataframe(automation_summary, width="stretch", hide_index=True, height=170)
 
     st.warning(
-        "본 보유세 분석은 신고 목적의 확정 세액 산출, 법률의견, 투자 추천이 아니라 예비 검토입니다. "
+        "본 분석은 신고 목적의 확정 세액 산출이 아니라 공개자료와 Snapshot에 기반한 예비 추정입니다. "
+        "최종 판단에는 원자료 확인과 세무 전문가 검토가 필요합니다. "
         "실제 고지세액은 자산별 과세구분, 지자체 조례, 감면, 세부담상한, 건축물 시가표준액, 리츠별 보유 구조에 따라 달라질 수 있습니다."
     )

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "p2_issue_matrix",
+  "position": {
+    "x": 20,
+    "y": 240,
+    "z": 300,
+    "height": 430,
+    "width": 760,
+    "tabOrder": 300
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactIssue"
+                    }
+                  },
+                  "Property": "tax_issue"
+                }
+              },
+              "queryRef": "FactIssue.tax_issue",
+              "nativeQueryRef": "tax_issue"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactIssue"
+                    }
+                  },
+                  "Property": "risk_level"
+                }
+              },
+              "queryRef": "FactIssue.risk_level",
+              "nativeQueryRef": "risk_level"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactIssue"
+                    }
+                  },
+                  "Property": "occurrence_basis"
+                }
+              },
+              "queryRef": "FactIssue.occurrence_basis",
+              "nativeQueryRef": "occurrence_basis"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactIssue"
+                    }
+                  },
+                  "Property": "review_direction"
+                }
+              },
+              "queryRef": "FactIssue.review_direction",
+              "nativeQueryRef": "review_direction"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactIssue"
+                    }
+                  },
+                  "Property": "evidence_request"
+                }
+              },
+              "queryRef": "FactIssue.evidence_request",
+              "nativeQueryRef": "evidence_request"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactIssue"
+                    }
+                  },
+                  "Property": "source_type"
+                }
+              },
+              "queryRef": "FactIssue.source_type",
+              "nativeQueryRef": "source_type"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Tax Issue Matrix'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

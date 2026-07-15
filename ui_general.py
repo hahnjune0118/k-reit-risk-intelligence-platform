@@ -3,6 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 from calculations_scenario import korean_metric_label, korean_risk_label
+from data_source_policy import source_type_label
 from formatting import format_pct_from_100, format_ratio, format_score, format_trn_krw_from_mn
 from api_manager import sanitize_secret_text
 from ui_common import compact_fig, fmt_metric_value, fmt_mn_to_bn, mode_specific_action_items, render_selected_company_header
@@ -85,7 +86,8 @@ def _render_peer_benchmark_overview(peer_context: dict | None):
     )
     st.caption(
         f"대상 리츠: {target_company} / Peer Group: {peer_context.get('peer_group', '전체 상장리츠')} / "
-        f"Snapshot 기준: data/reit_peer_snapshot.csv / source_type={peer_summary.get('source_type', 'unknown')} / "
+        f"Snapshot 기준: data/reit_peer_snapshot.csv / 데이터 출처: "
+        f"{source_type_label(peer_summary.get('source_type'))} / "
         "실시간 API 호출 실패 시 예시 데이터 사용"
     )
 
@@ -203,7 +205,11 @@ def render_general_dashboard(
     k2.metric("시나리오 후 FFO proxy", fmt_mn_to_bn(scenario["stressed_ffo"]), f"{scenario['ffo_decline_pct']:.1f}%" if pd.notna(scenario["ffo_decline_pct"]) else "N/A")
     k3.metric("FFO 이자감당력 proxy", format_ratio(scenario["stressed_icr"]), f"현재 {format_ratio(scenario['reported_icr'])}")
     k4.metric("장부NAV proxy 영향", format_pct_from_100(scenario["nav_change_pct"]), fmt_mn_to_bn(scenario["total_value_change"]))
-    k5.metric("LTV proxy", format_pct_from_100(scenario["stressed_ltv_proxy"]), f"현재 {format_pct_from_100(scenario['base_ltv_proxy'])}")
+    k5.metric(
+        "투자부동산 가치 기준 차입비율 proxy",
+        format_pct_from_100(scenario["stressed_ltv_proxy"]),
+        f"현재 {format_pct_from_100(scenario['base_ltv_proxy'])}",
+    )
 
     _render_peer_benchmark_overview(peer_context)
 

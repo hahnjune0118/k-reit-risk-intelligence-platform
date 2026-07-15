@@ -1,0 +1,17 @@
+table pFFODecline
+	lineageTag: auto-pffodecline
+
+	column pFFODecline
+		dataType: int64
+		formatString: 0
+		lineageTag: 80f90b92-80e0-429f-aeff-efcac604697a
+		summarizeBy: none
+		sourceColumn: [pFFODecline]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition pFFODecline = calculated
+		mode: import
+		source = SELECTCOLUMNS(GENERATESERIES(0, 20, 1), "pFFODecline", [Value])
+
+	annotation PBI_ResultType = Table

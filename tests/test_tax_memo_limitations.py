@@ -45,7 +45,7 @@ def test_tax_review_memo_always_contains_limitation_wording():
         ffo_stress,
     )
 
-    assert "## 6. 제한 및 유의사항" in memo
+    assert "## 9. 제한 및 유의사항" in memo
     assert "확정 세액" in memo
     assert "법률의견" in memo
     assert "원자료 확인" in memo

@@ -106,16 +106,25 @@ def summarize_holding_tax_history(tax_history: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
     latest_year = int(tax_history["year"].max())
     first_year = int(tax_history["year"].min())
-    agg = tax_history.groupby("year", as_index=False).agg(
-        보유세_추정_백만원=("보유세_추정_백만원", "sum"),
-        토지_시가표준액_백만원=("토지_시가표준액_백만원", "sum"),
-        토지_과세표준_백만원=("토지_과세표준_백만원", "sum"),
-        재산세본세_백만원=("재산세본세_백만원", "sum"),
-        도시지역분_백만원=("도시지역분_백만원", "sum"),
-        지방교육세_백만원=("지방교육세_백만원", "sum"),
-    )
+    value_columns = [
+        "보유세_추정_백만원",
+        "토지_시가표준액_백만원",
+        "토지_과세표준_백만원",
+        "재산세본세_백만원",
+        "도시지역분_백만원",
+        "지방교육세_백만원",
+    ]
+    for column in value_columns:
+        if column not in tax_history.columns:
+            tax_history = tax_history.copy()
+            tax_history[column] = pd.NA
+    agg = tax_history.groupby("year", as_index=False)[value_columns].sum(min_count=1)
     first_tax = agg.loc[agg["year"] == first_year, "보유세_추정_백만원"].iloc[0]
-    agg["누적증가율_%"] = (agg["보유세_추정_백만원"] / first_tax - 1) * 100 if first_tax else pd.NA
+    agg["누적증가율_%"] = (
+        (agg["보유세_추정_백만원"] / first_tax - 1) * 100
+        if pd.notna(first_tax) and first_tax != 0
+        else pd.NA
+    )
     agg["전년대비증가율_%"] = agg["보유세_추정_백만원"].pct_change() * 100
     return agg
 

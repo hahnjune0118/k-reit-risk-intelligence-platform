@@ -1,0 +1,108 @@
+table FactStress
+	lineageTag: auto-factstress
+
+	column stock_code
+		dataType: string
+		lineageTag: c20f82b2-7f71-4215-a6e9-f066e7a8f754
+		summarizeBy: none
+		sourceColumn: stock_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_name
+		dataType: string
+		lineageTag: 5fa77458-9883-45f2-b61c-8d53fdbb3926
+		summarizeBy: none
+		sourceColumn: company_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column scenario
+		dataType: string
+		lineageTag: 604d91c4-a456-4e16-be00-ac7b8f7b4885
+		summarizeBy: none
+		sourceColumn: scenario
+
+		annotation SummarizationSetBy = Automatic
+
+	column scenario_sort
+		dataType: int64
+		formatString: 0
+		lineageTag: cb5d1095-d350-448c-bd82-83663dea2aad
+		summarizeBy: none
+		sourceColumn: scenario_sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column amount_eok
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 01f3ab4f-f28c-40be-918c-02c78fa614b2
+		summarizeBy: sum
+		sourceColumn: amount_eok
+
+		annotation SummarizationSetBy = Automatic
+
+	column ffo_ratio
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 54d6f461-a020-44a7-9383-aad45e04639e
+		summarizeBy: none
+		sourceColumn: ffo_ratio
+
+		annotation SummarizationSetBy = Automatic
+
+	column interpretation
+		dataType: string
+		lineageTag: 3d9b7627-e1f1-4679-a702-fc098a8960ed
+		summarizeBy: none
+		sourceColumn: interpretation
+
+		annotation SummarizationSetBy = Automatic
+
+	column holding_tax_increase_pct
+		dataType: double
+		formatString: 0.0
+		lineageTag: 5bd7aa6d-49b6-4679-9c2d-8043fb204f51
+		summarizeBy: none
+		sourceColumn: holding_tax_increase_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column ffo_stress_pct
+		dataType: double
+		formatString: 0.0
+		lineageTag: 441b9452-8930-442a-ae0a-16c8e0f26068
+		summarizeBy: none
+		sourceColumn: ffo_stress_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_type
+		dataType: string
+		lineageTag: 297311dd-b014-418e-9cdd-0fca29bacdf1
+		summarizeBy: none
+		sourceColumn: source_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 4a443c88-f0e9-4d31-8ed8-46654e54a6f7
+		summarizeBy: none
+		sourceColumn: latest_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactStress = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pExportFolder & "\fact_ffo_stress.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				  PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{"stock_code", type text}, {"company_name", type text}, {"scenario", type text}, {"scenario_sort", Int64.Type}, {"amount_eok", type number}, {"ffo_ratio", type number}, {"interpretation", type text}, {"holding_tax_increase_pct", type number}, {"ffo_stress_pct", type number}, {"source_type", type text}, {"latest_year", Int64.Type}}, "ko-KR")
+				in
+				  ChangedType
+
+	annotation PBI_ResultType = Table

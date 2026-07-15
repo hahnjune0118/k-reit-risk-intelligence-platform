@@ -1,0 +1,32 @@
+model Model
+	culture: ko-KR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: ko-KR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["pExportFolder","DimREIT","DimSource","DimPeriod","FactKPI","FactBridge","FactIssue","FactRequest","FactReconciliation","FactStress","FactValidation","FactLineage"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table DimREIT
+ref table DimSource
+ref table DimPeriod
+ref table FactKPI
+ref table FactBridge
+ref table FactIssue
+ref table FactRequest
+ref table FactReconciliation
+ref table FactStress
+ref table FactValidation
+ref table FactLineage
+ref table _Measures
+ref table pHoldingTaxIncrease
+ref table pFFODecline
+
+ref expression pExportFolder
+
+ref cultureInfo ko-KR

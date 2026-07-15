@@ -215,12 +215,12 @@
     {
       "id": "official_price_growth_placeholder",
       "label": "공시가격 상승률 추가 검토",
-      "metric": "holding_tax_to_ffo",
+      "metric": "official_price_growth_5y",
       "risk_direction": "high_is_bad",
       "yellow_percentile": 0.75,
       "red_percentile": 0.95,
-      "yellow_absolute": 0.30,
-      "red_absolute": 0.40,
+      "yellow_absolute": 10.0,
+      "red_absolute": 15.0,
       "area": "Tax",
       "explanation_ko": "공시가격 상승률은 향후 자산별 과거 고지자료가 확장되면 별도 규칙으로 고도화할 예정입니다.",
       "tax_review_points": [

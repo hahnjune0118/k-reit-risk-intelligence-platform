@@ -7,7 +7,7 @@ v14.1은 v14의 Tax Workflow Control 구조를 유지하면서 핵심 지표의 
 - FFO는 공식 공시 FFO가 아니라 `FFO proxy`로 표시
 - NAV는 시가평가 NAV가 아니라 `장부기준 NAV proxy`로 표시
 - DART 재무제표 매핑에서 총부채와 이자부 차입부채를 분리
-- 충당부채는 장부기준 NAV proxy의 총부채에는 포함될 수 있지만 Gross LTV, 순차입금, 금리 shock 대상에서는 제외
+- 충당부채는 장부기준 NAV proxy의 총부채에는 포함될 수 있지만 총자산 기준 차입비율, 순차입금, 금리 shock 대상에서는 제외
 - Methodology 화면에 핵심 지표 정의표와 지표별 source lineage 표 추가
 
 ## v14 - Tax Workflow Control & Validation

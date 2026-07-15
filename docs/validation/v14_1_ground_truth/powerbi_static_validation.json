@@ -1,0 +1,54 @@
+{
+  "status": "passed",
+  "validated_at": "2026-07-15T09:08:17+09:00",
+  "error_count": 0,
+  "warning_count": 0,
+  "errors": [],
+  "warnings": [],
+  "checks": {
+    "required_files": {
+      "passed": true,
+      "missing": []
+    },
+    "semantic_objects": {
+      "passed": true,
+      "table_count": 14,
+      "measure_count": 51,
+      "duplicate_measures": []
+    },
+    "model_references": {
+      "passed": true,
+      "missing": []
+    },
+    "csv_tmdl_schema": {
+      "passed": true,
+      "issues": []
+    },
+    "relationships": {
+      "passed": true,
+      "count": 16,
+      "issues": []
+    },
+    "dax_column_references": {
+      "passed": true,
+      "issues": []
+    },
+    "report_definition": {
+      "passed": true,
+      "visual_count": 41,
+      "json_errors": [],
+      "broken_references": [],
+      "title_issues": [],
+      "raw_source_visuals": []
+    },
+    "portable_paths": {
+      "passed": true,
+      "hits": []
+    },
+    "company_period_slicers": {
+      "passed": true,
+      "missing": [],
+      "sync_issues": []
+    }
+  }
+}

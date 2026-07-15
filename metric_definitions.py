@@ -36,12 +36,9 @@ def safe_divide(numerator: Any, denominator: Any) -> Any:
 def derive_book_nav_proxy(total_assets: Any, total_liabilities: Any, total_equity: Any = pd.NA) -> tuple[Any, str]:
     assets = _num(total_assets)
     liabilities = _num(total_liabilities)
-    equity = _num(total_equity)
     if pd.notna(assets) and pd.notna(liabilities):
         return assets - liabilities, "총자산 - 총부채"
-    if pd.notna(equity):
-        return equity, "자본총계"
-    return pd.NA, "총부채 또는 자본총계 부족"
+    return pd.NA, "총자산 또는 총부채 부족"
 
 
 def derive_interest_bearing_debt(
@@ -59,27 +56,32 @@ def derive_interest_bearing_debt(
         ("사채", _num(bonds)),
         ("리스부채", _num(lease_liabilities)),
     ]
-    available = [(name, value) for name, value in components if pd.notna(value)]
-    if available:
-        return sum(value for _name, value in available), " + ".join(name for name, _value in available)
+    if all(pd.notna(value) for _name, value in components):
+        return sum(value for _name, value in components), " + ".join(name for name, _value in components)
     fallback = _num(fallback_interest_bearing_debt)
     if pd.notna(fallback):
-        return fallback, "이자부 차입부채 fallback"
-    return pd.NA, "이자부 차입부채 구성항목 부족"
+        return fallback, "구성항목 완전성 미확인 / 검증된 이자부 차입부채 총액 fallback"
+    return pd.NA, "이자부 차입부채 구성항목 완전성 부족"
 
 
 def derive_net_debt(
     interest_bearing_debt: Any,
     cash_and_cash_equivalents: Any = pd.NA,
     short_term_financial_assets: Any = pd.NA,
+    short_term_financial_assets_unrestricted: bool = False,
 ) -> tuple[Any, str]:
     debt = _num(interest_bearing_debt)
     cash = _num(cash_and_cash_equivalents)
     short_assets = _num(short_term_financial_assets)
     if pd.isna(debt) or pd.isna(cash):
         return pd.NA, "이자부 차입부채 또는 현금및현금성자산 부족"
-    available_financial_assets = 0 if pd.isna(short_assets) else short_assets
-    return debt - cash - available_financial_assets, "이자부 차입부채 - 현금및현금성자산 - 즉시 사용 가능한 단기금융자산"
+    available_financial_assets = short_assets if short_term_financial_assets_unrestricted and pd.notna(short_assets) else 0
+    method = "이자부 차입부채 - 현금및현금성자산"
+    if short_term_financial_assets_unrestricted and pd.notna(short_assets):
+        method += " - 사용제한 없음이 확인된 단기금융자산"
+    elif pd.notna(short_assets):
+        method += " / 단기금융자산은 사용제한 미확인으로 차감 제외"
+    return debt - cash - available_financial_assets, method
 
 
 def derive_ffo_proxy(
@@ -88,16 +90,10 @@ def derive_ffo_proxy(
     operating_income: Any = pd.NA,
     net_income: Any = pd.NA,
 ) -> tuple[Any, str]:
-    for value, method in [
-        (snapshot_ffo_proxy, "Snapshot ffo_proxy"),
-        (operating_cash_flow, "영업활동현금흐름"),
-        (operating_income, "영업이익"),
-        (net_income, "당기순이익"),
-    ]:
-        converted = _num(value)
-        if pd.notna(converted):
-            return converted, method
-    return pd.NA, "FFO proxy 산정 입력값 부족"
+    cash_flow = _num(operating_cash_flow)
+    if pd.notna(cash_flow):
+        return cash_flow, "영업활동현금흐름 기반 FFO proxy"
+    return pd.NA, "영업활동현금흐름 부족 / FFO proxy 미산정"
 
 
 def is_quarter_point_rate(value: Any) -> bool:
@@ -113,7 +109,7 @@ METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
         category="자산·부채 및 NAV",
         display_name="장부기준 NAV proxy",
         definition="재무상태표 장부가액 기준의 순자산 proxy입니다.",
-        formula="총자산 - 총부채. 총자산·총부채를 모두 확보하지 못하면 자본총계를 보조 입력으로 사용합니다.",
+        formula="총자산 - 총부채. 두 입력 중 하나라도 없으면 계산하지 않습니다.",
         data_basis="DART 재무제표는 연결재무제표(CFS)를 우선하고, 연결 자료가 없으면 별도재무제표(OFS)로 fallback합니다. Snapshot은 nav 컬럼이 명시된 경우에만 사용합니다.",
         included="총부채 전체: 차입금, 사채, 리스부채, 매입채무, 충당부채, 이연법인세부채, 기타부채",
         excluded="투자부동산 최신 감정가, 매각비용, 잠재 세금효과, 비공개 시가 조정",
@@ -125,24 +121,24 @@ METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
         category="수익성과 현금흐름",
         display_name="FFO proxy",
         definition="리츠의 반복적 현금창출력을 비교하기 위한 proxy입니다.",
-        formula="Snapshot은 ffo_proxy 컬럼을 사용합니다. DART 정규화 자료는 영업활동현금흐름을 우선하고, 없으면 영업이익, 그마저 없으면 당기순이익을 사용합니다.",
+        formula="영업활동현금흐름을 사용합니다. 부분기간 공시값은 연환산 여부와 배수를 별도 metadata로 표시합니다.",
         data_basis="현재 공개 데이터에는 투자부동산 감가상각비, 처분손익, 일회성 비현금 조정항목이 회사별로 충분히 구조화되어 있지 않습니다.",
-        included="확보 가능한 ffo_proxy, 영업활동현금흐름, 영업이익 또는 당기순이익",
+        included="공시 또는 Snapshot에서 확인되는 영업활동현금흐름",
         excluded="확인되지 않은 감가상각비 가산, 처분손익 제거, 운전자본 조정, 기타 비공개 조정",
         interpretation="배당 여력, 보유세 현금유출, 이자부담을 비교하는 예비 지표입니다.",
         limitation="본 지표는 리츠가 공식적으로 공시한 FFO와 동일하지 않을 수 있으며, 확보 가능한 공시 계정과 현금흐름 자료를 이용한 비교 목적의 proxy입니다.",
     ),
     MetricDefinition(
-        key="gross_ltv",
+        key="borrowings_to_total_assets",
         category="REITs 핵심 지표",
-        display_name="Gross LTV",
+        display_name="총자산 기준 차입비율",
         definition="총자산 대비 이자부 차입부채 부담을 나타내는 비율입니다.",
         formula="이자부 차입부채 / 총자산",
         data_basis="DART에서는 단기차입금, 유동성장기차입금, 장기차입금, 사채, 리스부채를 구성항목으로 사용합니다. Snapshot에서는 borrowings_total을 이자부 차입부채 proxy로 사용합니다.",
         included="단기차입금, 유동성장기차입금, 장기차입금, 사채, 분석정책상 포함한 리스부채",
         excluded="충당부채, 이연법인세부채, 매입채무, 미지급비용, 기타 비차입부채",
         interpretation="차입 구조와 자본 여력을 비교하는 예비 신호입니다.",
-        limitation="담보가치 기준 LTV가 아니라 총자산 기준 Gross LTV입니다. 담보별 covenant LTV와 다를 수 있습니다.",
+        limitation="부동산 담보가치 기준 LTV가 아니라 회사 총자산 대비 이자부 차입부채 비율입니다.",
     ),
     MetricDefinition(
         key="net_debt",
@@ -254,7 +250,7 @@ def metric_lineage_table() -> pd.DataFrame:
         [
             {
                 "지표": "장부기준 NAV proxy",
-                "실제 계산식": "총자산 - 총부채. 부족 시 자본총계 보조 사용",
+                "실제 계산식": "총자산 - 총부채. 입력 부족 시 미산정",
                 "우선 데이터 소스": "DART API",
                 "fallback": "Snapshot nav 컬럼 또는 데이터 부족",
                 "연결/별도": "연결 우선, 별도 fallback",
@@ -262,14 +258,14 @@ def metric_lineage_table() -> pd.DataFrame:
             },
             {
                 "지표": "FFO proxy",
-                "실제 계산식": "Snapshot ffo_proxy 또는 DART 영업활동현금흐름 > 영업이익 > 당기순이익",
+                "실제 계산식": "영업활동현금흐름 기반 FFO proxy. 부분기간이면 연환산 metadata 표시",
                 "우선 데이터 소스": "DART API",
                 "fallback": "Peer Snapshot ffo_proxy",
                 "연결/별도": "연결 우선, 별도 fallback",
                 "추정 여부": "Proxy",
             },
             {
-                "지표": "Gross LTV",
+                "지표": "총자산 기준 차입비율",
                 "실제 계산식": "이자부 차입부채 / 총자산",
                 "우선 데이터 소스": "DART API",
                 "fallback": "Peer Snapshot borrowings_total / total_assets",

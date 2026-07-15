@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from calculations_holding_tax_bridge import calculate_estimated_holding_tax, calculate_estimated_tax_base
 from config import DATA_DIR
 from data_source_policy import contains_estimate_source, get_source_policy, normalize_source_type
 
@@ -19,6 +20,8 @@ NUMERIC_TAX_COLUMNS = [
     "estimated_holding_tax",
     "official_price_growth_5y",
     "holding_tax_to_ffo",
+    "fair_market_value_ratio",
+    "effective_holding_tax_rate",
     "latest_year",
 ]
 
@@ -37,7 +40,12 @@ def load_tax_snapshot(path: str | Path = TAX_SNAPSHOT_PATH) -> pd.DataFrame:
     for col in NUMERIC_TAX_COLUMNS:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
-    for col in ["company_name", "stock_code", "dart_corp_code", "asset_name", "region", "asset_type", "source_type", "source_note"]:
+    for col in [
+        "company_name", "stock_code", "dart_corp_code", "asset_name", "region", "asset_type",
+        "calculation_model", "formula_version", "tax_scope", "tax_component_status",
+        "legal_owner_status", "taxpayer_status", "tax_pass_through_status", "pnu",
+        "source_type", "source_name", "source_date", "source_note",
+    ]:
         if col not in df.columns:
             df[col] = ""
     return df
@@ -87,6 +95,13 @@ def estimate_company_holding_tax_from_peer_snapshot(
                     "estimated_holding_tax": pd.NA,
                     "official_price_growth_5y": pd.NA,
                     "holding_tax_to_ffo": pd.NA,
+                    "calculation_model": "data_insufficient",
+                    "formula_version": "holding_tax_screening_v14_1",
+                    "tax_scope": "data_insufficient",
+                    "tax_component_status": "data_insufficient",
+                    "legal_owner_status": "data_insufficient",
+                    "taxpayer_status": "data_insufficient",
+                    "tax_pass_through_status": "data_insufficient",
                     "source_type": "data_insufficient",
                     "source_note": DATA_MISSING_NOTE,
                     "latest_year": pd.NA,
@@ -100,18 +115,52 @@ def estimate_company_holding_tax_from_peer_snapshot(
     source_type = "peer_snapshot_estimate"
     source_note = COMPANY_LEVEL_FALLBACK_NOTE
 
+    if str(profile.get("main_region", "")).strip().lower() == "overseas":
+        return pd.DataFrame(
+            [
+                {
+                    "company_name": company_name,
+                    "stock_code": str(profile.get("stock_code", "")),
+                    "dart_corp_code": profile.get("dart_corp_code", ""),
+                    "asset_name": COMPANY_LEVEL_FALLBACK_ASSET_NAME,
+                    "region": "Overseas",
+                    "asset_type": profile.get("main_asset_type", ""),
+                    "book_value": investment_property,
+                    "official_price": pd.NA,
+                    "estimated_tax_base": pd.NA,
+                    "estimated_holding_tax": pd.NA,
+                    "official_price_growth_5y": pd.NA,
+                    "holding_tax_to_ffo": pd.NA,
+                    "calculation_model": "data_insufficient",
+                    "formula_version": "holding_tax_screening_v14_1",
+                    "tax_scope": "overseas_asset_not_modeled",
+                    "tax_component_status": "data_insufficient",
+                    "legal_owner_status": "data_insufficient",
+                    "taxpayer_status": "data_insufficient",
+                    "tax_pass_through_status": "data_insufficient",
+                    "source_type": "data_insufficient",
+                    "source_note": "해외자산 중심 회사에는 국내 공시가격·보유세 산식을 적용하지 않습니다.",
+                    "latest_year": row.get("year", pd.NA),
+                }
+            ]
+        )
+
     if pd.isna(estimated_tax) and pd.notna(official_price):
-        estimated_tax = official_price * 0.011
+        tax_base = calculate_estimated_tax_base(official_price, 0.70)
+        estimated_tax = calculate_estimated_holding_tax(tax_base, 0.011)
         source_type = "official_price_estimate"
-        source_note = "보유세 직접 추정값이 부족하여 공시가격 총액 기반 보수적 proxy 적용"
+        source_note = "보유세 직접 추정값이 부족하여 공시가격×70%×1.1% screening proxy 적용"
     if pd.isna(official_price) and pd.notna(investment_property):
         official_price = investment_property * 0.55
         if pd.isna(estimated_tax):
-            estimated_tax = official_price * 0.011
+            tax_base = calculate_estimated_tax_base(official_price, 0.70)
+            estimated_tax = calculate_estimated_holding_tax(tax_base, 0.011)
         source_type = "investment_property_estimate"
         source_note = "공시가격과 자산별 상세자료가 부족하여 투자부동산 장부금액 기반 proxy 적용"
 
     ffo = _num(row.get("ffo_proxy", pd.NA))
+    tax_base = calculate_estimated_tax_base(official_price, 0.70)
+    effective_rate = estimated_tax / tax_base if pd.notna(estimated_tax) and pd.notna(tax_base) and tax_base else pd.NA
     return pd.DataFrame(
         [
             {
@@ -123,10 +172,19 @@ def estimate_company_holding_tax_from_peer_snapshot(
                 "asset_type": profile.get("main_asset_type", ""),
                 "book_value": investment_property,
                 "official_price": official_price,
-                "estimated_tax_base": official_price * 0.70 if pd.notna(official_price) else pd.NA,
+                "estimated_tax_base": tax_base,
                 "estimated_holding_tax": estimated_tax,
-                "official_price_growth_5y": 10.0,
+                "official_price_growth_5y": pd.NA,
                 "holding_tax_to_ffo": estimated_tax / ffo if pd.notna(estimated_tax) and pd.notna(ffo) and ffo else pd.NA,
+                "calculation_model": "effective-rate estimate" if pd.notna(estimated_tax) else "data_insufficient",
+                "fair_market_value_ratio": 0.70,
+                "effective_holding_tax_rate": effective_rate,
+                "formula_version": "holding_tax_screening_v14_1",
+                "tax_scope": "company_level_screening_total",
+                "tax_component_status": "data_insufficient",
+                "legal_owner_status": "data_insufficient",
+                "taxpayer_status": "data_insufficient",
+                "tax_pass_through_status": "data_insufficient",
                 "source_type": source_type,
                 "source_note": source_note,
                 "latest_year": row.get("year", pd.NA),
@@ -149,9 +207,25 @@ def build_company_tax_dataset(
 
     company_tax = company_tax.copy()
     company_tax["company_name"] = company_name
-    for col in ["source_type", "source_note", "asset_name", "region"]:
+    defaults = {
+        "source_type": "data_insufficient",
+        "source_name": "",
+        "source_date": "",
+        "source_note": "",
+        "asset_name": COMPANY_LEVEL_FALLBACK_ASSET_NAME,
+        "region": COMPANY_LEVEL_FALLBACK_REGION,
+        "calculation_model": "data_insufficient",
+        "formula_version": "holding_tax_screening_v14_1",
+        "tax_scope": "data_insufficient",
+        "tax_component_status": "data_insufficient",
+        "legal_owner_status": "data_insufficient",
+        "taxpayer_status": "data_insufficient",
+        "tax_pass_through_status": "data_insufficient",
+        "pnu": "",
+    }
+    for col, default in defaults.items():
         if col not in company_tax.columns:
-            company_tax[col] = ""
+            company_tax[col] = default
     fallback_mask = company_tax["asset_name"].astype(str).str.strip().eq(COMPANY_LEVEL_FALLBACK_ASSET_NAME)
     company_tax.loc[fallback_mask, "region"] = COMPANY_LEVEL_FALLBACK_REGION
     company_tax.loc[fallback_mask & company_tax["source_type"].astype(str).str.strip().eq(""), "source_type"] = "peer_snapshot_estimate"
@@ -192,10 +266,10 @@ def get_tax_source_summary(company_name: str, company_tax_data: pd.DataFrame) ->
     source_type_text = ", ".join(source_types) or "data_insufficient"
     policy = get_source_policy(source_type_text)
     is_estimated = fallback_assets.any() or contains_estimate_source(source_type_text)
-    if fallback_assets.any():
-        scope_label = "회사 전체 Snapshot 기반 추정"
-    elif policy.source_type == "data_insufficient":
+    if policy.source_type == "data_insufficient":
         scope_label = "데이터 부족"
+    elif fallback_assets.any():
+        scope_label = "회사 전체 Snapshot 기반 추정"
     elif is_estimated:
         scope_label = "예비 추정"
     else:
@@ -236,47 +310,48 @@ def build_tax_history_from_company_tax_data(
     rows = []
     for _, row in company_tax_data.iterrows():
         latest_year = int(row.get("latest_year", default_latest_year)) if pd.notna(row.get("latest_year", pd.NA)) else default_latest_year
-        start_year = latest_year - years_back + 1
-        growth_pct = row.get("official_price_growth_5y", 10.0)
-        annual_growth = (1 + float(growth_pct if pd.notna(growth_pct) else 10.0) / 100) ** (1 / max(years_back - 1, 1)) - 1
         latest_official = row.get("official_price", pd.NA)
         latest_tax_base = row.get("estimated_tax_base", pd.NA)
         latest_tax = row.get("estimated_holding_tax", pd.NA)
-        for year in range(start_year, latest_year + 1):
-            periods_back = latest_year - year
-            discount = (1 + annual_growth) ** periods_back
-            official = latest_official / discount if pd.notna(latest_official) else pd.NA
-            tax_base = latest_tax_base / discount if pd.notna(latest_tax_base) else pd.NA
-            tax = latest_tax / discount if pd.notna(latest_tax) else pd.NA
-            rows.append(
-                {
-                    "asset_name": row.get("asset_name", COMPANY_LEVEL_FALLBACK_ASSET_NAME),
-                    "year": year,
-                    "location": row.get("region", ""),
-                    "asset_type": row.get("asset_type", ""),
-                    "official_land_price_per_sqm_krw": pd.NA,
-                    "토지_시가표준액_백만원": official,
-                    "건물_시가표준액_백만원": 0.0,
-                    "토지_과세표준_백만원": tax_base,
-                    "건물_과세표준_백만원": 0.0,
-                    "재산세본세_백만원": tax * 0.60 if pd.notna(tax) else pd.NA,
-                    "도시지역분_백만원": tax * 0.30 if pd.notna(tax) else pd.NA,
-                    "지방교육세_백만원": tax * 0.10 if pd.notna(tax) else pd.NA,
-                    "보유세_추정_백만원": tax,
-                    "official_price_source": row.get("source_type", ""),
-                    "source_type": row.get("source_type", ""),
-                    "source_note": row.get("source_note", ""),
-                    "book_value_mn_krw": row.get("book_value", pd.NA),
-                    "official_price_mn_krw": official,
-                    "tax_base_mn_krw": tax_base,
-                }
-            )
+        rows.append(
+            {
+                "asset_name": row.get("asset_name", COMPANY_LEVEL_FALLBACK_ASSET_NAME),
+                "year": latest_year,
+                "location": row.get("region", ""),
+                "asset_type": row.get("asset_type", ""),
+                "official_land_price_per_sqm_krw": pd.NA,
+                "토지_시가표준액_백만원": latest_official,
+                "건물_시가표준액_백만원": pd.NA,
+                "토지_과세표준_백만원": latest_tax_base,
+                "건물_과세표준_백만원": pd.NA,
+                "재산세본세_백만원": pd.NA,
+                "도시지역분_백만원": pd.NA,
+                "지방교육세_백만원": pd.NA,
+                "보유세_추정_백만원": latest_tax,
+                "공시지가_전년대비_%": pd.NA,
+                "보유세_전년대비_%": pd.NA,
+                "보유세_5년누적증가_%": pd.NA,
+                "official_price_growth_5y": row.get("official_price_growth_5y", pd.NA),
+                "history_kind": "snapshot_single_period",
+                "calculation_model": row.get("calculation_model", "data_insufficient"),
+                "formula_version": row.get("formula_version", "holding_tax_screening_v14_1"),
+                "tax_scope": row.get("tax_scope", "data_insufficient"),
+                "tax_component_status": row.get("tax_component_status", "data_insufficient"),
+                "legal_owner_status": row.get("legal_owner_status", "data_insufficient"),
+                "taxpayer_status": row.get("taxpayer_status", "data_insufficient"),
+                "tax_pass_through_status": row.get("tax_pass_through_status", "data_insufficient"),
+                "official_price_source": row.get("source_type", ""),
+                "source_type": row.get("source_type", ""),
+                "source_name": row.get("source_name", ""),
+                "source_date": row.get("source_date", ""),
+                "source_note": row.get("source_note", ""),
+                "book_value_mn_krw": row.get("book_value", pd.NA),
+                "official_price_mn_krw": latest_official,
+                "tax_base_mn_krw": latest_tax_base,
+            }
+        )
     history = pd.DataFrame(rows)
     if history.empty:
         return history
     history = history.sort_values(["asset_name", "year"])
-    history["공시지가_전년대비_%"] = history.groupby("asset_name")["official_price_mn_krw"].pct_change() * 100
-    history["보유세_전년대비_%"] = history.groupby("asset_name")["보유세_추정_백만원"].pct_change() * 100
-    first_tax = history.groupby("asset_name")["보유세_추정_백만원"].transform("first")
-    history["보유세_5년누적증가_%"] = (history["보유세_추정_백만원"] / first_tax - 1) * 100
     return history

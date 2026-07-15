@@ -1,0 +1,372 @@
+table _Measures
+	isHidden
+	lineageTag: e42962c0-dc6e-4198-ab60-fe4a06f30995
+
+	measure '선택 회사' =
+
+			SELECTEDVALUE(DimREIT[company_name], "전체 REITs")
+		displayFolder: 01 Selection
+		lineageTag: c91b12d5-0908-4809-89a8-4d1339630bb3
+
+	measure '선택 기준연도 표시' =
+
+			FORMAT([선택 기준연도], "0")
+		displayFolder: 01 Selection
+		lineageTag: 922902fd-7601-4da5-8dc1-a20dc08abd08
+
+	measure '선택 기준연도' =
+
+			SELECTEDVALUE(DimPeriod[analysis_year], MAX(DimPeriod[analysis_year]))
+		formatString: 0
+		displayFolder: 01 Selection
+		lineageTag: 4a87bd52-6400-4170-b3a2-a9bf8b2d4926
+
+	measure '페이지 제목' =
+
+			[선택 회사] & " | " & [선택 기준연도 표시] & " Tax Executive Summary"
+		displayFolder: 01 Selection
+		lineageTag: d95c0410-8e02-4627-9ab0-3cd6b9c06811
+
+	measure '분석 Source Type' =
+
+			SELECTEDVALUE(FactKPI[source_type], "복수 또는 확인 필요")
+		displayFolder: 02 Source Lineage
+		lineageTag: 4be71f5f-2398-4ecc-ab80-da241d055209
+
+	measure 'Source Note' =
+
+			SELECTEDVALUE(FactKPI[source_note], "세부 데이터 출처를 확인하세요.")
+		displayFolder: 02 Source Lineage
+		lineageTag: 635d8745-3480-4d8d-b84e-fe634efde747
+
+	measure '분석 Source Type 표시' =
+
+			SWITCH(
+			    [분석 Source Type],
+			    "official_api", "공식 API",
+			    "official_disclosure", "공식 공시자료",
+			    "api_snapshot", "API/Snapshot 자료",
+			    "peer_snapshot", "Peer Snapshot",
+			    "peer_snapshot_estimate", "Peer Snapshot estimate",
+			    "sample_estimate", "Sample estimate",
+			    "data_insufficient", "데이터 부족",
+			    [분석 Source Type]
+			)
+		displayFolder: 02 Source Lineage
+		lineageTag: d12565b8-8405-4f30-a60d-d503b7997a3c
+
+	measure '재무제표 범위' =
+
+			SELECTEDVALUE(FactKPI[financial_statement_scope], "Snapshot 또는 확인 필요")
+		displayFolder: 02 Source Lineage
+		lineageTag: bbd45368-0a1e-46b7-9bdb-9578ce005ec9
+
+	measure 'Fallback 상태' =
+
+			IF(SELECTEDVALUE(FactKPI[is_fallback], TRUE()), "Snapshot/Fallback 사용", "공식 API 또는 직접 원천")
+		displayFolder: 02 Source Lineage
+		lineageTag: 5252378e-11cf-4590-a845-bef267e4a9c3
+
+	measure 'Source Name' =
+
+			SELECTEDVALUE(FactKPI[source_name], "")
+		displayFolder: 02 Source Lineage
+		lineageTag: 88741146-191a-47e8-aceb-d1477f9a54e1
+
+	measure 'Source Date' =
+
+			SELECTEDVALUE(FactKPI[source_date], "")
+		displayFolder: 02 Source Lineage
+		lineageTag: f1d20c85-62da-4a17-9143-2f46b46a3445
+
+	measure 'Calculation Method' =
+
+			SELECTEDVALUE(FactKPI[calculation_method], "계산 경로 확인 필요")
+		displayFolder: 02 Source Lineage
+		lineageTag: 31ddf693-10ed-48c9-8c88-1745b111d1ce
+
+	measure 총자산(억원) =
+
+			SUM(FactKPI[total_assets_eok])
+		formatString: #,0.0
+		displayFolder: 03 Financial Position
+		lineageTag: e0076531-cad0-4685-8a7c-31e9f6571854
+
+	measure 총부채(억원) =
+
+			SUM(FactKPI[total_liabilities_eok])
+		formatString: #,0.0
+		displayFolder: 03 Financial Position
+		lineageTag: 1697acd0-2341-42e5-be84-6471478901d3
+
+	measure '이자부 차입부채(억원)' =
+
+			SUM(FactKPI[interest_bearing_debt_eok])
+		formatString: #,0.0
+		displayFolder: 03 Financial Position
+		lineageTag: 60642edc-b166-44bb-8423-2f6f10e66580
+
+	measure 충당부채(억원) =
+
+			SUM(FactKPI[provisions_eok])
+		formatString: #,0.0
+		displayFolder: 03 Financial Position
+		lineageTag: ecaee311-4c0e-4400-9e9a-4c51c9c6e812
+
+	measure 현금및현금성자산(억원) =
+
+			SUM(FactKPI[cash_and_cash_equivalents_eok])
+		formatString: #,0.0
+		displayFolder: 03 Financial Position
+		lineageTag: bd210ba7-b211-4ccc-bad5-813d26c5ae79
+
+	measure 순차입금(억원) =
+
+			IF(ISBLANK([이자부 차입부채(억원)]) || ISBLANK([현금및현금성자산(억원)]), BLANK(), [이자부 차입부채(억원)] - [현금및현금성자산(억원)])
+		formatString: #,0.0
+		displayFolder: 03 Financial Position
+		lineageTag: 2d1c5f89-9223-4785-9acc-a8c71a2a5f6c
+
+	measure 투자부동산(억원) =
+
+			SUM(FactKPI[investment_property_eok])
+		formatString: #,0.0
+		displayFolder: 03 Financial Position
+		lineageTag: 2b466e6c-31ac-4d98-a39f-c8124ca22ee0
+
+	measure 'Book NAV proxy(억원)' =
+
+			SUM(FactKPI[book_nav_proxy_eok])
+		formatString: #,0.0
+		displayFolder: 03 Financial Position
+		lineageTag: 3eed2a66-52c7-45af-86e4-377930eb08d0
+
+	measure 'FFO proxy(억원)' =
+
+			SUM(FactKPI[ffo_proxy_eok])
+		formatString: #,0.0
+		displayFolder: 04 Cash Flow & Tax
+		lineageTag: c77b8852-674f-4417-bc99-c66ad32472a6
+
+	measure 영업활동현금흐름(억원) =
+
+			SUM(FactKPI[operating_cash_flow_eok])
+		formatString: #,0.0
+		displayFolder: 04 Cash Flow & Tax
+		lineageTag: eda6e9f5-52c8-49b2-9fcb-0a5108883d5e
+
+	measure 영업수익(억원) =
+
+			SUM(FactKPI[operating_revenue_eok])
+		formatString: #,0.0
+		displayFolder: 04 Cash Flow & Tax
+		lineageTag: 3246872d-5d89-4e34-b47a-a5abf164413e
+
+	measure 영업이익(억원) =
+
+			SUM(FactKPI[operating_income_eok])
+		formatString: #,0.0
+		displayFolder: 04 Cash Flow & Tax
+		lineageTag: af8d91b6-c8e9-4d46-89b2-23cb1d117633
+
+	measure 이자비용(억원) =
+
+			SUM(FactKPI[interest_expense_eok])
+		formatString: #,0.0
+		displayFolder: 04 Cash Flow & Tax
+		lineageTag: 52dac9f6-4211-44e5-a331-1c45a0e9be52
+
+	measure '추정 보유세(억원)' =
+
+			SUM(FactKPI[estimated_holding_tax_eok])
+		formatString: #,0.0
+		displayFolder: 04 Cash Flow & Tax
+		lineageTag: 08b75a6e-3a63-4b5b-bc5d-3c2b48956e68
+
+	measure '보유세 / FFO proxy' =
+
+			DIVIDE([추정 보유세(억원)], [FFO proxy(억원)])
+		formatString: 0.0%
+		displayFolder: 05 Ratios
+		lineageTag: e741a51b-2e1b-4361-a533-19106bb90629
+
+	measure '보유세 / 영업수익' =
+
+			DIVIDE([추정 보유세(억원)], [영업수익(억원)])
+		formatString: 0.0%
+		displayFolder: 05 Ratios
+		lineageTag: 5be18846-1241-43b0-a6e2-d516c0fdce7d
+
+	measure '총자산 기준 차입비율' =
+
+			DIVIDE([이자부 차입부채(억원)], [총자산(억원)])
+		formatString: 0.0%
+		displayFolder: 05 Ratios
+		lineageTag: eff911d3-bb94-4c85-b222-cc73ad8595ab
+
+	measure '투자부동산 기준 Property LTV' =
+
+			DIVIDE([이자부 차입부채(억원)], [투자부동산(억원)])
+		formatString: 0.0%
+		displayFolder: 05 Ratios
+		lineageTag: b77c61e7-8a2b-4051-8094-e1a06d31fd36
+
+	measure 'FFO 이자감당배율 proxy' =
+
+			DIVIDE([FFO proxy(억원)], [이자비용(억원)])
+		formatString: 0.00배
+		displayFolder: 05 Ratios
+		lineageTag: 921adf47-0097-44c3-b6d6-267af464a4c5
+
+	measure '영업현금흐름 이자감당배율 proxy' =
+
+			DIVIDE([영업활동현금흐름(억원)], [이자비용(억원)])
+		formatString: 0.00배
+		displayFolder: 05 Ratios
+		lineageTag: dce84769-4d8b-4ce8-b7d6-359b326f5399
+
+	measure '공시가격 / 투자부동산' =
+
+			DIVIDE(SUM(FactKPI[official_price_total_eok]), [투자부동산(억원)])
+		formatString: 0.0%
+		displayFolder: 05 Ratios
+		lineageTag: 1e2a8e27-1414-455f-8047-8b91f23cbd8c
+
+	measure '배당 / FFO proxy' =
+
+			DIVIDE(SUM(FactKPI[dividends_eok]), [FFO proxy(억원)])
+		formatString: 0.0%
+		displayFolder: 05 Ratios
+		lineageTag: c3bce14c-54a3-48ab-ad1b-d975d61ed201
+
+	measure 'Peer 보유세 / FFO 중앙값' =
+
+			CALCULATE(
+			    MEDIANX(VALUES(DimREIT[company_name]), [보유세 / FFO proxy]),
+			    REMOVEFILTERS(DimREIT)
+			)
+		formatString: 0.0%
+		displayFolder: 05 Ratios
+		lineageTag: 4242daf9-84f9-4ca6-a65e-dbfc989e0b92
+
+	measure 'Peer 대비 차이' =
+
+			[보유세 / FFO proxy] - [Peer 보유세 / FFO 중앙값]
+		formatString: 0.0%
+		displayFolder: 05 Ratios
+		lineageTag: e37f29dc-c955-4c6d-951a-dc7ab6ee6d71
+
+	measure '고위험 이슈 수' =
+
+			CALCULATE(COUNTROWS(FactIssue), FactIssue[risk_level] = "높음")
+		formatString: 0
+		displayFolder: 06 Issues & Validation
+		lineageTag: f6fdab6a-720e-4483-8123-6e675361ef7c
+
+	measure '주의 이슈 수' =
+
+			CALCULATE(COUNTROWS(FactIssue), FactIssue[risk_level] = "주의")
+		formatString: 0
+		displayFolder: 06 Issues & Validation
+		lineageTag: 83781a5f-3c7a-4fe4-b0fa-d8a95fb50fd0
+
+	measure '요청자료 수' =
+
+			DISTINCTCOUNT(FactRequest[request_item])
+		formatString: 0
+		displayFolder: 06 Issues & Validation
+		lineageTag: 71ebe2c0-7c70-4624-b674-ceea9b7d3cc1
+
+	measure '검토 필요 항목 수' =
+
+			[고위험 이슈 수] + [주의 이슈 수]
+		formatString: 0
+		displayFolder: 06 Issues & Validation
+		lineageTag: 95570c7b-21c5-400b-8d77-276838ed3610
+
+	measure 'Validation 이슈 수' =
+
+			CALCULATE(COUNTROWS(FactValidation), FactValidation[validation_status] <> "정상")
+		formatString: 0
+		displayFolder: 06 Issues & Validation
+		lineageTag: ccd96c09-29e2-4818-84d3-10debecd4775
+
+	measure 'Validation 종합 상태' =
+
+			IF([Validation 이슈 수] > 0, "검토 필요", "정상")
+		displayFolder: 06 Issues & Validation
+		lineageTag: 72a754b8-7a45-496d-9e08-11ce80f22e2d
+
+	measure 'pHoldingTaxIncrease Value' =
+
+			SELECTEDVALUE(pHoldingTaxIncrease[pHoldingTaxIncrease], 10)
+		formatString: 0
+		displayFolder: 07 Stress Scenario
+		lineageTag: 70e3b82b-c9f8-4de6-8f96-fbd7ac148185
+
+	measure 'pFFODecline Value' =
+
+			SELECTEDVALUE(pFFODecline[pFFODecline], 4)
+		formatString: 0
+		displayFolder: 07 Stress Scenario
+		lineageTag: 46612f0a-89cc-483e-b629-408396f4598d
+
+	measure '스트레스 보유세(억원)' =
+
+			[추정 보유세(억원)] * (1 + DIVIDE([pHoldingTaxIncrease Value], 100))
+		formatString: #,0.0
+		displayFolder: 07 Stress Scenario
+		lineageTag: 415b5691-7da8-429a-bc81-76b7584f2a4a
+
+	measure '스트레스 FFO proxy(억원)' =
+
+			[FFO proxy(억원)] * (1 - DIVIDE([pFFODecline Value], 100))
+		formatString: #,0.0
+		displayFolder: 07 Stress Scenario
+		lineageTag: 93809b73-0d7b-4e8a-a3de-4a5b8b049bc7
+
+	measure '스트레스 보유세 / FFO proxy' =
+
+			DIVIDE([스트레스 보유세(억원)], [스트레스 FFO proxy(억원)])
+		formatString: 0.0%
+		displayFolder: 07 Stress Scenario
+		lineageTag: 03b1f9a0-e09c-4d35-bc76-f9ea351c2bcd
+
+	measure '추가 현금유출(억원)' =
+
+			[스트레스 보유세(억원)] - [추정 보유세(억원)]
+		formatString: #,0.0
+		displayFolder: 07 Stress Scenario
+		lineageTag: 7b54e671-10d1-4c8b-b830-c90c06784a29
+
+	measure '스트레스 위험수준' =
+
+			SWITCH(TRUE(), ISBLANK([스트레스 보유세 / FFO proxy]), "데이터 부족", [스트레스 보유세 / FFO proxy] >= 0.35, "높음", [스트레스 보유세 / FFO proxy] >= 0.25, "주의", "정상")
+		displayFolder: 07 Stress Scenario
+		lineageTag: 86d635b4-b03e-49b3-b8de-043f732e5f4d
+
+	measure 'Detailed Tax Review Pack URL' =
+
+			"https://hahnjune0118-k-reit-risk-intelligence-platform-app.streamlit.app/"
+		displayFolder: 06 Issues & Validation
+		lineageTag: 7b2e614a-b951-4d45-ae5d-cee28a756554
+
+	measure 'Tax Review Pack 열기' =
+
+			"Streamlit Tax Review Pack 열기"
+		displayFolder: 06 Issues & Validation
+
+	column 'Measure Holder'
+		isHidden
+		lineageTag: 138f0677-84d3-46c4-abdd-efb0bb783e7a
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Measure Holder]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = calculated
+		mode: import
+		source = DATATABLE("Measure Holder", STRING, {{"Measures"}})
+
+	annotation PBI_Id = 08ecacedd89e410cbf0f9c682ebca5f7

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "p3_reconciliation",
+  "position": {
+    "x": 630,
+    "y": 130,
+    "z": 310,
+    "height": 210,
+    "width": 590,
+    "tabOrder": 310
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactReconciliation"
+                    }
+                  },
+                  "Property": "asset_name"
+                }
+              },
+              "queryRef": "FactReconciliation.asset_name",
+              "nativeQueryRef": "asset_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactReconciliation"
+                    }
+                  },
+                  "Property": "book_value_eok"
+                }
+              },
+              "queryRef": "FactReconciliation.book_value_eok",
+              "nativeQueryRef": "book_value_eok"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactReconciliation"
+                    }
+                  },
+                  "Property": "official_price_eok"
+                }
+              },
+              "queryRef": "FactReconciliation.official_price_eok",
+              "nativeQueryRef": "official_price_eok"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactReconciliation"
+                    }
+                  },
+                  "Property": "estimated_holding_tax_eok"
+                }
+              },
+              "queryRef": "FactReconciliation.estimated_holding_tax_eok",
+              "nativeQueryRef": "estimated_holding_tax_eok"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactReconciliation"
+                    }
+                  },
+                  "Property": "holding_tax_to_ffo"
+                }
+              },
+              "queryRef": "FactReconciliation.holding_tax_to_ffo",
+              "nativeQueryRef": "holding_tax_to_ffo"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactReconciliation"
+                    }
+                  },
+                  "Property": "review_required"
+                }
+              },
+              "queryRef": "FactReconciliation.review_required",
+              "nativeQueryRef": "review_required"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'보유세 Reconciliation'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

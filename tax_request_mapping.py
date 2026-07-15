@@ -40,15 +40,20 @@ def _append(rows: list[dict], item: str, purpose: str, issue: str, priority: str
 
 
 def _dedupe(rows: list[dict]) -> list[dict]:
-    seen = set()
-    result = []
+    priority_rank = {"높음": 0, "중간": 1, "낮음": 2}
+    merged: dict[str, dict] = {}
     for row in rows:
-        key = (row["요청자료"], row["관련 이슈"])
-        if key in seen:
+        key = row["요청자료"]
+        if key not in merged:
+            merged[key] = row.copy()
             continue
-        seen.add(key)
-        result.append(row)
-    return result
+        target = merged[key]
+        for column in ["요청 목적", "관련 이슈", "해당 검토영역", "source trigger", "비고"]:
+            values = [value.strip() for value in f"{target[column]} / {row[column]}".split(" / ") if value.strip()]
+            target[column] = " / ".join(dict.fromkeys(values))
+        if priority_rank.get(row["우선순위"], 99) < priority_rank.get(target["우선순위"], 99):
+            target["우선순위"] = row["우선순위"]
+    return list(merged.values())
 
 
 def map_tax_issues_to_request_items(
@@ -88,6 +93,36 @@ def map_tax_issues_to_request_items(
         "공시가격 검증",
         base_trigger,
         "공식 조회자료 또는 기준시가 산출 근거",
+    )
+    _append(
+        rows,
+        "종합부동산세 고지서 및 과세내역",
+        "재산세 외 보유세 세목의 적용 여부와 회사 전체 세부담 범위를 확인",
+        "보유세 세목 coverage",
+        "높음",
+        "공통 필수자료",
+        base_trigger,
+        "종합부동산세·농어촌특별세 적용 여부와 합산·배제 내역 포함",
+    )
+    _append(
+        rows,
+        "자산별 법적 소유자·납세의무자 확인자료",
+        "연결실체·법적 소유자·고지서상 납세의무자·실제 현금부담자를 구분",
+        "납세의무 및 세부담 귀속",
+        "높음",
+        "공통 필수자료",
+        base_trigger,
+        "등기사항증명서, 신탁계약, SPC 구조도, 고지서 명의 대사",
+    )
+    _append(
+        rows,
+        "주요 임대차계약서의 제세공과금 부담 조항",
+        "임차인 전가 또는 정산 구조가 리츠의 실제 현금유출에 미치는 영향을 확인",
+        "세부담 귀속 및 임차인 전가",
+        "중간",
+        "공통 필수자료",
+        base_trigger,
+        "세금·공과금 부담 주체와 관리비 정산 조항 확인",
     )
 
     if "FFO" in text or "현금유출" in text or "배당" in text:

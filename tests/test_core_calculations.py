@@ -290,12 +290,13 @@ def test_v12_selected_company_profile_and_recent_5y_snapshot_are_built():
     assert profile["company_name"] == "SK리츠"
     assert profile["stock_code"] == "395400"
     assert profile["market_cap_rank"] == 1
-    assert status == "Snapshot 기준 / DART 연결 설정 없음"
-    assert recent_5y.shape[0] == 5
+    assert status == "최근 가용 Snapshot 기준 / DART 연결 설정 없음"
+    assert recent_5y.shape[0] == 1
     assert recent_5y["year"].is_monotonic_increasing
     assert {"total_assets", "investment_property", "borrowings_total", "ffo_proxy", "nav", "source_type"}.issubset(recent_5y.columns)
-    assert recent_5y["nav"].isna().all()
-    assert recent_5y["nav_calculation_method"].str.contains("총부채 또는 nav 컬럼 부족", na=False).all()
+    assert recent_5y["nav"].notna().all()
+    assert recent_5y["nav_calculation_method"].eq("총자산 - 총부채").all()
+    assert recent_5y["ffo_proxy_calculation_method"].eq("annualized_operating_cash_flow_proxy").all()
 
 
 def test_v12_empty_company_asset_detail_does_not_reuse_sample_assets():
@@ -395,7 +396,7 @@ def test_v13_data_availability_marks_non_sk_as_company_level_fallback():
     esr_availability = get_company_data_availability(esr_profile["company_name"], esr_profile, peer_snapshot)
 
     assert has_asset_level_data(sk_profile["company_name"], sk_profile) is True
-    assert has_tax_asset_data(sk_profile["company_name"], sk_profile) is True
+    assert has_tax_asset_data(sk_profile["company_name"], sk_profile) is False
     assert has_asset_level_data(esr_profile["company_name"], esr_profile) is False
     assert has_tax_asset_data(esr_profile["company_name"], esr_profile) is False
     assert sk_availability["asset_level_real_estate_available"] is True
@@ -431,7 +432,7 @@ def test_v14_1_metric_definitions_include_proxy_limitations():
     table = metric_definition_table()
     ffo = table[table["지표"].eq("FFO proxy")].iloc[0]
     nav = table[table["지표"].eq("장부기준 NAV proxy")].iloc[0]
-    ltv = table[table["지표"].eq("Gross LTV")].iloc[0]
+    ltv = table[table["지표"].eq("총자산 기준 차입비율")].iloc[0]
 
     assert "공식적으로 공시한 FFO와 동일하지 않을 수" in ffo["제한사항"]
     assert "총자산 - 총부채" in nav["계산식"]
@@ -461,8 +462,17 @@ def test_v14_1_provisions_are_excluded_from_interest_bearing_debt_and_net_debt()
 
     assert debt == 675
     assert "충당부채" not in method
-    assert net_debt == 575
+    assert net_debt == 595
     assert "현금및현금성자산" in net_method
+    assert "차감 제외" in net_method
+
+    unrestricted_net_debt, _ = derive_net_debt(
+        debt,
+        cash_and_cash_equivalents=80,
+        short_term_financial_assets=20,
+        short_term_financial_assets_unrestricted=True,
+    )
+    assert unrestricted_net_debt == 575
 
 
 def test_v14_1_rate_step_and_weighted_label_are_explicit():

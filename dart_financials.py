@@ -25,7 +25,11 @@ def load_reit_master(path: Path = REIT_MASTER_PATH) -> pd.DataFrame:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
     if "stock_code" in df.columns:
-        df["stock_code"] = df["stock_code"].astype(str).str.zfill(6)
+        df["stock_code"] = df["stock_code"].astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(6)
+    if "dart_corp_code" in df.columns:
+        df["dart_corp_code"] = df["dart_corp_code"].apply(
+            lambda value: "" if pd.isna(value) else str(value).replace(".0", "").zfill(8)
+        )
     sort_cols = [col for col in ["market_cap_rank", "market_cap", "company_name"] if col in df.columns]
     if "market_cap" in sort_cols:
         ascending = [True if col != "market_cap" else False for col in sort_cols]
@@ -64,7 +68,7 @@ def get_selected_company_profile(selected_company: str, master_df: pd.DataFrame 
         if not matched.empty:
             row = matched.iloc[0]
     if row.empty:
-        row = pd.Series({"company_name": company_name or "SK리츠", "stock_code": "395400", "dart_corp_code": "sample_001"})
+        row = pd.Series({"company_name": company_name or "SK리츠", "stock_code": "395400", "dart_corp_code": ""})
 
     latest_period = ""
     source_type = "sample_snapshot"
@@ -75,10 +79,12 @@ def get_selected_company_profile(selected_company: str, master_df: pd.DataFrame 
             latest_period = str(latest.get("period", latest.get("year", "")))
             source_type = str(latest.get("source_type", source_type))
 
+    dart_corp_code = row.get("dart_corp_code", "")
+    dart_corp_code = "" if pd.isna(dart_corp_code) else str(dart_corp_code).strip()
     profile = {
         "company_name": str(row.get("company_name", company_name)),
         "stock_code": str(row.get("stock_code", "395400")).zfill(6),
-        "dart_corp_code": str(row.get("dart_corp_code", "")),
+        "dart_corp_code": dart_corp_code,
         "market_cap_rank": row.get("market_cap_rank", pd.NA),
         "market_cap": row.get("market_cap", pd.NA),
         "market": row.get("market", ""),
@@ -99,50 +105,35 @@ def _to_recent_5y_from_snapshot(company_name: str, peer_snapshot: pd.DataFrame) 
     if rows.empty:
         return pd.DataFrame()
     latest = rows.sort_values([col for col in ["year", "period"] if col in rows.columns]).iloc[-1]
-    latest_year_value = pd.to_numeric(pd.Series([latest.get("year")]), errors="coerce").iloc[0]
-    latest_year = int(latest_year_value) if pd.notna(latest_year_value) else pd.Timestamp.today().year
-    factors = {
-        latest_year - 4: 0.82,
-        latest_year - 3: 0.88,
-        latest_year - 2: 0.93,
-        latest_year - 1: 0.97,
-        latest_year: 1.00,
-    }
-    records = []
-    for year, factor in factors.items():
-        total_assets = _scale(latest.get("total_assets"), factor)
-        investment_property = _scale(latest.get("investment_property"), factor)
-        borrowings_total = _scale(latest.get("borrowings_total"), factor * 0.98)
-        ffo_proxy = _scale(latest.get("ffo_proxy"), 0.86 + (factor - 0.82) * 0.9)
-        nav = _scale(latest.get("nav"), factor)
-        nav_method = "Snapshot nav 컬럼" if pd.notna(nav) else "Snapshot에 총부채 또는 nav 컬럼 부족"
-        records.append({
+    nav, nav_method = derive_book_nav_proxy(
+        latest.get("total_assets", pd.NA),
+        latest.get("total_liabilities", pd.NA),
+    )
+    ffo_proxy, ffo_method = derive_ffo_proxy(
+        operating_cash_flow=latest.get("operating_cash_flow", pd.NA),
+    )
+    net_debt, net_debt_method = derive_net_debt(
+        latest.get("borrowings_total", pd.NA),
+        latest.get("cash_and_cash_equivalents", pd.NA),
+        latest.get("short_term_financial_assets", pd.NA),
+        short_term_financial_assets_unrestricted=bool(latest.get("short_term_financial_assets_unrestricted", False)),
+    )
+    record = latest.to_dict()
+    record.update(
+        {
             "company_name": company_name,
-            "year": int(year),
-            "period": f"{year}Y",
-            "total_assets": total_assets,
-            "investment_property": investment_property,
-            "borrowings_total": borrowings_total,
-            "operating_revenue": _scale(latest.get("operating_revenue"), 0.84 + (factor - 0.82) * 0.85),
-            "operating_income": _scale(latest.get("operating_income"), 0.84 + (factor - 0.82) * 0.85),
-            "net_income": _scale(latest.get("net_income"), 0.80 + (factor - 0.82) * 0.8),
-            "interest_expense": _scale(latest.get("interest_expense"), 0.78 + (factor - 0.82) * 1.05),
             "ffo_proxy": ffo_proxy,
             "nav": nav,
             "book_nav_proxy": nav,
-            "ffo_proxy_calculation_method": "Snapshot ffo_proxy 컬럼",
+            "net_debt": net_debt,
+            "ffo_proxy_calculation_method": str(latest.get("ffo_method", ffo_method)),
             "nav_calculation_method": nav_method,
-            "financial_statement_scope": "Snapshot 기준",
-            "source_note": "Peer Snapshot 기반 5년 흐름 proxy입니다. 총부채가 없어 총자산-차입금으로 NAV를 대체하지 않습니다.",
-            "is_fallback": True,
-            "source_type": str(latest.get("source_type", "sample_snapshot")),
-        })
-    return _add_compat_columns(pd.DataFrame(records))
-
-
-def _scale(value, factor: float):
-    value = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-    return value * factor if pd.notna(value) else pd.NA
+            "net_debt_calculation_method": net_debt_method,
+            "source_note": str(latest.get("source_note", "최근 가용 Snapshot 기준")),
+            "is_fallback": str(latest.get("source_type", "sample_estimate")) != "official_disclosure",
+        }
+    )
+    return _add_compat_columns(pd.DataFrame([record]))
 
 
 def _normalize_dart_history(dart_history: pd.DataFrame) -> pd.DataFrame:
@@ -195,6 +186,7 @@ def _normalize_dart_history(dart_history: pd.DataFrame) -> pd.DataFrame:
             row.get("borrowings_total", pd.NA),
             row.get("cash_and_cash_equivalents", pd.NA),
             row.get("short_term_financial_assets", pd.NA),
+            short_term_financial_assets_unrestricted=False,
         )
         ffo_values.append(ffo_value)
         ffo_methods.append(ffo_method)
@@ -211,8 +203,12 @@ def _normalize_dart_history(dart_history: pd.DataFrame) -> pd.DataFrame:
     df["net_debt_calculation_method"] = net_debt_methods
     if "interest_expense" not in df.columns:
         df["interest_expense"] = pd.NA
-    df["source_type"] = "dart_api_selected_company"
+    df["source_type"] = "official_disclosure"
     df["source_note"] = "DART 재무제표 API 기준. 연결재무제표(CFS)를 우선하고 자료가 없으면 별도재무제표(OFS)를 사용합니다."
+    df["annualized"] = False
+    df["annualization_factor"] = 1.0
+    df["ffo_method"] = "operating_cash_flow_proxy"
+    df["ffo_limitation"] = "공식 FFO가 아니며 영업활동현금흐름 기반 proxy입니다."
     df["is_fallback"] = False
     keep = [
         "company_name", "year", "total_assets", "investment_property", "borrowings_total",
@@ -223,7 +219,7 @@ def _normalize_dart_history(dart_history: pd.DataFrame) -> pd.DataFrame:
         "net_income", "operating_cash_flow", "interest_expense", "ffo_proxy", "nav",
         "book_nav_proxy", "source_type", "source_note", "financial_statement_scope",
         "ffo_proxy_calculation_method", "nav_calculation_method", "net_debt_calculation_method",
-        "is_fallback",
+        "annualized", "annualization_factor", "ffo_method", "ffo_limitation", "is_fallback",
     ]
     return _add_compat_columns(df[[col for col in keep if col in df.columns]])
 
@@ -273,6 +269,6 @@ def get_recent_5y_financials(
     snapshot_history = _to_recent_5y_from_snapshot(company_name, peer_snapshot)
     if not snapshot_history.empty:
         snapshot_history["source_note"] = snapshot_history.get("source_note", "Snapshot fallback")
-        return snapshot_history, f"Snapshot 기준 / {status}"
+        return snapshot_history, f"최근 가용 Snapshot 기준 / {status}"
 
     return pd.DataFrame(), "예시 데이터 기준"
