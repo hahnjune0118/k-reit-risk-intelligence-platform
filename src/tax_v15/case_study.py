@@ -10,11 +10,19 @@ from .loaders import V15DataBundle
 from .validation.controls import summarize_coverage
 
 
-GOLDEN_STOCK_CODE = "395400"
-GOLDEN_ASSET_ID = "SKR-SEOUL-SEORIN-001"
-GOLDEN_TAXPAYER_ID = "SKR-TP-001"
-GOLDEN_TAX_YEAR = 2026
-GOLDEN_RECALCULATION_RAW = Decimal("1250710968.55472")
+CORE_STOCK_CODE = "395400"
+CORE_ASSET_ID = "SKR-SEOUL-SEORIN-001"
+CORE_ASSET_TAXPAYER_ID = "SKR-TP-001"
+CORE_TAX_YEAR = 2026
+CORE_RECALCULATION_BEFORE_END_DIGIT_TREATMENT = Decimal("1250710968.55472")
+CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT = Decimal("1250710930")
+
+# Deprecated aliases retained for internal data-key compatibility.
+GOLDEN_STOCK_CODE = CORE_STOCK_CODE
+GOLDEN_ASSET_ID = CORE_ASSET_ID
+GOLDEN_TAXPAYER_ID = CORE_ASSET_TAXPAYER_ID
+GOLDEN_TAX_YEAR = CORE_TAX_YEAR
+GOLDEN_RECALCULATION_RAW = CORE_RECALCULATION_BEFORE_END_DIGIT_TREATMENT
 
 CALCULATED_STATUSES = {
     "verified_notice",
@@ -23,15 +31,13 @@ CALCULATED_STATUSES = {
 }
 
 SCENARIO_SUMMARY_COLUMNS = [
-    "Scenario",
-    "토지 시가표준액",
-    "건축물 시가표준액",
-    "토지 관련 세액",
-    "건축물 관련 세액",
-    "소방분",
-    "총 보유세",
-    "Base 대비 증감액",
-    "Base 대비 증감률",
+    "민감도 분석",
+    "토지 개별공시지가 변동률",
+    "건축물 시가표준액 변동률",
+    "끝수 처리 전 합계",
+    "끝수 처리 후 합계",
+    "기준 대비 증감액",
+    "기준 대비 증감률",
 ]
 
 ISSUE_MATRIX_COLUMNS = [
@@ -51,7 +57,7 @@ ISSUE_MATRIX_COLUMNS = [
 
 
 @dataclass(frozen=True)
-class GoldenCaseData:
+class CoreAssetTaxCaseData:
     reit_name: str
     stock_code: str
     tax_year: int
@@ -66,19 +72,19 @@ class GoldenCaseData:
     reconciliation: pd.DataFrame
 
 
-def select_golden_case(bundle: V15DataBundle) -> GoldenCaseData:
+def select_core_asset_tax_case(bundle: V15DataBundle) -> CoreAssetTaxCaseData:
     assets = bundle.assets[
-        bundle.assets["asset_id"].fillna("").astype(str).eq(GOLDEN_ASSET_ID)
+        bundle.assets["asset_id"].fillna("").astype(str).eq(CORE_ASSET_ID)
     ].copy()
     if len(assets) != 1:
-        raise ValueError("SK서린빌딩 Golden Asset 행을 하나로 식별할 수 없습니다.")
+        raise ValueError("SK서린빌딩 핵심 분석대상 자산을 하나로 식별할 수 없습니다.")
 
     reit_name = str(assets.iloc[0]["reit_name"])
     stock_code = str(assets.iloc[0]["stock_code"])
-    if stock_code != GOLDEN_STOCK_CODE:
-        raise ValueError("Golden Asset 종목코드가 SK리츠와 일치하지 않습니다.")
+    if stock_code != CORE_STOCK_CODE:
+        raise ValueError("핵심 분석대상 자산의 종목코드가 SK리츠와 일치하지 않습니다.")
 
-    asset_ids = {GOLDEN_ASSET_ID}
+    asset_ids = {CORE_ASSET_ID}
     parcels = bundle.parcels[
         bundle.parcels["asset_id"].fillna("").astype(str).isin(asset_ids)
     ].copy()
@@ -93,13 +99,13 @@ def select_golden_case(bundle: V15DataBundle) -> GoldenCaseData:
             bundle.calculations["asset_id"]
             .fillna("")
             .astype(str)
-            .eq(GOLDEN_ASSET_ID)
+            .eq(CORE_ASSET_ID)
         )
         | (
             bundle.calculations["taxpayer_id"]
             .fillna("")
             .astype(str)
-            .eq(GOLDEN_TAXPAYER_ID)
+            .eq(CORE_ASSET_TAXPAYER_ID)
         )
     ].copy()
     validations = bundle.validations[
@@ -111,14 +117,14 @@ def select_golden_case(bundle: V15DataBundle) -> GoldenCaseData:
     reconciliation = bundle.reconciliation[
         bundle.reconciliation["reit_name"].fillna("").astype(str).eq(reit_name)
         & pd.to_numeric(bundle.reconciliation["tax_year"], errors="coerce").eq(
-            GOLDEN_TAX_YEAR
+            CORE_TAX_YEAR
         )
     ].copy()
 
-    return GoldenCaseData(
+    return CoreAssetTaxCaseData(
         reit_name=reit_name,
         stock_code=stock_code,
-        tax_year=GOLDEN_TAX_YEAR,
+        tax_year=CORE_TAX_YEAR,
         assets=assets,
         parcels=parcels,
         buildings=buildings,
@@ -129,6 +135,14 @@ def select_golden_case(bundle: V15DataBundle) -> GoldenCaseData:
         requests=requests,
         reconciliation=reconciliation,
     )
+
+
+# Deprecated API aliases retained for callers that still use the v15.0 names.
+GoldenCaseData = CoreAssetTaxCaseData
+
+
+def select_golden_case(bundle: V15DataBundle) -> CoreAssetTaxCaseData:
+    return select_core_asset_tax_case(bundle)
 
 
 def _decimal(value) -> Decimal:
@@ -147,7 +161,7 @@ def _validate_scenario_change(value: int | float | Decimal, label: str) -> Decim
 
 
 def _scaled_inputs(
-    case: GoldenCaseData,
+    case: CoreAssetTaxCaseData,
     land_change_pct: Decimal,
     building_change_pct: Decimal,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -172,8 +186,8 @@ def _scaled_inputs(
     return parcels, buildings
 
 
-def _amount(frame: pd.DataFrame, mask: pd.Series) -> Decimal:
-    rows = frame.loc[mask, "calculated_tax"].dropna()
+def _amount(frame: pd.DataFrame, mask: pd.Series, column: str) -> Decimal:
+    rows = frame.loc[mask, column].dropna()
     return sum((_decimal(value) for value in rows), Decimal("0"))
 
 
@@ -184,14 +198,21 @@ def _detail_row(
     mask: pd.Series,
 ) -> dict:
     rows = calculations.loc[mask].copy()
-    amount = _amount(calculations, mask)
+    before = _amount(
+        calculations,
+        mask,
+        "calculated_tax_before_end_digit_treatment",
+    )
+    after = _amount(calculations, mask, "calculated_tax")
     statuses = sorted(set(rows["calculation_status"].dropna().astype(str)))
     articles = sorted(set(rows["article"].dropna().astype(str)))
     urls = sorted(set(rows["source_url"].dropna().astype(str)))
     return {
-        "Scenario": scenario_name,
+        "민감도 분석": scenario_name,
         "세목": display_name,
-        "계산세액": amount,
+        "끝수 처리 전 산출세액": before,
+        "끝수 처리 후 재계산액": after,
+        "끝수 처리 차이": before - after,
         "계산상태": ", ".join(statuses) if statuses else "data_insufficient",
         "법적 근거": ", ".join(articles),
         "source_url": ", ".join(urls),
@@ -199,7 +220,7 @@ def _detail_row(
 
 
 def calculate_sensitivity_scenario(
-    case: GoldenCaseData,
+    case: CoreAssetTaxCaseData,
     scenario_name: str,
     land_change_pct: int | float | Decimal,
     building_change_pct: int | float | Decimal,
@@ -268,16 +289,19 @@ def calculate_sensitivity_scenario(
             for display_name, mask in detail_specs
         ]
     )
-    total = sum(details["계산세액"], Decimal("0"))
+    total_before = sum(details["끝수 처리 전 산출세액"], Decimal("0"))
+    total_after = sum(details["끝수 처리 후 재계산액"], Decimal("0"))
     details = pd.concat(
         [
             details,
             pd.DataFrame(
                 [
                     {
-                        "Scenario": scenario_name,
+                        "민감도 분석": scenario_name,
                         "세목": "총계",
-                        "계산세액": total,
+                        "끝수 처리 전 산출세액": total_before,
+                        "끝수 처리 후 재계산액": total_after,
+                        "끝수 처리 차이": total_before - total_after,
                         "계산상태": "official_source_calculated",
                         "법적 근거": "세목별 Tax Rule Master 산식 합계",
                         "source_url": "",
@@ -288,56 +312,28 @@ def calculate_sensitivity_scenario(
         ignore_index=True,
     )
 
-    land_value = sum(
-        (
-            _decimal(row["individual_land_price_per_m2"])
-            * _decimal(row["taxable_area_m2"])
-            * _decimal(row["ownership_share"])
-            for _, row in parcels.iterrows()
-        ),
-        Decimal("0"),
-    )
-    building_value = sum(
-        (_decimal(value) for value in buildings["building_standard_value"]),
-        Decimal("0"),
-    )
-    detail_amount = dict(zip(details["세목"], details["계산세액"], strict=True))
-    land_related = sum(
-        detail_amount[name]
-        for name in ["토지 재산세", "토지 도시지역분", "토지 지방교육세"]
-    )
-    building_related = sum(
-        detail_amount[name]
-        for name in [
-            "건축물 재산세",
-            "건축물 도시지역분",
-            "건축물 지방교육세",
-        ]
-    )
     summary = {
-        "Scenario": scenario_name,
-        "토지 시가표준액": land_value,
-        "건축물 시가표준액": building_value,
-        "토지 관련 세액": land_related,
-        "건축물 관련 세액": building_related,
-        "소방분": detail_amount["소방분 지역자원시설세"],
-        "총 보유세": total,
-        "Base 대비 증감액": Decimal("0"),
-        "Base 대비 증감률": Decimal("0"),
+        "민감도 분석": scenario_name,
+        "토지 개별공시지가 변동률": land_change,
+        "건축물 시가표준액 변동률": building_change,
+        "끝수 처리 전 합계": total_before,
+        "끝수 처리 후 합계": total_after,
+        "기준 대비 증감액": Decimal("0"),
+        "기준 대비 증감률": Decimal("0"),
     }
     return summary, details
 
 
 def build_sensitivity_scenarios(
-    case: GoldenCaseData,
+    case: CoreAssetTaxCaseData,
     custom_land_change_pct: int = 0,
     custom_building_change_pct: int = 0,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     definitions = [
-        ("Base", 0, 0),
-        ("Moderate", 5, 5),
-        ("Severe", 10, 10),
-        ("Custom", custom_land_change_pct, custom_building_change_pct),
+        ("기준", 0, 0),
+        ("공시가격·시가표준액 5% 상승", 5, 5),
+        ("공시가격·시가표준액 10% 상승", 10, 10),
+        ("사용자 설정", custom_land_change_pct, custom_building_change_pct),
     ]
     summaries: list[dict] = []
     details: list[pd.DataFrame] = []
@@ -351,11 +347,11 @@ def build_sensitivity_scenarios(
         summaries.append(summary)
         details.append(detail)
 
-    base_total = summaries[0]["총 보유세"]
+    base_total = summaries[0]["끝수 처리 후 합계"]
     for summary in summaries:
-        delta = summary["총 보유세"] - base_total
-        summary["Base 대비 증감액"] = delta
-        summary["Base 대비 증감률"] = (
+        delta = summary["끝수 처리 후 합계"] - base_total
+        summary["기준 대비 증감액"] = delta
+        summary["기준 대비 증감률"] = (
             delta / base_total * Decimal("100")
             if base_total != 0
             else Decimal("0")
@@ -366,14 +362,14 @@ def build_sensitivity_scenarios(
     )
 
 
-def _reconciliation_row(case: GoldenCaseData, metric: str) -> pd.Series | None:
+def _reconciliation_row(case: CoreAssetTaxCaseData, metric: str) -> pd.Series | None:
     rows = case.reconciliation[
         case.reconciliation["metric"].fillna("").astype(str).eq(metric)
     ]
     return None if rows.empty else rows.iloc[0]
 
 
-def build_tax_issue_matrix(case: GoldenCaseData) -> pd.DataFrame:
+def build_tax_issue_matrix(case: CoreAssetTaxCaseData) -> pd.DataFrame:
     taxpayer = case.taxpayers.iloc[0]
     notice = _reconciliation_row(case, "holding_tax_notice_reconciliation")
     area = _reconciliation_row(case, "parcel_area_difference_tax_sensitivity")
@@ -416,7 +412,9 @@ def build_tax_issue_matrix(case: GoldenCaseData) -> pd.DataFrame:
             "evidence_status": "not_reconciled" if notice_open else "reconciled",
             "potential_tax_effect": "모델 재계산액과 실제 세액 차이",
             "quantitative_sensitivity": (
-                f"재계산액 {GOLDEN_RECALCULATION_RAW:,}원, 실제 고지액 미확인"
+                "끝수 처리 후 재계산액 "
+                f"{CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT:,}원, "
+                "실제 고지세액 미확인"
             ),
             "required_document": "2026 재산세·지역자원시설세 고지서",
             "request_reason": "세목별 산식 재계산액과 실제 고지세액 대사",
@@ -441,7 +439,7 @@ def build_tax_issue_matrix(case: GoldenCaseData) -> pd.DataFrame:
             "current_status": "Open",
             "evidence_status": "not_reconciled",
             "potential_tax_effect": "과세면적 차이에 따른 토지 관련 세액 차이",
-            "quantitative_sensitivity": f"법정 절사 전 약 {area_effect:,}원",
+            "quantitative_sensitivity": f"끝수 처리 적용 전 약 {area_effect:,}원",
             "required_document": "최신 토지대장·지적도 및 부속지번 자료",
             "request_reason": "서린동 91 포함 여부와 현행 과세면적 확인",
         },
@@ -459,13 +457,13 @@ def build_tax_issue_matrix(case: GoldenCaseData) -> pd.DataFrame:
         {
             "priority": "P1",
             "issue_code": "notice_adjustments_unmodeled",
-            "tax_issue": "법정 절사·감면·세부담상한 미반영",
+            "tax_issue": "감면·세부담상한·지방자치단체 조정 미반영",
             "current_status": "Open" if notice_open else "Resolved",
             "evidence_status": "not_reflected",
-            "potential_tax_effect": "실제 납부세액과 산식 재계산액의 차이",
+            "potential_tax_effect": "실제 고지세액과 산식 재계산액의 차이",
             "quantitative_sensitivity": "실제 과세내역 확인 전 정량화 불가",
             "required_document": "과세내역서 및 감면·세부담상한 적용자료",
-            "request_reason": "법정 절사와 지방자치단체 조정 내역 확인",
+            "request_reason": "감면·세부담상한과 지방자치단체 조정 내역 확인",
         },
     ]
     for issue in issues:
@@ -515,7 +513,7 @@ def build_case_request_list(
 
 
 def build_case_kpis(
-    case: GoldenCaseData,
+    case: CoreAssetTaxCaseData,
     issue_matrix: pd.DataFrame,
 ) -> dict[str, int | float | str]:
     coverage = summarize_coverage(

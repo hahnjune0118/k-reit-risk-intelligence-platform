@@ -25,7 +25,9 @@ GOLDEN_REIT_NAME = "SK리츠"
 GOLDEN_DOC_DIR = PROJECT_ROOT / "docs" / "v15" / "golden_asset"
 EVIDENCE_MATRIX_PATH = GOLDEN_DOC_DIR / "SK_SEORIN_EVIDENCE_MATRIX.csv"
 AREA_RECONCILIATION_PATH = GOLDEN_DOC_DIR / "SK_SEORIN_AREA_RECONCILIATION.csv"
-STATUTORY_RECALCULATION_LABEL = "2026년 공식 입력자료 기반 보유세 산식 재계산액"
+STATUTORY_RECALCULATION_LABEL = (
+    "2026년 공식 과세기초자료와 확인된 법정 산식에 따른 보유세 재계산액"
+)
 EVIDENCE_MATRIX_COLUMNS = [
     "evidence_id",
     "metric_or_fact",
@@ -722,7 +724,7 @@ def _reconciliation_rows(calculations: pd.DataFrame, snapshot: dict) -> pd.DataF
             "variance_percent": pd.NA,
             "reconciliation_reason": (
                 "5.3㎡ 전부를 동일 지가·분리과세·도시지역분 대상으로 가정한 "
-                "법정 절사 전 민감도이며 실제 고지 차이가 아님"
+            "끝수 처리 적용 전 민감도이며 실제 고지 차이가 아님"
             ),
             "reviewer_status": "open",
         },
@@ -839,7 +841,7 @@ def run() -> dict:
         "asset_id": snapshot["asset"]["asset_id"],
         "calculation_rows": len(calculations),
         "calculated_rows": int(numeric.notna().sum()),
-        "official_source_total": float(total),
+        "official_source_total": _decimal_text(total),
         "statutory_recalculation_label": STATUTORY_RECALCULATION_LABEL,
         "statutory_recalculation_raw": _decimal_text(total),
         "actual_notice_amount": None,
@@ -849,7 +851,7 @@ def run() -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="공식자료가 연결된 첫 v15 Golden Asset 계산을 재현합니다."
+        description="공식자료가 연결된 v15 핵심 자산 계산을 재현합니다."
     )
     parser.parse_args()
     print(json.dumps(run(), ensure_ascii=False, indent=2))

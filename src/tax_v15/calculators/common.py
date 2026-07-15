@@ -9,6 +9,22 @@ from ..constants import CALCULABLE_SOURCE_STATUSES
 from ..models import as_decimal
 
 
+END_DIGIT_TREATMENT_UNIT = Decimal("10")
+END_DIGIT_TREATMENT_METHOD = "10원 미만 끝수 미계산"
+END_DIGIT_TREATMENT_LEGAL_BASIS = (
+    "지방회계법 제55조(지방회계법 시행령 제67조의 예외 대상 여부 별도 검토)"
+)
+
+
+def truncate_to_ten_won(amount: Decimal) -> Decimal:
+    """Drop the remainder below KRW 10 without using binary floating point."""
+    if not isinstance(amount, Decimal):
+        raise TypeError("끝수 처리 금액은 Decimal이어야 합니다.")
+    if amount < 0:
+        raise ValueError("끝수 처리 금액은 음수일 수 없습니다.")
+    return (amount // END_DIGIT_TREATMENT_UNIT) * END_DIGIT_TREATMENT_UNIT
+
+
 def source_is_calculable(row: Mapping, required_fields: list[str]) -> tuple[bool, list[str]]:
     issues: list[str] = []
     status = str(row.get("validation_status", "")).strip()

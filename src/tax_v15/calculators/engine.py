@@ -9,6 +9,12 @@ from ..models import CalculationResult
 from ..rules import TaxRuleBook
 from ..schemas import CSV_SCHEMAS
 from .building_property_tax import calculate_building_property_tax
+from .common import (
+    END_DIGIT_TREATMENT_LEGAL_BASIS,
+    END_DIGIT_TREATMENT_METHOD,
+    END_DIGIT_TREATMENT_UNIT,
+    truncate_to_ten_won,
+)
 from .comprehensive_real_estate_tax import calculate_comprehensive_land_tax, calculate_rural_special_tax
 from .comprehensive_real_estate_tax import aggregate_official_land_values
 from .land_property_tax import calculate_land_assessed_value, calculate_land_property_tax
@@ -16,9 +22,37 @@ from .supplementary_taxes import calculate_fire_resource_tax, calculate_local_ed
 
 
 def _plain(value):
-    if isinstance(value, Decimal):
-        return float(value)
     return value
+
+
+def _end_digit_values(result: CalculationResult) -> dict:
+    before = result.calculated_tax
+    is_tax_amount = (
+        before is not None
+        and result.status != "not_applicable"
+        and result.tax_name != "토지 시가표준액"
+    )
+    if not is_tax_amount:
+        return {
+            "calculated_tax_before_end_digit_treatment": pd.NA,
+            "end_digit_treatment_unit": pd.NA,
+            "end_digit_treatment_method": pd.NA,
+            "end_digit_treatment_legal_basis": pd.NA,
+            "calculated_tax_after_end_digit_treatment": pd.NA,
+            "end_digit_treatment_difference": pd.NA,
+            "calculated_tax": before,
+        }
+
+    after = truncate_to_ten_won(before)
+    return {
+        "calculated_tax_before_end_digit_treatment": before,
+        "end_digit_treatment_unit": END_DIGIT_TREATMENT_UNIT,
+        "end_digit_treatment_method": END_DIGIT_TREATMENT_METHOD,
+        "end_digit_treatment_legal_basis": END_DIGIT_TREATMENT_LEGAL_BASIS,
+        "calculated_tax_after_end_digit_treatment": after,
+        "end_digit_treatment_difference": before - after,
+        "calculated_tax": after,
+    }
 
 
 def _record(
@@ -34,7 +68,7 @@ def _record(
     taxable_area=None,
     ownership_share=None,
 ) -> dict:
-    return {
+    record = {
         "tax_year": tax_year,
         "reit_name": reit_name,
         "taxpayer_id": taxpayer_id,
@@ -52,7 +86,6 @@ def _record(
         "base_amount": _plain(result.base_amount),
         "tax_rate": _plain(result.tax_rate),
         "multiplier": _plain(result.multiplier),
-        "calculated_tax": _plain(result.calculated_tax),
         "verified_tax": pd.NA,
         "variance": pd.NA,
         "calculation_status": result.status,
@@ -63,6 +96,8 @@ def _record(
         "source_url": result.source_url,
         "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
     }
+    record.update(_end_digit_values(result))
+    return record
 
 
 def _taxpayer_for_asset(taxpayers: pd.DataFrame, asset_id: str) -> pd.Series | None:

@@ -9,33 +9,49 @@ from ..validation.controls import summarize_coverage
 
 
 SECTIONS = [
-    "Executive Conclusion",
-    "Scope and Limitation",
-    "Ownership and Taxpayer Structure",
-    "Public REIT Separate-Tax Eligibility",
-    "Land Property Tax",
-    "Building Property Tax",
-    "Urban Area and Local Education Tax",
-    "Fire Resource Facility Tax",
-    "Comprehensive Real Estate Holding Tax",
-    "Tax Sensitivity Scenario",
-    "Tax Issue Matrix",
-    "Request List",
-    "Reconciliation",
-    "Reviewer Sign-off",
+    "검토 결론",
+    "검토대상 및 한계",
+    "공모부동산투자회사 법적 지위",
+    "소유·신탁 구조 및 재산세 납세의무자",
+    "목적사업용 토지의 분리과세 적용요건",
+    "토지분 재산세",
+    "건축물분 재산세",
+    "재산세 도시지역분 및 지방교육세",
+    "소방분 지역자원시설세",
+    "토지분 종합부동산세 및 농어촌특별세",
+    "세목별 끝수 처리",
+    "보유세 민감도 분석",
+    "주요 세무쟁점",
+    "추가 요청자료 목록",
+    "고지세액 대사",
+    "검토자 서명",
 ]
 
+PUBLIC_STATUS_LABELS = {
+    "eligible_separated_public_reit": "분리과세 적용요건 충족 판단",
+    "unverified": "미확인",
+    "statutory_basis_reviewed_registry_and_notice_open": (
+        "법령 검토 완료·등기 및 과세내역 확인 필요"
+    ),
+    "not_reconciled": "미대사",
+}
 
-def _verified_total(calculations: pd.DataFrame) -> Decimal | None:
+
+def _calculated_tax_rows(calculations: pd.DataFrame) -> pd.DataFrame:
     if calculations is None or calculations.empty:
-        return None
-    eligible = calculations[
+        return pd.DataFrame()
+    return calculations[
         calculations["calculation_status"].isin(
             ["verified_notice", "official_source_calculated"]
         )
         & calculations["tax_name"].ne("토지 시가표준액")
-    ]
-    values = eligible["calculated_tax"].dropna()
+    ].copy()
+
+
+def _decimal_total(frame: pd.DataFrame, column: str) -> Decimal | None:
+    if frame is None or frame.empty or column not in frame.columns:
+        return None
+    values = frame[column].dropna()
     if values.empty:
         return None
     return sum((Decimal(str(value)) for value in values), Decimal("0"))
@@ -46,7 +62,7 @@ def _status_summary(frame: pd.DataFrame, column: str, fallback: str) -> str:
         return fallback
     values = sorted(
         {
-            str(value).strip()
+            PUBLIC_STATUS_LABELS.get(str(value).strip(), str(value).strip())
             for value in frame[column]
             if not pd.isna(value) and str(value).strip()
         }
@@ -62,8 +78,16 @@ def _markdown_value(value) -> str:
             return ""
     except (TypeError, ValueError):
         pass
-    text = f"{value:,}" if isinstance(value, Decimal) else str(value)
+    text = _format_decimal(value) if isinstance(value, Decimal) else str(value)
     return text.replace("|", "\\|").replace("\n", " ")
+
+
+def _format_decimal(value: Decimal) -> str:
+    text = format(value, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    whole, dot, fraction = text.partition(".")
+    return f"{int(whole):,}{dot}{fraction}"
 
 
 def _markdown_table(frame: pd.DataFrame | None, columns: list[str]) -> str:
@@ -79,6 +103,109 @@ def _markdown_table(frame: pd.DataFrame | None, columns: list[str]) -> str:
     for row in frame[available].itertuples(index=False, name=None):
         lines.append("| " + " | ".join(_markdown_value(value) for value in row) + " |")
     return "\n".join(lines)
+
+
+def _end_digit_table(calculations: pd.DataFrame) -> pd.DataFrame:
+    rows = calculations[
+        calculations["end_digit_treatment_method"].fillna("").astype(str).ne("")
+    ].copy()
+    result = rows[
+        [
+            "tax_name",
+            "calculated_tax_before_end_digit_treatment",
+            "end_digit_treatment_unit",
+            "end_digit_treatment_method",
+            "calculated_tax_after_end_digit_treatment",
+            "end_digit_treatment_difference",
+        ]
+    ].copy()
+
+    def tax_line_label(row: pd.Series) -> str:
+        tax_name = str(row.get("tax_name", ""))
+        if tax_name == "토지 재산세":
+            return "토지분 재산세"
+        if tax_name == "건축물 재산세":
+            return "건축물분 재산세"
+        if tax_name in {"재산세 도시지역분", "지방교육세"}:
+            if str(row.get("parcel_id", "")).strip():
+                return f"토지분 {tax_name}"
+            if str(row.get("building_id", "")).strip():
+                return f"건축물분 {tax_name}"
+        return tax_name
+
+    result["tax_name"] = rows.apply(tax_line_label, axis=1)
+    return result.rename(
+        columns={
+            "tax_name": "세목",
+            "calculated_tax_before_end_digit_treatment": "끝수 처리 전 산출세액",
+            "end_digit_treatment_unit": "끝수 처리 단위",
+            "end_digit_treatment_method": "끝수 처리 방법",
+            "calculated_tax_after_end_digit_treatment": "끝수 처리 후 재계산액",
+            "end_digit_treatment_difference": "끝수 처리 차이",
+        }
+    )
+
+
+def _issue_table(issue_matrix: pd.DataFrame | None) -> pd.DataFrame | None:
+    if issue_matrix is None or issue_matrix.empty:
+        return issue_matrix
+    result = issue_matrix[
+        [
+            "priority",
+            "tax_issue",
+            "evidence_status",
+            "potential_tax_effect",
+            "quantitative_sensitivity",
+            "required_document",
+            "resolution_status",
+        ]
+    ].copy()
+    result["resolution_status"] = result["resolution_status"].replace(
+        {"Open": "미해결", "Resolved": "조치 완료"}
+    )
+    return result.rename(
+        columns={
+            "priority": "우선순위",
+            "tax_issue": "주요 세무쟁점",
+            "evidence_status": "검증근거 상태",
+            "potential_tax_effect": "잠재 세무영향",
+            "quantitative_sensitivity": "정량 영향",
+            "required_document": "추가 필요자료",
+            "resolution_status": "조치 상태",
+        }
+    )
+
+
+def _request_table(requests: pd.DataFrame | None) -> pd.DataFrame | None:
+    if requests is None or requests.empty:
+        return requests
+    request_document_column = (
+        "required_document"
+        if "required_document" in requests.columns
+        else "request_document"
+    )
+    request_issue_column = "tax_issue" if "tax_issue" in requests.columns else "issue"
+    result = requests[
+        [
+            "priority",
+            request_issue_column,
+            request_document_column,
+            "request_reason",
+            "reviewer_status",
+        ]
+    ].copy()
+    result["reviewer_status"] = result["reviewer_status"].replace(
+        {"open": "미검토", "reviewed": "검토 완료"}
+    )
+    return result.rename(
+        columns={
+            "priority": "우선순위",
+            request_issue_column: "주요 세무쟁점",
+            request_document_column: "추가 요청자료",
+            "request_reason": "요청 사유",
+            "reviewer_status": "검토 상태",
+        }
+    )
 
 
 def build_tax_review_memo(
@@ -102,10 +229,14 @@ def build_tax_review_memo(
         taxpayers,
         calculations,
     )
-    verified_total = _verified_total(calculations)
+    tax_rows = _calculated_tax_rows(calculations)
+    before_total = _decimal_total(
+        tax_rows,
+        "calculated_tax_before_end_digit_treatment",
+    )
+    after_total = _decimal_total(tax_rows, "calculated_tax")
     completed = int(coverage["completed_calculation_rows"])
     blocked = int(coverage["blocked_calculation_rows"])
-    recalculation_label = f"{tax_year}년 공식 입력자료 기반 보유세 산식 재계산액"
     statutory_status = _status_summary(
         taxpayers,
         "statutory_eligibility_status",
@@ -128,126 +259,160 @@ def build_tax_review_memo(
         else "분석대상 자산"
     )
     conclusion = (
-        f"{asset_name}의 확인된 공식 입력자료와 현행 표준 산식에 따른 "
-        f"{tax_year}년 보유세 재계산액은 "
+        "공개자료와 현행 법령에 따른 검토 결과, "
+        f"{reit_name}가 위탁자이자 재산세 납세의무자인 {asset_name}의 토지는 "
+        "공모부동산투자회사의 목적사업용 토지로서 분리과세 적용요건을 충족하는 "
+        "것으로 판단됩니다. 이에 따라 해당 토지는 토지분 종합부동산세의 "
+        "과세대상에서 제외되는 것으로 분석했습니다. "
         + (
-            f"{verified_total:,}원입니다. "
-            if verified_total is not None
-            else "공개자료만으로 산식 재계산할 수 있는 금액은 없습니다. "
+            f"{tax_year}년 공식 과세기초자료와 확인된 법정 산식에 따른 "
+            "보유세 재계산액은 "
+            f"{after_total:,}원입니다. "
+            if after_total is not None
+            else "공개자료만으로 재계산할 수 있는 보유세 금액은 없습니다. "
         )
-        + "이는 실제 고지세액이 아니며, 실제 과세내역서상 분리과세 코드, "
-        "법정 절사, 감면, 세부담상한, 지방자치단체 조정 및 고지서 대사는 "
-        "미완료 상태입니다."
+        + "다만 실제 고지세액이 아니며, 과세내역서상 분리과세 코드, 감면, "
+        "세부담상한, 지방자치단체 조정과 소방분 위험유형 코드 대사는 미완료입니다."
     )
     scenario_text = (
-        "본 시나리오는 공시가격 및 시가표준액 변화에 대한 기계적 민감도 분석이며, "
-        "미래 세액 예측이나 과세관청의 결정세액이 아닙니다.\n\n"
+        "개별공시지가 및 건축물 시가표준액의 기계적 변동을 가정한 분석이며, "
+        "미래 결정세액 또는 과세관청의 고지세액 예측이 아닙니다. 각 세목에는 "
+        "지방회계법 제55조에 따른 10원 미만 끝수 미계산 기준을 적용했습니다.\n\n"
         + _markdown_table(
             sensitivity_summary,
             [
-                "Scenario",
-                "토지 시가표준액",
-                "건축물 시가표준액",
-                "총 보유세",
-                "Base 대비 증감액",
-                "Base 대비 증감률",
+                "민감도 분석",
+                "토지 개별공시지가 변동률",
+                "건축물 시가표준액 변동률",
+                "끝수 처리 전 합계",
+                "끝수 처리 후 합계",
+                "기준 대비 증감액",
+                "기준 대비 증감률",
             ],
         )
     )
     issue_text = _markdown_table(
-        issue_matrix,
+        _issue_table(issue_matrix),
         [
-            "priority",
-            "issue_code",
-            "tax_issue",
-            "current_status",
-            "evidence_status",
-            "potential_tax_effect",
-            "quantitative_sensitivity",
-            "required_document",
-            "resolution_status",
+            "우선순위",
+            "주요 세무쟁점",
+            "검증근거 상태",
+            "잠재 세무영향",
+            "정량 영향",
+            "추가 필요자료",
+            "조치 상태",
         ],
-    )
-    request_document_column = (
-        "required_document"
-        if requests is not None and "required_document" in requests.columns
-        else "request_document"
-    )
-    request_issue_column = (
-        "tax_issue"
-        if requests is not None and "tax_issue" in requests.columns
-        else "issue"
     )
     request_text = _markdown_table(
-        requests,
+        _request_table(requests),
         [
-            "priority",
-            "issue_code",
-            request_issue_column,
-            request_document_column,
-            "request_reason",
-            "reviewer_status",
+            "우선순위",
+            "주요 세무쟁점",
+            "추가 요청자료",
+            "요청 사유",
+            "검토 상태",
         ],
     )
+    end_digit_text = (
+        "본 분석에서는 지방회계법 제55조에 따른 10원 미만 끝수 미계산 기준을 "
+        "세율·배율 적용 후 각 세목의 산출세액에 적용했습니다. 지방회계법 시행령 "
+        "제67조의 분할 징수·수납 예외와 실제 과세관청의 처리 방식은 과세내역서로 "
+        "추가 확인해야 합니다. 시가표준액, 재산세 과세표준, 세율, 배율 및 "
+        "과세대상 제외·해당 없음 행에는 적용하지 않았습니다.\n\n"
+        + _markdown_table(
+            _end_digit_table(calculations),
+            [
+                "세목",
+                "끝수 처리 전 산출세액",
+                "끝수 처리 단위",
+                "끝수 처리 방법",
+                "끝수 처리 후 재계산액",
+                "끝수 처리 차이",
+            ],
+        )
+    )
     section_text = {
-        "Executive Conclusion": conclusion,
-        "Scope and Limitation": (
-            f"본 Tax 모듈은 {reit_name} 전체 자산의 확정 세액을 산출하는 도구가 아니라, "
-            f"대표 자산인 {asset_name}을 대상으로 공모리츠 보유세 검토 프로세스를 구현한 "
-            f"심층 Case Study입니다.\n\n{DISCLAIMER_KO}"
+        "검토 결론": conclusion,
+        "검토대상 및 한계": (
+            f"본 Tax 모듈은 {reit_name} 전체 자산의 확정 세액을 산출하는 도구가 "
+            f"아니라, 핵심 분석대상인 {asset_name}을 대상으로 공개자료 기반의 "
+            f"단일 자산 보유세 검토 흐름을 구현합니다.\n\n{DISCLAIMER_KO}"
         ),
-        "Ownership and Taxpayer Structure": (
-            f"자산 {coverage['asset_count']}건 중 공개자료와 법령을 연결해 납세의무자를 "
-            f"판정한 행은 {coverage['verified_taxpayer_count']}건입니다. 투자 보유형태, "
-            "등기 보유형태, 등기명의자, 위탁자·수탁자, 경제적 보유주체와 "
-            "재산세 납세의무자를 서로 구분합니다."
+        "공모부동산투자회사 법적 지위": (
+            "공식 투자보고서상 공모 의무와 공모 실시 사실을 부동산투자회사법상 "
+            "요건과 연결했습니다. 최신 영업인가·등록 상태는 별도 확인이 필요합니다."
         ),
-        "Public REIT Separate-Tax Eligibility": (
-            f"법정 적격성은 {statutory_status}, 실제 고지 과세구분은 {notice_status}, "
-            f"법률 검토 상태는 {legal_status}입니다. 법정 적용 가능성과 실제 고지 "
-            "과세구분을 동일한 상태로 표시하지 않습니다."
+        "소유·신탁 구조 및 재산세 납세의무자": (
+            f"자산 {coverage['asset_count']}건 중 공개자료와 지방세법 제107조를 "
+            f"연결해 재산세 납세의무자를 판정한 행은 "
+            f"{coverage['verified_taxpayer_count']}건입니다. 투자 보유형태, 등기 명의, "
+            "위탁자·수탁자, 경제적 보유주체와 재산세 납세의무자를 구분합니다."
         ),
-        "Land Property Tax": (
+        "목적사업용 토지의 분리과세 적용요건": (
+            f"법정 적용요건 상태는 {statutory_status}, 실제 고지 재산세 과세구분은 "
+            f"{notice_status}, 법률 검토 상태는 {legal_status}입니다. 분리과세 판단은 "
+            "토지에만 적용하며 건축물분 재산세, 재산세 도시지역분, 지방교육세와 "
+            "소방분 지역자원시설세는 각각 별도로 과세합니다."
+        ),
+        "토지분 재산세": (
             "필지별 개별공시지가 × 과세면적 × 소유지분으로 토지 시가표준액을 "
-            "계산하고 Tax Rule Master의 공정시장가액비율과 세율을 적용합니다."
+            "계산하고 공정시장가액비율과 분리과세 토지 표준세율을 적용했습니다."
         ),
-        "Building Property Tax": (
+        "건축물분 재산세": (
             f"공식 건축물 시가표준액 확인 건은 "
-            f"{coverage['verified_building_value_count']}건입니다. 시가표준액은 재산세 "
-            "과세표준이나 실제 고지세액과 구분하며, 미확인 건은 계산하지 않습니다."
+            f"{coverage['verified_building_value_count']}건입니다. 시가표준액, 재산세 "
+            "과세표준과 끝수 처리 전·후 산출세액을 구분합니다."
         ),
-        "Urban Area and Local Education Tax": (
-            "도시지역분은 적용대상 고시와 조례가 확인된 자산만 계산하며, "
-            "지방교육세는 도시지역분을 제외한 재산세 본세를 기준으로 계산합니다."
+        "재산세 도시지역분 및 지방교육세": (
+            "재산세 도시지역분은 확인된 적용대상과 과세표준을 기준으로 계산하고, "
+            "지방교육세는 도시지역분을 제외한 재산세 본세를 기준으로 계산했습니다."
         ),
-        "Fire Resource Facility Tax": (
-            "공식 건축물 시가표준액과 위험유형이 모두 확인된 경우에만 누진세율 및 "
-            "100%·200%·300% 배율을 적용합니다. 실제 고지 위험코드는 미대사입니다."
+        "소방분 지역자원시설세": (
+            "업무시설·지상 36층이라는 공개자료와 지방세법 시행령 제138조를 "
+            "연결하여 법정 요건상 대형 화재위험 건축물 해당 판단에 따른 300% "
+            "배율을 적용했습니다. 실제 고지서상 위험유형 코드는 미확인이고 대사 "
+            "상태는 미대사입니다."
         ),
-        "Comprehensive Real Estate Holding Tax": (
-            "분리과세 토지는 not_applicable로 표시합니다. 종합·별도합산 토지는 "
-            "납세의무자별 전국 합산 공시가격과 재산세 공제액이 없으면 계산을 차단합니다."
+        "토지분 종합부동산세 및 농어촌특별세": (
+            "토지분 종합부동산세: 과세대상 제외. 분리과세대상 토지는 토지분 "
+            "종합부동산세의 종합합산·별도합산 과세대상에 포함되지 않으므로 계산상 "
+            "세액을 0원으로 처리합니다. 종합부동산세분 농어촌특별세: 해당 없음. "
+            "과세대상 제외는 감면·면제와 구분합니다."
         ),
-        "Tax Sensitivity Scenario": scenario_text,
-        "Tax Issue Matrix": issue_text,
-        "Request List": request_text,
-        "Reconciliation": (
-            f"고지 대사 상태는 {reconciliation_status}입니다. 세금과공과 전체를 보유세 "
-            "Ground Truth로 사용하지 않으며 실제 고지서 또는 과세내역서와 세목별로 "
+        "세목별 끝수 처리": end_digit_text,
+        "보유세 민감도 분석": scenario_text,
+        "주요 세무쟁점": issue_text,
+        "추가 요청자료 목록": request_text,
+        "고지세액 대사": (
+            f"고지세액 대사 상태는 {reconciliation_status}입니다. 실제 고지세액은 "
+            "과세내역서 미확보로 확인하지 못했습니다. 세금과공과 전체를 보유세 "
+            "검증값으로 사용하지 않으며 실제 고지서 또는 과세내역서와 세목별로 "
             "대사해야 합니다."
         ),
-        "Reviewer Sign-off": (
+        "검토자 서명": (
             "검토자: ____________________  검토일: ____________________  "
             "승인: ____________________"
         ),
     }
+    before_label = (
+        f"{_format_decimal(before_total)}원"
+        if before_total is not None
+        else "재계산 불가"
+    )
+    after_label = (
+        f"{_format_decimal(after_total)}원"
+        if after_total is not None
+        else "재계산 불가"
+    )
     lines = [
-        f"# {reit_name} — {asset_name} {tax_year} Tax Review Memo",
+        f"# {reit_name} - {asset_name} {tax_year}년 보유세 세무검토 메모",
         "",
         f"계산 상태: {SOURCE_BADGES.get(coverage['final_status'], coverage['final_status'])}",
-        f"산식 재계산 가능 세목: {completed}건 / 추가자료 필요 행: {blocked}건",
-        f"계산 명칭: {recalculation_label}",
-        "실제 고지세액: 미확인",
+        f"재계산 가능 세목: {completed}건 / 추가자료 필요 행: {blocked}건",
+        f"끝수 처리 전 산식상 산출세액: {before_label}",
+        f"끝수 처리 후 보유세 재계산액: {after_label}",
+        "실제 고지세액: 과세내역서 미확보",
+        "고지세액 대사 상태: 미대사",
         "",
     ]
     for number, title in enumerate(SECTIONS, start=1):

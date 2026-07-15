@@ -1,67 +1,42 @@
-# Architecture
+# 시스템 구조
 
-## Runtime
+## 공개 런타임
 
-`app.py`는 Streamlit 진입점이며 General, Assurance, Tax, Methodology 네 모드를 오케스트레이션합니다. Deals와 KRX API는 공개 시작 경로에 포함되지 않습니다.
+`app.py`는 General, Assurance, Tax와 Methodology 네 화면을 연결합니다. Deals와 KRX 관련 모듈은 공개 시작 경로에 포함하지 않습니다. API 인증정보는 서버 측에서만 읽고 화면·로그·내려받기 자료에 전달하지 않습니다.
 
-```mermaid
-flowchart LR
-    A["app.py"] --> B["ui_sidebar.py"]
-    A --> C["ui_general.py"]
-    A --> D["ui_assurance.py"]
-    A --> E["ui_tax_v15.py"]
-    A --> F["ui_methodology.py"]
-    E --> G["src/tax_v15"]
-    G --> H["data/v15 CSV Snapshot"]
-```
-
-## v15 Tax 계층
+## v15 Tax 모듈
 
 ```text
 src/tax_v15/
-  acquisition/    공식 홈페이지·PDF 링크와 페이지 근거 추출
-  calculators/    토지·건축물·부가세목·종부세 계산
-  reporting/      Request List, Memo, CSV·Excel·HTML Export
-  validation/     Source·Schema·Coverage·계산상태 통제
-  loaders.py      고정 스키마 CSV 로더
-  models.py       Decimal 계산결과와 Fail-closed 상태
-  rules.py        Tax Rule Master 조회와 누진세율 계산
-  taxpayer.py     신탁 납세의무자와 분리과세 판정
+  loaders.py       CSV 계약 검증과 Decimal 로딩
+  schemas.py       파일별 필수 컬럼
+  rules.py         세법 규칙표 조회와 검증 게이트
+  calculators/     토지·건축물·부가세목·끝수 처리
+  validation/      자료 확인범위와 Fail-closed 통제
+  reporting/       추가 요청자료, 메모, CSV·Excel·HTML 생성
 ```
-
-## 데이터 흐름
 
 ```mermaid
 flowchart TD
-    R["공식 상장리츠 목록"] --> D["Source Document Manifest"]
-    D --> A["Asset Registry"]
-    A --> T["Legal Owner / Taxpayer"]
-    A --> P["Parcel / PNU"]
-    A --> B["Building"]
-    P --> C["Official Land Value"]
-    B --> C2["Official Building Standard Value"]
-    T --> X["Tax Classification"]
-    C --> E["Tax Calculation Detail"]
-    C2 --> E
-    X --> E
-    M["Tax Rule Master"] --> E
-    E --> V["Validation / Reconciliation"]
-    V --> Q["Request List"]
-    V --> O["Tax Review Memo"]
+    S["공식 과세기초자료"] --> M["자산·필지·건축물·납세의무자 등록부"]
+    M --> C["재산세 과세구분"]
+    C --> R["세법 규칙표"]
+    R --> B["세목별 산출세액"]
+    B --> T["세목별 10원 미만 끝수 처리"]
+    T --> V["검증 및 고지세액 대사"]
+    V --> I["주요 세무쟁점"]
+    V --> Q["추가 요청자료 목록"]
+    V --> O["보유세 세무검토 메모"]
 ```
 
-## 경계
+## 계산 계약
 
-- General·Assurance의 Peer·재무 Snapshot은 v15 Tax 계산과 분리합니다.
-- 인증값은 `api_manager.py`에서 서버 측으로 로드하고 UI와 출력에 전달하지 않습니다.
-- 원문 PDF와 OCR 산출물은 로컬 캐시에 두고 Git에는 정규화된 사실과 Source metadata만 저장합니다.
-- `TaxRuleBook`은 공식 검증 상태와 공식 URL이 없는 규칙을 거부합니다.
-- 미검증 상태에는 `calculated_tax`를 저장할 수 없습니다.
+`tax_calculation_detail.csv`는 끝수 처리 전 산출세액, 처리 단위·방법·법적 근거, 처리 후 재계산액과 차이를 보존합니다. `calculated_tax`는 처리 후 금액과 같으며, 비과세·과세대상 제외·시가표준액 행에는 끝수 처리 정보를 기록하지 않습니다.
 
-## 재현 경로
+## 통제 경계
 
-```powershell
-py -m scripts.v15.run_pipeline --tax-year 2026 --all-reits --no-resume
-py -m pytest -q
-py -m streamlit run app.py
-```
+- 필수 공식자료가 없으면 계산하지 않습니다.
+- 실제 고지서 확인 전에는 `verified_notice`를 생성하지 않습니다.
+- 민감도 분석은 같은 계산 엔진을 다시 호출합니다.
+- UI·메모·내려받기 자료는 동일한 처리 후 합계를 사용합니다.
+- 건축물 장부가액이나 Peer 비율을 공식 과세기초가액의 대체값으로 사용하지 않습니다.

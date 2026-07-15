@@ -9,15 +9,18 @@ import pandas as pd
 import pytest
 
 from src.tax_v15.case_study import (
+    CORE_ASSET_ID,
+    CORE_ASSET_TAXPAYER_ID,
+    CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT,
+    CORE_RECALCULATION_BEFORE_END_DIGIT_TREATMENT,
+    CORE_STOCK_CODE,
     GOLDEN_ASSET_ID,
-    GOLDEN_RECALCULATION_RAW,
-    GOLDEN_STOCK_CODE,
-    GOLDEN_TAXPAYER_ID,
     build_case_kpis,
     build_case_request_list,
     build_sensitivity_scenarios,
     build_tax_issue_matrix,
     calculate_sensitivity_scenario,
+    select_core_asset_tax_case,
     select_golden_case,
 )
 from src.tax_v15.loaders import load_v15_bundle
@@ -41,7 +44,7 @@ EXPECTED_ISSUES = {
 
 @pytest.fixture(scope="module")
 def case():
-    return select_golden_case(load_v15_bundle())
+    return select_core_asset_tax_case(load_v15_bundle())
 
 
 @pytest.fixture(scope="module")
@@ -57,97 +60,114 @@ def issue_frames(case):
 
 
 def _scenario_row(summary: pd.DataFrame, name: str) -> pd.Series:
-    rows = summary[summary["Scenario"].eq(name)]
+    rows = summary[summary["민감도 분석"].eq(name)]
     assert len(rows) == 1
     return rows.iloc[0]
 
 
 def test_tax_scope_is_only_sk_reit_and_sk_seorin(case):
-    assert case.stock_code == GOLDEN_STOCK_CODE
+    assert case.stock_code == CORE_STOCK_CODE
     assert case.tax_year == 2026
-    assert case.assets["asset_id"].tolist() == [GOLDEN_ASSET_ID]
+    assert case.assets["asset_id"].tolist() == [CORE_ASSET_ID]
     assert case.assets["asset_name"].tolist() == ["SK서린빌딩"]
-    assert case.taxpayers["taxpayer_id"].tolist() == [GOLDEN_TAXPAYER_ID]
+    assert case.taxpayers["taxpayer_id"].tolist() == [CORE_ASSET_TAXPAYER_ID]
     assert case.assets["reit_name"].nunique() == 1
 
 
-def test_tax_ui_has_no_cross_reit_or_asset_selectors():
+def test_deprecated_selector_and_ids_remain_compatible(case):
+    legacy = select_golden_case(load_v15_bundle())
+
+    assert GOLDEN_ASSET_ID == CORE_ASSET_ID
+    assert legacy.assets.equals(case.assets)
+
+
+def test_tax_ui_is_fixed_to_one_asset_and_uses_korean_public_copy():
     source = (ROOT / "ui_tax_case_study.py").read_text(encoding="utf-8")
     wrapper = (ROOT / "ui_tax_v15.py").read_text(encoding="utf-8")
 
-    assert "Tax Case Study" in source
-    assert "SK리츠 — SK서린빌딩" in source
+    assert "SK리츠 핵심 자산 보유세 세무검토" in source
+    assert "### SK서린빌딩" in source
     assert "st.selectbox" not in source
-    assert "분석대상 리츠" not in source
-    assert '"전체 자산"' not in source
-    assert '"전체 납세의무자"' not in source
-    assert '"전체 보유구조"' not in source
-    assert "ESR" not in source + wrapper
     assert "Peer Benchmark" not in source
-    assert "Sample Estimate" not in source
     assert "FFO" not in source
-    assert '**Raw statutory recalculation:** `{base_total:,}원`' in source
+    assert "끝수 처리 후 보유세 재계산액" in source
+    assert "끝수 처리 전 산식상 산출세액" in source
+    assert not any(
+        term in source + wrapper
+        for term in [
+            "Golden Asset",
+            "Golden Case",
+            "Raw statutory recalculation",
+            "Actual assessed amount",
+            "Notice reconciliation",
+        ]
+    )
 
 
-def test_general_mode_keeps_multi_company_selector_and_tax_highlight():
+def test_sidebar_keeps_default_background_and_korean_tax_caption():
     sidebar = (ROOT / "ui_sidebar.py").read_text(encoding="utf-8")
     layout = (ROOT / "ui_layout.py").read_text(encoding="utf-8")
 
     assert "selected_company_form" in sidebar
     assert 'st.selectbox(\n                "분석 대상회사"' in sidebar
-    assert 'selected_user_mode == "Tax"' in layout
-    assert "background:#fff9df" in layout
-    assert "SK서린빌딩 Tax Case Study의 분석단계를 아래에서 확인하세요." in sidebar
+    assert "background:#fff9df" not in layout
+    assert "border-right:3px solid" not in layout
+    assert "SK서린빌딩 보유세 세무검토의 주요 단계와 민감도 분석을 " in sidebar
+    assert "아래에서 확인할 수 있습니다." in sidebar
 
 
-def test_base_scenario_matches_golden_raw_total(scenario_frames):
+def test_base_scenario_matches_before_and_after_totals(scenario_frames):
     summary, breakdown = scenario_frames
-    base = _scenario_row(summary, "Base")
-    base_details = breakdown[breakdown["Scenario"].eq("Base")]
+    base = _scenario_row(summary, "기준")
+    base_details = breakdown[breakdown["민감도 분석"].eq("기준")]
+    total = base_details[base_details["세목"].eq("총계")].iloc[0]
 
-    assert base["총 보유세"] == GOLDEN_RECALCULATION_RAW
-    assert base_details.loc[base_details["세목"].eq("총계"), "계산세액"].iloc[0] == (
-        GOLDEN_RECALCULATION_RAW
+    assert base["끝수 처리 전 합계"] == CORE_RECALCULATION_BEFORE_END_DIGIT_TREATMENT
+    assert base["끝수 처리 후 합계"] == CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT
+    assert total["끝수 처리 전 산출세액"] == CORE_RECALCULATION_BEFORE_END_DIGIT_TREATMENT
+    assert total["끝수 처리 후 재계산액"] == CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT
+    assert all(
+        isinstance(value, Decimal)
+        for value in base_details["끝수 처리 후 재계산액"]
     )
-    assert all(isinstance(value, Decimal) for value in base_details["계산세액"])
 
 
-def test_moderate_and_severe_scenarios_are_exact(scenario_frames):
+def test_five_and_ten_percent_scenarios_are_exact(scenario_frames):
     summary, _ = scenario_frames
-    moderate = _scenario_row(summary, "Moderate")
-    severe = _scenario_row(summary, "Severe")
+    five = _scenario_row(summary, "공시가격·시가표준액 5% 상승")
+    ten = _scenario_row(summary, "공시가격·시가표준액 10% 상승")
 
-    assert moderate["토지 시가표준액"] == Decimal("387676091250.0000")
-    assert moderate["건축물 시가표준액"] == Decimal("42232839709.200")
-    assert moderate["총 보유세"] == Decimal("1313250671.982456")
-    assert severe["토지 시가표준액"] == Decimal("406136857500.000")
-    assert severe["건축물 시가표준액"] == Decimal("44243927314.40")
-    assert severe["총 보유세"] == Decimal("1375790375.410192")
+    assert five["끝수 처리 전 합계"] == Decimal("1313250671.982456000")
+    assert five["끝수 처리 후 합계"] == Decimal("1313250630")
+    assert ten["끝수 처리 전 합계"] == Decimal("1375790375.41019200")
+    assert ten["끝수 처리 후 합계"] == Decimal("1375790350")
 
 
 def test_custom_scenario_accepts_bounds_and_rejects_invalid_steps(case):
-    lower, _ = calculate_sensitivity_scenario(case, "Custom", -10, -10)
-    upper, _ = calculate_sensitivity_scenario(case, "Custom", 20, 20)
+    lower, _ = calculate_sensitivity_scenario(case, "사용자 설정", -10, -10)
+    upper, _ = calculate_sensitivity_scenario(case, "사용자 설정", 20, 20)
 
-    assert lower["총 보유세"] < GOLDEN_RECALCULATION_RAW
-    assert upper["총 보유세"] > GOLDEN_RECALCULATION_RAW
+    assert lower["끝수 처리 후 합계"] < CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT
+    assert upper["끝수 처리 후 합계"] > CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT
     with pytest.raises(ValueError, match=r"-10%부터 \+20%"):
-        calculate_sensitivity_scenario(case, "Custom", -11, 0)
+        calculate_sensitivity_scenario(case, "사용자 설정", -11, 0)
     with pytest.raises(ValueError, match="1% 단위"):
-        calculate_sensitivity_scenario(case, "Custom", 1.5, 0)
+        calculate_sensitivity_scenario(case, "사용자 설정", Decimal("1.5"), 0)
 
 
-def test_scenario_reuses_tax_rule_master(case):
+def test_scenario_reuses_tax_rule_master_without_float(case):
     rules = case.rules.copy()
     mask = rules["rule_code"].eq("property_tax_land_separated")
     original_rate = Decimal(str(rules.loc[mask, "marginal_rate"].iloc[0]))
-    rules.loc[mask, "marginal_rate"] = float(original_rate * Decimal("2"))
+    rules["marginal_rate"] = rules["marginal_rate"].astype(object)
+    rules.loc[mask, "marginal_rate"] = original_rate * Decimal("2")
     changed_case = replace(case, rules=rules)
-    changed, detail = calculate_sensitivity_scenario(changed_case, "Base", 0, 0)
+    changed, detail = calculate_sensitivity_scenario(changed_case, "기준", 0, 0)
 
-    assert changed["총 보유세"] > GOLDEN_RECALCULATION_RAW
+    assert changed["끝수 처리 후 합계"] > CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT
     land_tax = detail[detail["세목"].eq("토지 재산세")].iloc[0]
-    assert land_tax["계산세액"] == Decimal("1033802910.0")
+    assert land_tax["끝수 처리 전 산출세액"] == Decimal("1033802910.0")
+    assert land_tax["끝수 처리 후 재계산액"] == Decimal("1033802910")
     assert "제111조" in land_tax["법적 근거"]
 
 
@@ -157,18 +177,18 @@ def test_scenario_keeps_classification_and_is_not_notice(case, scenario_frames):
     assert case.taxpayers["actual_notice_classification"].eq("unverified").all()
     assert not breakdown["계산상태"].str.contains("verified_notice").any()
     ui_source = (ROOT / "ui_tax_case_study.py").read_text(encoding="utf-8")
-    assert "미래 세액 예측이나 과세관청의 결정세액이 아닙니다." in ui_source
+    assert "미래 결정세액 또는 과세관청의 고지세액을 예측한" in ui_source
 
 
-def test_each_scenario_total_equals_breakdown_sum(scenario_frames):
+def test_each_scenario_total_equals_per_line_after_sum(scenario_frames):
     summary, breakdown = scenario_frames
-    for scenario_name in summary["Scenario"]:
+    for scenario_name in summary["민감도 분석"]:
         detail = breakdown[
-            breakdown["Scenario"].eq(scenario_name)
+            breakdown["민감도 분석"].eq(scenario_name)
             & breakdown["세목"].ne("총계")
         ]
-        expected = sum(detail["계산세액"], Decimal("0"))
-        actual = _scenario_row(summary, scenario_name)["총 보유세"]
+        expected = sum(detail["끝수 처리 후 재계산액"], Decimal("0"))
+        actual = _scenario_row(summary, scenario_name)["끝수 처리 후 합계"]
         assert actual == expected
 
 
@@ -201,11 +221,7 @@ def test_issue_matrix_kpis_and_request_links(case, issue_frames):
     assert set(requests["issue_code"]) == set(EXPECTED_ISSUES)
 
 
-def test_memo_and_exports_include_scenario_issue_and_requests(
-    case,
-    scenario_frames,
-    issue_frames,
-):
+def test_memo_and_exports_use_korean_sections_and_amounts(case, scenario_frames, issue_frames):
     summary, breakdown = scenario_frames
     issues, requests = issue_frames
     memo = build_tax_review_memo(
@@ -221,44 +237,37 @@ def test_memo_and_exports_include_scenario_issue_and_requests(
         summary,
         issues,
     )
-    html = review_document_html("SK Seorin Tax Review", memo).decode("utf-8")
+    html = review_document_html("SK리츠 SK서린빌딩 보유세 세무검토", memo).decode("utf-8")
     workbook = review_pack_excel_bytes(
         {
-            "ScenarioSummary": summary,
-            "ScenarioBreakdown": breakdown,
-            "TaxIssueMatrix": issues,
-            "RequestList": requests,
+            "민감도분석": summary,
+            "세목별민감도": breakdown,
+            "주요세무쟁점": issues,
+            "추가요청자료": requests,
         }
     )
     sheet_names = pd.ExcelFile(BytesIO(workbook)).sheet_names
 
     for section in [
-        "Executive Conclusion",
-        "Ownership and Taxpayer Structure",
-        "Public REIT Separate-Tax Eligibility",
-        "Tax Sensitivity Scenario",
-        "Tax Issue Matrix",
-        "Request List",
-        "Reconciliation",
-        "Reviewer Sign-off",
+        "검토 결론",
+        "소유·신탁 구조 및 재산세 납세의무자",
+        "목적사업용 토지의 분리과세 적용요건",
+        "세목별 끝수 처리",
+        "보유세 민감도 분석",
+        "주요 세무쟁점",
+        "추가 요청자료 목록",
+        "고지세액 대사",
     ]:
         assert section in memo
         assert section in html
-    assert f"{GOLDEN_RECALCULATION_RAW:,}원" in memo
-    assert "실제 고지세액: 미확인" in memo
-    assert "notice_classification_unverified" in memo
-    assert set(sheet_names) == {
-        "ScenarioSummary",
-        "ScenarioBreakdown",
-        "TaxIssueMatrix",
-        "RequestList",
-    }
+    assert f"{CORE_RECALCULATION_AFTER_END_DIGIT_TREATMENT:,}원" in memo
+    assert f"{CORE_RECALCULATION_BEFORE_END_DIGIT_TREATMENT:,}원" in memo
+    assert "실제 고지세액: 과세내역서 미확보" in memo
+    assert set(sheet_names) == {"민감도분석", "세목별민감도", "주요세무쟁점", "추가요청자료"}
 
 
 def test_no_notice_or_fallback_claim_is_reintroduced(case):
-    source = (ROOT / "src" / "tax_v15" / "case_study.py").read_text(
-        encoding="utf-8"
-    )
+    source = (ROOT / "src" / "tax_v15" / "case_study.py").read_text(encoding="utf-8")
     ui_source = (ROOT / "ui_tax_case_study.py").read_text(encoding="utf-8")
 
     assert case.taxpayers["actual_notice_classification"].eq("unverified").all()

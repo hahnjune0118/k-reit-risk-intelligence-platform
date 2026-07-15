@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 GOLDEN_ASSET_ID = "SKR-SEOUL-SEORIN-001"
 GOLDEN_TAXPAYER_ID = "SKR-TP-001"
 RAW_TOTAL = Decimal("1250710968.55472")
-CALCULATION_LABEL = "2026년 공식 입력자료 기반 보유세 산식 재계산액"
+AFTER_TOTAL = Decimal("1250710930")
+CALCULATION_LABEL = "2026년 공식 과세기초자료와 확인된 법정 산식에 따른 보유세 재계산액"
 SNAPSHOT_PATH = (
     ROOT / "data" / "v15" / "golden_asset" / "sk_seorin_official_snapshot.json"
 )
@@ -152,23 +153,30 @@ def test_each_formula_and_raw_total_are_exact_decimal(raw_calculations, snapshot
     ) * Decimal("3")
 
     expected = {
-        ("토지 재산세", "parcel"): land_property_tax,
-        ("재산세 도시지역분", "parcel"): land_urban_tax,
-        ("지방교육세", "parcel"): land_education_tax,
-        ("건축물 재산세", "building"): building_property_tax,
-        ("재산세 도시지역분", "building"): building_urban_tax,
-        ("지방교육세", "building"): building_education_tax,
-        ("소방분 지역자원시설세", "building"): fire_tax,
-        ("토지분 종합부동산세", "taxpayer"): Decimal("0"),
-        ("종합부동산세분 농어촌특별세", "taxpayer"): Decimal("0"),
+        ("토지 재산세", "parcel"): (land_property_tax, Decimal("516901450")),
+        ("재산세 도시지역분", "parcel"): (land_urban_tax, Decimal("361831010")),
+        ("지방교육세", "parcel"): (land_education_tax, Decimal("103380290")),
+        ("건축물 재산세", "building"): (building_property_tax, Decimal("70388060")),
+        ("재산세 도시지역분", "building"): (building_urban_tax, Decimal("39417310")),
+        ("지방교육세", "building"): (building_education_tax, Decimal("14077610")),
+        ("소방분 지역자원시설세", "building"): (fire_tax, Decimal("144715200")),
+        ("토지분 종합부동산세", "taxpayer"): (None, Decimal("0")),
+        ("종합부동산세분 농어촌특별세", "taxpayer"): (None, Decimal("0")),
     }
-    for (tax_name, scope), expected_amount in expected.items():
+    for (tax_name, scope), (expected_before, expected_after) in expected.items():
         row = _raw_tax_row(raw_calculations, tax_name, scope=scope)
-        assert Decimal(row["calculated_tax"]) == expected_amount
+        if expected_before is None:
+            assert row["calculated_tax_before_end_digit_treatment"] == ""
+            assert row["calculated_tax_after_end_digit_treatment"] == ""
+        else:
+            assert Decimal(row["calculated_tax_before_end_digit_treatment"]) == expected_before
+            assert Decimal(row["calculated_tax_after_end_digit_treatment"]) == expected_after
+        assert Decimal(row["calculated_tax"]) == expected_after
 
     assert land_value == Decimal("369215325000.0")
     assert building_value == Decimal("40221752104")
-    assert sum(expected.values(), Decimal("0")) == RAW_TOTAL
+    assert sum((before for before, _ in expected.values() if before is not None), Decimal("0")) == RAW_TOTAL
+    assert sum((after for _, after in expected.values()), Decimal("0")) == AFTER_TOTAL
 
 
 def test_raw_recalculation_is_not_actual_notice_amount(bundle):
@@ -189,7 +197,7 @@ def test_raw_recalculation_is_not_actual_notice_amount(bundle):
         metric="holding_tax_notice_reconciliation",
     )
 
-    assert raw_row["calculated_value"] == "1250710968.55472"
+    assert raw_row["calculated_value"] == "1250710930"
     assert raw_row["disclosed_or_verified_value"] == ""
     assert pd.isna(reconciliation["disclosed_or_verified_value"])
     assert reconciliation["reviewer_status"] == "open"
@@ -221,7 +229,8 @@ def test_fire_300_percent_has_building_and_statutory_evidence(bundle):
     assert "제138조제2항제1호" in building["fire_tax_evidence_page"]
     assert "11층" in building["fire_tax_evidence_quote"]
     assert Decimal(str(fire_row["tax_base"])) == Decimal("40221752104.0")
-    assert Decimal(str(fire_row["calculated_tax"])) == Decimal("144715207.5744")
+    assert Decimal(str(fire_row["calculated_tax_before_end_digit_treatment"])) == Decimal("144715207.5744")
+    assert Decimal(str(fire_row["calculated_tax"])) == Decimal("144715200")
 
 
 def test_etax_value_is_standard_value_not_property_tax_base(bundle):
@@ -326,17 +335,20 @@ def test_ui_uses_about_12_51_eok_and_safe_calculation_name(bundle):
         & bundle.calculations["tax_name"].ne("토지 시가표준액")
     ]
 
-    assert _decimal_tax_total(eligible) == RAW_TOTAL
-    assert _format_eok(RAW_TOTAL) == "약 12.51억원"
+    assert _decimal_tax_total(eligible) == AFTER_TOTAL
+    assert _format_eok(AFTER_TOTAL) == "약 12.51억원"
     assert CALCULATION_LABEL in ui_text
     assert "행 단순 합계" not in ui_text
     assert CALCULATION_LABEL in memo_text
     assert CALCULATION_LABEL in dynamic_memo
     assert "1,250,710,968.55472원" in memo_text
     assert "1,250,710,968.55472원" in dynamic_memo
-    assert "eligible_separated_public_reit" in dynamic_memo
-    assert "unverified" in dynamic_memo
-    assert "not_reconciled" in dynamic_memo
+    assert "1,250,710,930원" in dynamic_memo
+    assert "분리과세 적용요건 충족 판단" in dynamic_memo
+    assert "실제 고지세액: 과세내역서 미확보" in dynamic_memo
+    assert "고지세액 대사 상태: 미대사" in dynamic_memo
+    assert "eligible_separated_public_reit" not in dynamic_memo
+    assert "not_reconciled" not in dynamic_memo
 
 
 def test_public_wording_avoids_confirmed_payment_claims(bundle):

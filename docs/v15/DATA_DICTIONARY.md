@@ -44,5 +44,11 @@ validation_result 1 -> N request_list
 - 비율은 계산 엔진에서 `0.70`, `0.002`와 같은 Decimal 비율로 저장합니다.
 - `ownership_share`는 0 초과 1 이하입니다.
 - PNU는 선행 0을 보존하는 19자리 문자열입니다.
-- `calculated_tax`는 세액만 저장합니다. 토지 시가표준액은 `official_value`에 저장합니다.
+- `calculated_tax_before_end_digit_treatment`는 세율·배율 적용 후 끝수 처리 전 산출세액입니다.
+- `end_digit_treatment_unit`는 `10`, `end_digit_treatment_method`는 `10원 미만 끝수 미계산`을 저장합니다.
+- `end_digit_treatment_legal_basis`는 지방회계법 제55조와 시행령 제67조 예외 검토 문구를 저장합니다.
+- `calculated_tax_after_end_digit_treatment`는 세목별 끝수 처리 후 재계산액입니다.
+- `end_digit_treatment_difference`는 처리 전 금액과 처리 후 금액의 차이입니다.
+- `calculated_tax`는 끝수 처리 후 재계산액과 같습니다. 토지 시가표준액은 `official_value`에 저장합니다.
+- 시가표준액·과세표준·세율·배율·과세대상 제외 행의 끝수 처리 필드는 비워 둡니다.
 - `verified_tax`는 실제 고지서·과세내역서 확인 전 비워 둡니다.

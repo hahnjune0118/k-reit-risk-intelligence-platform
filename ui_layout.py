@@ -63,20 +63,10 @@ def render_mode_selector():
             format_func=lambda mode: PUBLIC_MODE_LABELS.get(mode, mode),
         )
         st.caption(
-            "v15 Tax는 SK리츠의 SK서린빌딩을 Golden Asset으로 선정해 "
-            "자산·필지·납세의무자 단위 검토 흐름을 구현합니다."
+            "v15 Tax는 SK리츠의 SK서린빌딩을 대상으로 자산·필지·"
+            "재산세 납세의무자 단위의 보유세 검토 흐름을 구현합니다."
         )
         st.divider()
-    if selected_user_mode == "Tax":
-        st.markdown(
-            """
-            <style>
-            section[data-testid="stSidebar"] > div {background:#fff9df; border-right:3px solid #d6aa00;}
-            section[data-testid="stSidebar"] {color:#25210f;}
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
     return selected_user_mode
 
 
@@ -110,8 +100,8 @@ def render_intro(selected_user_mode: str):
             **v15 현재 범위**
             공개 버전은 일반 정보 및 시나리오, Tax: 보유세 분석, Assurance: 감사위험 분석,
             분석 방법론 및 데이터 출처에 집중합니다. v15 Tax는 SK리츠의 SK서린빌딩을
-            Golden Asset으로 선정하고, Asset Registry, 필지·PNU, 실제 납세의무자,
-            공식 과세입력, 민감도 Scenario, Issue Matrix와 요청자료를 순서대로 연결합니다.
+            핵심 분석대상 자산으로 선정하고, 자산대장, 필지·PNU, 재산세 납세의무자,
+            공식 과세기초자료, 보유세 민감도, 주요 세무쟁점과 요청자료를 순서대로 연결합니다.
             """
         )
 

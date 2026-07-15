@@ -18,9 +18,9 @@ def test_v15_version_is_consistent_across_public_docs_and_config():
     config = _read("config.py")
 
     assert "v15.0.0" in readme
-    assert "SK Seorin Golden Asset Tax Case Study" in readme
+    assert "SK서린빌딩 핵심 자산 보유세 세무검토" in readme
     assert "SK리츠·SK서린빌딩" in reviewer_guide
-    assert "v15.0.0 - SK Seorin Golden Asset Tax Case Study" in changelog
-    assert "v15.0.0 - SK Seorin Golden Asset Tax Case Study" in roadmap
+    assert "v15.0.0 - SK서린빌딩 핵심 자산 보유세 세무검토" in changelog
+    assert "v15.0.0 - SK서린빌딩 핵심 자산 보유세 세무검토" in roadmap
     assert 'APP_VERSION = "v15.0.0"' in config
-    assert "SK Seorin Golden Asset Tax Case Study" in config
+    assert "SK서린빌딩 핵심 자산 보유세 세무검토" in config
