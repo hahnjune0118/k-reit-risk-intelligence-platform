@@ -64,7 +64,16 @@ def calculate_land_property_tax(parcel: Mapping, taxpayer: Mapping, rules: TaxRu
         taxpayer,
         ["tax_obligor", "tax_classification", "assessment_date_ownership_verified"],
     )
-    if not taxpayer_ok or str(taxpayer.get("assessment_date_ownership_verified", "")).lower() not in {"true", "1", "verified", "yes"}:
+    ownership_verified = str(
+        taxpayer.get("assessment_date_ownership_verified", "")
+    ).lower() in {"true", "1", "verified", "yes"}
+    ownership_supported = (
+        str(taxpayer.get("assessment_date_ownership_basis_status", ""))
+        == "public_disclosure_continuity_supported_registry_unverified"
+        and str(taxpayer.get("statutory_eligibility_status", ""))
+        == "eligible_separated_public_reit"
+    )
+    if not taxpayer_ok or not (ownership_verified or ownership_supported):
         return CalculationResult.blocked(
             tax_name,
             "manual_review_required",

@@ -13,7 +13,7 @@ from src.tax_v15.calculators.engine import calculate_holding_tax_detail
 from src.tax_v15.constants import PROJECT_ROOT, V15_DATA_DIR
 from src.tax_v15.loaders import load_csv, load_v15_bundle
 from src.tax_v15.reporting import build_request_list
-from src.tax_v15.schemas import coerce_to_schema
+from src.tax_v15.schemas import CSV_SCHEMAS, coerce_to_schema
 from src.tax_v15.taxpayer import classify_public_reit_land, determine_tax_obligor
 from src.tax_v15.validation import build_validation_results
 from src.tax_v15.validation.coverage import build_coverage_manifest, build_coverage_report
@@ -22,6 +22,27 @@ from src.tax_v15.validation.coverage import build_coverage_manifest, build_cover
 SNAPSHOT_PATH = V15_DATA_DIR / "golden_asset" / "sk_seorin_official_snapshot.json"
 GOLDEN_STOCK_CODE = "395400"
 GOLDEN_REIT_NAME = "SK리츠"
+GOLDEN_DOC_DIR = PROJECT_ROOT / "docs" / "v15" / "golden_asset"
+EVIDENCE_MATRIX_PATH = GOLDEN_DOC_DIR / "SK_SEORIN_EVIDENCE_MATRIX.csv"
+AREA_RECONCILIATION_PATH = GOLDEN_DOC_DIR / "SK_SEORIN_AREA_RECONCILIATION.csv"
+STATUTORY_RECALCULATION_LABEL = "2026년 공식 입력자료 기반 보유세 산식 재계산액"
+EVIDENCE_MATRIX_COLUMNS = [
+    "evidence_id",
+    "metric_or_fact",
+    "value",
+    "unit",
+    "source_name",
+    "source_url",
+    "source_date",
+    "source_page",
+    "source_quote",
+    "retrieved_at",
+    "sha256",
+    "reliability",
+    "verification_status",
+    "used_in_calculation",
+    "limitation",
+]
 
 
 def _read_snapshot() -> dict:
@@ -39,7 +60,12 @@ def _read_raw_rows(
     has_bom = path.read_bytes().startswith(b"\xef\xbb\xbf")
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
-        return list(reader.fieldnames or []), list(reader), has_bom
+        columns = list(reader.fieldnames or [])
+        rows = list(reader)
+    columns.extend(
+        column for column in CSV_SCHEMAS[file_name] if column not in columns
+    )
+    return columns, rows, has_bom
 
 
 def _stringify_row(row: dict, columns: list[str]) -> dict[str, str]:
@@ -189,10 +215,103 @@ def _source_manifest_rows(snapshot: dict) -> list[dict]:
                 "downloaded_at": snapshot["retrieved_at"],
                 "extraction_status": extraction_status,
                 "relevant_pages": source["relevant_pages"],
-                "notes": source["evidence"],
+                "notes": source["evidence"] + (
+                    f" | 한계: {source['limitation']}"
+                    if source.get("limitation")
+                    else ""
+                ),
             }
         )
     return rows
+
+
+def _decimal_text(value: Decimal) -> str:
+    text = format(value, "f")
+    return text.rstrip("0").rstrip(".") if "." in text else text
+
+
+def _area_difference_tax_effect(snapshot: dict) -> dict[str, Decimal]:
+    attached = snapshot["attached_lot_reconciliation"]
+    parcel = snapshot["parcel"]
+    difference = Decimal(str(attached["area_difference_m2"]))
+    price = Decimal(str(parcel["individual_land_price_per_m2"]))
+    assessed_value = difference * price
+    property_tax_base = assessed_value * Decimal("0.70")
+    property_tax = property_tax_base * Decimal("0.002")
+    urban_area_tax = property_tax_base * Decimal("0.0014")
+    local_education_tax = property_tax * Decimal("0.20")
+    total = property_tax + urban_area_tax + local_education_tax
+    expected = Decimal(str(attached["estimated_pre_rounding_tax_effect_krw"]))
+    if total != expected:
+        raise ValueError("Golden Asset 5.3㎡ 차이 세액 민감도가 스냅샷과 일치하지 않습니다.")
+    return {
+        "assessed_land_value": assessed_value,
+        "property_tax_base": property_tax_base,
+        "property_tax": property_tax,
+        "urban_area_tax": urban_area_tax,
+        "local_education_tax": local_education_tax,
+        "total": total,
+    }
+
+
+def _write_evidence_artifacts(snapshot: dict) -> None:
+    GOLDEN_DOC_DIR.mkdir(parents=True, exist_ok=True)
+    evidence_rows: list[dict] = []
+    for source in snapshot["sources"]:
+        sha256 = str(source.get("sha256", ""))
+        if len(sha256) != 64 or any(char not in "0123456789abcdef" for char in sha256.lower()):
+            raise ValueError(f"유효한 SHA-256이 없는 Golden Asset 출처: {source['source_id']}")
+        evidence_rows.append(
+            {
+                "evidence_id": source["source_id"],
+                "metric_or_fact": source["metric_or_fact"],
+                "value": source["value"],
+                "unit": source["unit"],
+                "source_name": source["document_name"],
+                "source_url": source["source_url"],
+                "source_date": source["document_date"],
+                "source_page": source["relevant_pages"],
+                "source_quote": source["source_quote"],
+                "retrieved_at": snapshot["retrieved_at"],
+                "sha256": sha256.lower(),
+                "reliability": source["reliability"],
+                "verification_status": source["verification_status"],
+                "used_in_calculation": source["used_in_calculation"],
+                "limitation": source["limitation"],
+            }
+        )
+    if len(evidence_rows) < 16:
+        raise ValueError("Golden Asset Evidence Matrix에는 최소 16개 출처가 필요합니다.")
+    pd.DataFrame(evidence_rows, columns=EVIDENCE_MATRIX_COLUMNS).to_csv(
+        EVIDENCE_MATRIX_PATH,
+        index=False,
+        encoding="utf-8-sig",
+    )
+
+    attached = snapshot["attached_lot_reconciliation"]
+    effect = _area_difference_tax_effect(snapshot)
+    area_row = {
+        "asset_id": snapshot["asset"]["asset_id"],
+        "reported_or_historical_source": "제20기 투자보고서·건축물대장 표제부",
+        "reported_or_historical_area_m2": attached["historical_or_reported_area_m2"],
+        "current_land_register_source": "서울 부동산정보광장 현행 토지대장",
+        "current_land_register_area_m2": attached["current_land_register_area_m2"],
+        "difference_m2": attached["area_difference_m2"],
+        "attached_lot_91_inclusion_status": attached["attached_lot_inclusion_status"],
+        "calculation_area_m2": attached["calculation_area_m2"],
+        "estimated_pre_rounding_tax_effect_krw": _decimal_text(effect["total"]),
+        "tax_effect_formula": (
+            "5.3㎡ × 63,950,000원/㎡ × 70% × "
+            "[재산세 0.2% + 도시지역분 0.14% + 재산세 본세의 지방교육세 20%]"
+        ),
+        "calculation_treatment": attached["calculation_treatment"],
+        "limitation": attached["tax_effect_limitation"],
+    }
+    pd.DataFrame([area_row]).to_csv(
+        AREA_RECONCILIATION_PATH,
+        index=False,
+        encoding="utf-8-sig",
+    )
 
 
 def _master_rows(snapshot: dict) -> tuple[dict, dict, dict, dict, dict]:
@@ -215,6 +334,11 @@ def _master_rows(snapshot: dict) -> tuple[dict, dict, dict, dict, dict]:
         for source in snapshot["sources"]
         if source["source_id"] == "seoul_etax_building_value"
     )
+    decree_source = next(
+        source
+        for source in snapshot["sources"]
+        if source["source_id"] == "local_tax_enforcement_decree_2026"
+    )
 
     obligor = determine_tax_obligor(
         {
@@ -232,6 +356,9 @@ def _master_rows(snapshot: dict) -> tuple[dict, dict, dict, dict, dict]:
             "assessment_date_ownership_verified": taxpayer[
                 "assessment_date_ownership_verified"
             ],
+            "assessment_date_ownership_supported": taxpayer[
+                "assessment_date_ownership_basis_status"
+            ] == "public_disclosure_continuity_supported_registry_unverified",
             "purpose_business_use": taxpayer["purpose_business_use"],
             "non_housing_land": True,
             "no_special_exclusion": True,
@@ -292,7 +419,14 @@ def _master_rows(snapshot: dict) -> tuple[dict, dict, dict, dict, dict]:
         "asset_name": asset["asset_name"],
         "asset_class": "office",
         "asset_subclass": "corporate_office",
-        "direct_or_indirect": "direct",
+        "direct_or_indirect": "direct_investment_trust_title",
+        "investment_holding_type": asset["investment_holding_type"],
+        "title_holding_type": asset["title_holding_type"],
+        "registered_owner": asset["registered_owner"],
+        "trustee": asset["trustee"],
+        "trustor": asset["trustor"],
+        "beneficial_owner": asset["beneficial_owner"],
+        "property_taxpayer": asset["property_taxpayer"],
         "listed_parent": asset["reit_name"],
         "legal_owner_name": taxpayer["registered_trustee"],
         "legal_owner_type": "trustee_for_reit",
@@ -313,7 +447,7 @@ def _master_rows(snapshot: dict) -> tuple[dict, dict, dict, dict, dict]:
         "source_page": "6, 12, 14, 25",
         "source_url": report["source_url"],
         "address_confidence": "verified",
-        "owner_confidence": "high",
+        "owner_confidence": "official_report_supported_registry_open",
         "verification_status": "official_source_calculated",
         "source_type": "official_reit_investment_report",
         "source_document_name": report["document_name"],
@@ -378,6 +512,9 @@ def _master_rows(snapshot: dict) -> tuple[dict, dict, dict, dict, dict]:
         ),
         "building_standard_value": building["building_standard_value"],
         "building_standard_value_year": building["building_standard_value_year"],
+        "building_standard_value_nature": building["building_standard_value_nature"],
+        "property_tax_base_method": building["property_tax_base_method"],
+        "fire_resource_tax_base_method": building["fire_resource_tax_base_method"],
         "calculation_source": (
             "서울시 ETAX 2026 주택외건물 시가표준액조회: "
             f"건물 {building['building_component_value']:,}원 + "
@@ -385,6 +522,10 @@ def _master_rows(snapshot: dict) -> tuple[dict, dict, dict, dict, dict]:
         ),
         "fire_risk_category": building["fire_risk_category"],
         "fire_tax_multiplier": building["fire_tax_multiplier"],
+        "fire_tax_multiplier_status": building["fire_tax_multiplier_status"],
+        "fire_tax_evidence_source_url": decree_source["source_url"],
+        "fire_tax_evidence_page": building["fire_tax_evidence_page"],
+        "fire_tax_evidence_quote": building["fire_tax_evidence_quote"],
         "urban_area_status": building["urban_area_status"],
         "source_url": building_source["source_url"],
         "source_page": building_source["relevant_pages"],
@@ -420,6 +561,13 @@ def _master_rows(snapshot: dict) -> tuple[dict, dict, dict, dict, dict]:
         "separation_tax_eligible": True,
         "separation_tax_reason": classification_reason,
         "tax_classification": classification,
+        "statutory_eligibility_status": taxpayer["statutory_eligibility_status"],
+        "actual_notice_classification": taxpayer["actual_notice_classification"],
+        "legal_review_status": taxpayer["legal_review_status"],
+        "notice_reconciliation_status": taxpayer["notice_reconciliation_status"],
+        "assessment_date_ownership_basis_status": taxpayer[
+            "assessment_date_ownership_basis_status"
+        ],
         "assessment_date_ownership_verified": taxpayer[
             "assessment_date_ownership_verified"
         ],
@@ -517,8 +665,16 @@ def _reconciliation_rows(calculations: pd.DataFrame, snapshot: dict) -> pd.DataF
         )
         & calculations["tax_name"].ne("토지 시가표준액")
     ].copy()
-    total = pd.to_numeric(calculated["calculated_tax"], errors="coerce").dropna().sum()
+    total = sum(
+        (
+            Decimal(str(value))
+            for value in calculated["calculated_tax"]
+            if not pd.isna(value)
+        ),
+        Decimal("0"),
+    )
     attached = snapshot["attached_lot_reconciliation"]
+    area_effect = _area_difference_tax_effect(snapshot)
     building = snapshot["building"]
     building_components = (
         building["building_component_value"] + building["facility_component_value"]
@@ -534,8 +690,8 @@ def _reconciliation_rows(calculations: pd.DataFrame, snapshot: dict) -> pd.DataF
             "variance": pd.NA,
             "variance_percent": pd.NA,
             "reconciliation_reason": (
-                "2026년 재산세 고지서·과세내역서가 공개되지 않아 공식자료 계산액과 "
-                "실제 고지세액 대사는 미완료"
+                f"{STATUTORY_RECALCULATION_LABEL}과 실제 고지세액의 대사. "
+                "2026년 재산세 고지서·과세내역서가 없어 실제 고지액은 미확인"
             ),
             "reviewer_status": "open",
         },
@@ -546,13 +702,28 @@ def _reconciliation_rows(calculations: pd.DataFrame, snapshot: dict) -> pd.DataF
             "metric": "parcel_area_register_to_building_ledger",
             "calculated_value": snapshot["parcel"]["parcel_area_m2"],
             "disclosed_or_verified_value": building["building_register_site_area_m2"],
-            "variance": -attached["area_difference_m2"],
+            "variance": -Decimal(str(attached["area_difference_m2"])),
             "variance_percent": (
                 -attached["area_difference_m2"]
                 / building["building_register_site_area_m2"]
                 * 100
             ),
             "reconciliation_reason": attached["calculation_treatment"],
+            "reviewer_status": "open",
+        },
+        {
+            "reit_name": GOLDEN_REIT_NAME,
+            "taxpayer_id": snapshot["taxpayer"]["taxpayer_id"],
+            "tax_year": snapshot["tax_year"],
+            "metric": "parcel_area_difference_tax_sensitivity",
+            "calculated_value": area_effect["total"],
+            "disclosed_or_verified_value": pd.NA,
+            "variance": pd.NA,
+            "variance_percent": pd.NA,
+            "reconciliation_reason": (
+                "5.3㎡ 전부를 동일 지가·분리과세·도시지역분 대상으로 가정한 "
+                "법정 절사 전 민감도이며 실제 고지 차이가 아님"
+            ),
             "reviewer_status": "open",
         },
         {
@@ -573,6 +744,7 @@ def _reconciliation_rows(calculations: pd.DataFrame, snapshot: dict) -> pd.DataF
 
 def run() -> dict:
     snapshot = _read_snapshot()
+    _write_evidence_artifacts(snapshot)
     retrieved_at = snapshot["retrieved_at"]
     reit_row, asset_row, parcel_row, building_row, taxpayer_row = _master_rows(snapshot)
 
@@ -655,12 +827,22 @@ def run() -> dict:
         )
         & calculations["tax_name"].ne("토지 시가표준액")
     ]
-    total = pd.to_numeric(source_calculated["calculated_tax"], errors="coerce").sum()
+    total = sum(
+        (
+            Decimal(str(value))
+            for value in source_calculated["calculated_tax"]
+            if not pd.isna(value)
+        ),
+        Decimal("0"),
+    )
     return {
         "asset_id": snapshot["asset"]["asset_id"],
         "calculation_rows": len(calculations),
         "calculated_rows": int(numeric.notna().sum()),
         "official_source_total": float(total),
+        "statutory_recalculation_label": STATUTORY_RECALCULATION_LABEL,
+        "statutory_recalculation_raw": _decimal_text(total),
+        "actual_notice_amount": None,
         "all_calculation_rows": len(all_calculations),
     }
 

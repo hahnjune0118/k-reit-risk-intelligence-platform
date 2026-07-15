@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pandas as pd
 import streamlit as st
 
@@ -24,6 +26,11 @@ STATUS_ORDER = [
 ]
 
 GOLDEN_ASSET_ID = "SKR-SEOUL-SEORIN-001"
+GOLDEN_TAXPAYER_ID = "SKR-TP-001"
+GOLDEN_RECALCULATION_LABEL = "2026년 공식 입력자료 기반 보유세 산식 재계산액"
+GOLDEN_OWNERSHIP_DISPLAY = (
+    "SK리츠가 위탁자이자 재산세 납세의무자인 신탁보유 오피스 자산"
+)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -45,6 +52,21 @@ def _safe_text(value, fallback: str = "데이터 부족") -> str:
 
 def _status_label(status: str) -> str:
     return f"[{SOURCE_BADGES.get(status, '데이터 부족')}]"
+
+
+def _decimal_tax_total(frame: pd.DataFrame) -> Decimal | None:
+    total = Decimal("0")
+    found = False
+    for value in frame.get("calculated_tax", pd.Series(dtype="object")):
+        if pd.isna(value):
+            continue
+        total += Decimal(str(value))
+        found = True
+    return total if found else None
+
+
+def _format_eok(value: Decimal) -> str:
+    return f"약 {value / Decimal('100000000'):.2f}억원"
 
 
 def _display_calculations(frame: pd.DataFrame) -> pd.DataFrame:
@@ -111,7 +133,7 @@ def _render_golden_asset_summary(
     ]
     golden_calculations = calculations[
         calculations["asset_id"].fillna("").astype(str).eq(GOLDEN_ASSET_ID)
-        | calculations["taxpayer_id"].fillna("").astype(str).eq("SKR-TP-001")
+        | calculations["taxpayer_id"].fillna("").astype(str).eq(GOLDEN_TAXPAYER_ID)
     ].copy()
     blocked = golden_calculations["calculation_status"].isin(
         ["official_partial", "manual_review_required", "data_insufficient"]
@@ -135,12 +157,20 @@ def _render_golden_asset_summary(
         .isin(["verified_notice", "official_source_calculated"])
         .all()
     )
-    separation_verified = (
+    statutory_eligible = (
         taxpayer_verified
-        and golden_taxpayers["tax_classification"]
+        and golden_taxpayers["statutory_eligibility_status"]
         .fillna("")
         .astype(str)
-        .eq("separated_public_reit")
+        .eq("eligible_separated_public_reit")
+        .all()
+    )
+    actual_notice_unverified = (
+        not golden_taxpayers.empty
+        and golden_taxpayers["actual_notice_classification"]
+        .fillna("")
+        .astype(str)
+        .eq("unverified")
         .all()
     )
     status_rows = pd.DataFrame(
@@ -167,14 +197,19 @@ def _render_golden_asset_summary(
                 ),
             },
             {
-                "검증항목": "납세의무자 검증",
-                "상태": "공식자료 판정" if taxpayer_verified else "수동 검토",
-                "확인 내용": "신탁 위탁자 기준",
+                "검증항목": "소유·납세 구조",
+                "상태": "공개자료 기반 판정" if taxpayer_verified else "수동 검토",
+                "확인 내용": GOLDEN_OWNERSHIP_DISPLAY,
             },
             {
-                "검증항목": "분리과세 검증",
-                "상태": "공식자료 판정" if separation_verified else "수동 검토",
-                "확인 내용": "공모리츠 목적사업용 토지",
+                "검증항목": "법정 분리과세 적격성",
+                "상태": "요건 충족 판단" if statutory_eligible else "수동 검토",
+                "확인 내용": "eligible_separated_public_reit",
+            },
+            {
+                "검증항목": "실제 고지 과세구분",
+                "상태": "미확인" if actual_notice_unverified else "확인 필요",
+                "확인 내용": "고지서·과세내역서 미확보",
             },
             {
                 "검증항목": "실제 고지서 대사",
@@ -199,34 +234,69 @@ def _render_golden_asset_summary(
     tax_display = tax_rows[["구분", "tax_name", "계산세액(원)", "근거 상태"]].rename(
         columns={"tax_name": "세목"}
     )
-    total = tax_rows.loc[
+    total_rows = tax_rows.loc[
         tax_rows["calculation_status"].isin(
             ["verified_notice", "official_source_calculated", "not_applicable"]
-        ),
-        "계산세액(원)",
-    ].sum(min_count=1)
+        )
+    ]
+    total = _decimal_tax_total(total_rows)
+
+    area_rows = reconciliation[
+        reconciliation["metric"].fillna("").astype(str).eq(
+            "parcel_area_register_to_building_ledger"
+        )
+    ]
+    area_effect_rows = reconciliation[
+        reconciliation["metric"].fillna("").astype(str).eq(
+            "parcel_area_difference_tax_sensitivity"
+        )
+    ]
 
     with st.container(border=True):
         st.markdown("### Golden Asset: SK서린빌딩")
-        st.success(
-            f"공식자료 계산 합계는 {total:,.0f}원입니다. "
-            "토지·건물 공식 입력값을 사용했으며 실제 고지서 대사 전 수치입니다."
-        )
-        st.dataframe(status_rows, hide_index=True, width="stretch", height=250)
-        st.markdown("**세목별 공식자료 계산 결과**")
+        if total is not None:
+            st.success(f"{GOLDEN_RECALCULATION_LABEL}: {_format_eok(total)}")
+            st.caption(
+                f"원 단위 미절사 산식 합계는 {total:,}원입니다. 실제 고지세액은 미확인이며, "
+                "법정 절사·세부담상한·감면·과세관청 조정은 반영하지 않았습니다."
+            )
+        st.write(GOLDEN_OWNERSHIP_DISPLAY)
+        st.dataframe(status_rows, hide_index=True, width="stretch", height=285)
+        st.markdown("**세목별 공식 입력자료 기반 산식 재계산 결과**")
         st.dataframe(
             tax_display,
             hide_index=True,
             width="stretch",
             height=330,
             column_config={
-                "계산세액(원)": st.column_config.NumberColumn(format="%,.2f원"),
+                "계산세액(원)": st.column_config.NumberColumn(format="%,.5f원"),
             },
         )
-        st.caption(
-            "건축물대장 부속지번 서린동 91과 현행 토지대장 간 5.3㎡ 차이는 "
-            "대사 미결사항으로 유지했습니다. 최신 토지대장·지적도 및 과세내역서가 필요합니다."
-        )
+        if not area_rows.empty:
+            area_row = area_rows.iloc[0]
+            area_effect = (
+                area_effect_rows.iloc[0]["calculated_value"]
+                if not area_effect_rows.empty
+                else pd.NA
+            )
+            area_display = pd.DataFrame(
+                [
+                    {
+                        "과거·보고 면적(㎡)": area_row["disclosed_or_verified_value"],
+                        "현행 토지대장 면적(㎡)": area_row["calculated_value"],
+                        "차이(㎡)": abs(float(area_row["variance"])),
+                        "서린동 91 포함 여부": "미확인",
+                        "현재 계산 사용 면적(㎡)": area_row["calculated_value"],
+                        "법정 절사 전 세액 민감도(원)": area_effect,
+                    }
+                ]
+            )
+            st.markdown("**5.3㎡ 면적 차이 조정표**")
+            st.dataframe(area_display, hide_index=True, width="stretch")
+            st.caption(
+                "현행 토지대장 5,773.5㎡를 계산에 사용했습니다. 민감도는 5.3㎡ 전부가 "
+                "동일 지가·분리과세·도시지역분 대상이라는 가정이며 실제 고지 차이가 아닙니다."
+            )
 
 
 def _rule_rows(rules: pd.DataFrame, codes: list[str]) -> pd.DataFrame:
@@ -342,7 +412,7 @@ def render_tax_mode(
         selected_taxpayer = st.selectbox("납세의무자", taxpayer_options, key="v15_tax_taxpayer")
     with a3:
         ownership_options = ["전체 보유구조"] + sorted(assets["direct_or_indirect"].dropna().astype(str).unique().tolist())
-        selected_ownership = st.selectbox("직접·간접보유", ownership_options, key="v15_tax_ownership")
+        selected_ownership = st.selectbox("투자·등기 보유구조", ownership_options, key="v15_tax_ownership")
     status_options = [status for status in STATUS_ORDER if status in set(calculations["calculation_status"].astype(str))]
     selected_statuses = st.multiselect(
         "계산상태",
@@ -383,8 +453,7 @@ def render_tax_mode(
         calculations["calculation_status"].isin(["verified_notice", "official_source_calculated"])
         & calculations["tax_name"].ne("토지 시가표준액")
     ]
-    verified_amounts = pd.to_numeric(verified_rows["calculated_tax"], errors="coerce").dropna()
-    verified_total = verified_amounts.sum() if not verified_amounts.empty else None
+    verified_total = _decimal_tax_total(verified_rows)
     with st.container(border=True):
         st.markdown("### 결론")
         if verified_total is None:
@@ -394,8 +463,10 @@ def render_tax_mode(
             )
         else:
             st.success(
-                f"{reit_name}의 공식자료 계산 행 단순 합계는 {verified_total:,.0f}원입니다. "
-                "고지서 대사·감면·세부담상한 검토 전 수치이며 신고 목적 확정세액이 아닙니다."
+                f"{reit_name}의 {tax_year}년 공식 입력자료 기반 보유세 산식 재계산액은 "
+                f"{verified_total:,}원({_format_eok(verified_total)})입니다. 실제 고지세액은 "
+                "미확인이며, 실제 고지서 대사·법정 절사·감면·조례·세부담상한 및 "
+                "과세내역서 검토 전이므로 신고·납부 목적 금액이 아닙니다."
             )
         st.caption(
             f"검토 신뢰도: 자산 {coverage['asset_count']}건 · 주소 검증 {coverage['verified_address_count']}건 · "
@@ -415,16 +486,23 @@ def render_tax_mode(
         limitation="상장 사실은 공식 리츠정보시스템으로 확인했으나, 공모리츠 분리과세 요건은 별도 법적 판정 대상입니다.",
         expanded=True,
     )
-    asset_display = assets[["asset_name", "asset_class", "direct_or_indirect", "legal_owner_name", "road_address", "verification_status", "source_url"]].rename(columns={
-        "asset_name": "자산명", "asset_class": "자산유형", "direct_or_indirect": "보유구조", "legal_owner_name": "법적 소유자",
-        "road_address": "주소", "verification_status": "검증상태", "source_url": "출처",
+    asset_display = assets[[
+        "asset_name", "asset_class", "investment_holding_type", "title_holding_type",
+        "registered_owner", "beneficial_owner", "property_taxpayer", "road_address",
+        "verification_status", "source_url",
+    ]].rename(columns={
+        "asset_name": "자산명", "asset_class": "자산유형",
+        "investment_holding_type": "투자 보유형태", "title_holding_type": "등기 보유형태",
+        "registered_owner": "등기명의자", "beneficial_owner": "경제적 보유주체",
+        "property_taxpayer": "재산세 납세의무자", "road_address": "주소",
+        "verification_status": "검증상태", "source_url": "출처",
     }) if not assets.empty else pd.DataFrame()
     _render_stage(
         2, "자산 및 납세의무자 구조",
         conclusion=f"공식자료에서 식별된 자산 {len(assets)}건과 납세의무자 검토 행 {len(taxpayers)}건을 연결했습니다.",
-        requirements=["직접·간접 보유구조", "법적 소유자", "신탁 위탁자·수탁자", "과세기준일 현재 소유지분"],
+        requirements=["투자 보유형태", "등기명의자", "신탁 위탁자·수탁자", "경제적 보유주체", "재산세 납세의무자"],
         source_rows=asset_display,
-        limitation="법적 소유자 또는 신탁관계가 확인되지 않은 자산은 세액 계산에 사용하지 않습니다.",
+        limitation="투자보고서의 직접취득 표시는 투자형태이며 등기 명의와 동일한 개념이 아닙니다. 등기부등본·신탁원부 원문은 별도 대사 대상입니다.",
     )
     _render_stage(
         3, "공모부동산투자회사 법적 요건",
@@ -434,21 +512,28 @@ def render_tax_mode(
         requirements=["법적 주체가 부동산투자회사인지", "공모부동산투자회사인지", "자회사 리츠 포함 요건에 해당하는지"],
         limitation="현재 Master의 public_reit_status가 수동 검토 상태이면 분리과세 결론을 자동 확정하지 않습니다.",
     )
-    taxpayer_display = taxpayers[["taxpayer_id", "legal_owner", "tax_obligor", "public_reit_qualified", "purpose_business_use", "tax_classification", "validation_status", "source_url"]].rename(columns={
+    taxpayer_display = taxpayers[[
+        "taxpayer_id", "legal_owner", "tax_obligor", "public_reit_qualified",
+        "purpose_business_use", "statutory_eligibility_status",
+        "actual_notice_classification", "legal_review_status",
+        "notice_reconciliation_status", "source_url",
+    ]].rename(columns={
         "taxpayer_id": "납세의무자 ID", "legal_owner": "법적 소유자", "tax_obligor": "납세의무자", "public_reit_qualified": "공모리츠 요건",
-        "purpose_business_use": "목적사업 사용", "tax_classification": "과세구분", "validation_status": "검증상태", "source_url": "출처",
+        "purpose_business_use": "목적사업 사용", "statutory_eligibility_status": "법정 적격성",
+        "actual_notice_classification": "실제 고지 과세구분", "legal_review_status": "법률 검토",
+        "notice_reconciliation_status": "고지 대사", "source_url": "출처",
     }) if not taxpayers.empty else pd.DataFrame()
     _render_stage(
         4, "분리과세 적용 요건",
-        conclusion="모든 필수 법적 요건이 확인된 토지만 separated_public_reit로 판정합니다.",
+        conclusion="공개자료와 현행 법령상 필수요건을 충족한 토지는 법정 분리과세 적격으로 판정하되, 실제 고지 과세구분은 별도로 표시합니다.",
         legal_basis=_rule_rows(bundle.rules, ["public_reit_land_separation"]),
         requirements=["공모리츠 또는 법정 자회사 리츠", "6월 1일 현재 소유", "목적사업 직접 사용", "주택이 아닌 토지", "제외·중과 규정 미적용"],
         source_rows=taxpayer_display,
-        limitation="listed=true만으로 분리과세를 적용하지 않습니다.",
+        limitation="법정 적격성 판단은 실제 재산세 과세내역서의 분리과세 코드 확인을 대체하지 않습니다.",
     )
     _render_stage(
         5, "과세기준일 및 납세의무자",
-        conclusion=f"납세의무자 공식 검증 완료 행은 {coverage['verified_taxpayer_count']}건입니다.",
+        conclusion=f"공개자료와 법령을 연결해 납세의무자를 판정한 행은 {coverage['verified_taxpayer_count']}건입니다.",
         legal_basis=_rule_rows(bundle.rules, ["property_tax_obligor"]),
         requirements=["매년 6월 1일 현재 사실상 소유자", "신탁재산의 위탁자 및 물적납세의무 검토", "공동소유 지분 확인"],
         source_rows=taxpayer_display,
@@ -481,15 +566,20 @@ def render_tax_mode(
         calculation_rows=land_tax_rows,
         limitation="분리·종합·별도합산 구분이 확정되지 않으면 세율을 적용하지 않습니다.",
     )
-    building_display = buildings[["building_id", "building_name", "gross_floor_area_m2", "building_standard_value", "building_standard_value_year", "validation_status", "source_url"]].rename(columns={
+    building_display = buildings[[
+        "building_id", "building_name", "gross_floor_area_m2", "building_standard_value",
+        "building_standard_value_year", "building_standard_value_nature",
+        "fire_tax_multiplier_status", "validation_status", "source_url",
+    ]].rename(columns={
         "building_id": "건축물 ID", "building_name": "건축물명", "gross_floor_area_m2": "연면적(㎡)", "building_standard_value": "건축물 시가표준액",
-        "building_standard_value_year": "기준연도", "validation_status": "검증상태", "source_url": "출처",
+        "building_standard_value_year": "기준연도", "building_standard_value_nature": "입력값 성격",
+        "fire_tax_multiplier_status": "소방분 배율 근거", "validation_status": "검증상태", "source_url": "출처",
     }) if not buildings.empty else pd.DataFrame()
     _render_stage(
         9, "건축물 시가표준액 도출",
         conclusion=f"공식 건축물 시가표준액 확인 건은 {coverage['verified_building_value_count']}건입니다.",
         source_rows=building_display,
-        limitation="투자부동산 장부가액·감정가에 임의 비율을 곱해 건축물 시가표준액을 만들지 않습니다.",
+        limitation="ETAX 조회 합계는 주택 외 건물 시가표준액이며 재산세 과세표준이나 실제 고지세액이 아닙니다.",
     )
     building_tax_rows = calculations[calculations["tax_name"].eq("건축물 재산세")]
     _render_stage(
@@ -516,7 +606,7 @@ def render_tax_mode(
         legal_basis=_rule_rows(bundle.rules, ["fire_resource_tax", "fire_multiplier_standard", "fire_multiplier_200", "fire_multiplier_300"]),
         formula="소방분 = 건축물 시가표준액 누진세액 × 검증된 위험유형 배율(100%·200%·300%)",
         calculation_rows=fire_rows,
-        limitation="시가표준액 또는 화재위험 유형이 불명확하면 계산하지 않습니다.",
+        limitation="업무시설·지상 36층과 시행령 제138조를 연결한 300% 법정 산식 판단이며, 실제 고지서의 위험유형 코드는 미대사입니다.",
     )
     comp_rows = calculations[calculations["tax_name"].isin(["토지분 종합부동산세", "종합부동산세분 농어촌특별세"])]
     _render_stage(
@@ -534,7 +624,7 @@ def render_tax_mode(
     memo = build_tax_review_memo(
         reit_name, int(tax_year), assets, parcels, buildings, taxpayers, calculations, validations, requests
     )
-    with st.expander("14. 총 보유세, 검증 결과 및 요청자료", expanded=True):
+    with st.expander("14. 보유세 산식 재계산, 검증 결과 및 요청자료", expanded=True):
         st.markdown("**A. 결론**")
         st.write(
             f"공식자료 계산·고지서 확인 행 {coverage['completed_calculation_rows']}건, "

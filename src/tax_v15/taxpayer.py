@@ -33,7 +33,6 @@ def classify_public_reit_land(facts: Mapping) -> tuple[str, str, str]:
     required_true = [
         "legal_reit_entity",
         "public_reit_qualified",
-        "assessment_date_ownership_verified",
         "purpose_business_use",
         "non_housing_land",
         "no_special_exclusion",
@@ -41,6 +40,12 @@ def classify_public_reit_land(facts: Mapping) -> tuple[str, str, str]:
     if str(facts.get("validation_status", "")) not in CALCULABLE_SOURCE_STATUSES:
         return "undetermined", "manual_review_required", "법적 판정 사실의 출처 검증이 완료되지 않았습니다."
     missing = [field for field in required_true if facts.get(field) is not True]
+    ownership_supported = (
+        facts.get("assessment_date_ownership_verified") is True
+        or facts.get("assessment_date_ownership_supported") is True
+    )
+    if not ownership_supported:
+        missing.append("assessment_date_ownership_support")
     if missing:
         return "undetermined", "manual_review_required", f"분리과세 필수요건 미확인: {', '.join(missing)}"
     return "separated_public_reit", "official_source_calculated", "공모리츠 목적사업용 토지 분리과세 필수요건 확인"
