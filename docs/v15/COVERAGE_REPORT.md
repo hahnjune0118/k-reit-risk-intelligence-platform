@@ -1,15 +1,15 @@
 # v15 Coverage Report
 
-생성시각(UTC): 2026-07-15T06:15:41.109471+00:00
+생성시각(UTC): 2026-07-15T06:30:00+00:00
 
 ## 전체 요약
 
 - 공식 상장리츠 목록: 23개
-- 공식자료에서 식별한 자산: 21건
-- 19자리 PNU 검증: 0건
-- 공식 개별공시지가 확인: 0건
-- 공식 건축물 시가표준액 확인: 0건
-- 계산상태 분포: {'data_insufficient': 84, 'manual_review_required': 42}
+- 공식자료에서 식별한 자산: 22건
+- 19자리 PNU 검증: 1건
+- 공식 개별공시지가 확인: 1건
+- 공식 건축물 시가표준액 확인: 1건
+- 계산상태 분포: {'data_insufficient': 84, 'manual_review_required': 42, 'official_source_calculated': 8, 'not_applicable': 2}
 
 > 현재 Coverage는 전체 상장리츠의 자산·필지·세액 검증 완료를 의미하지 않습니다. 공식 근거가 없는 값은 계산에서 차단됩니다.
 
@@ -17,7 +17,7 @@
 
 | reit_name | stock_code | official_website_found | ir_documents_checked | dart_documents_checked | asset_count_identified | address_count_verified | parcel_count_verified | land_price_coverage | building_value_coverage | taxpayer_coverage | tax_calculation_status | blocking_reason | next_action |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| SK리츠 | 395400 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
+| SK리츠 | 395400 | True | True | True | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% | official_source_calculated | 추가 차단사항 없음 | 고지서 대사 및 reviewer sign-off |
 | 롯데리츠 | 330590 | True | True | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
 | 한화리츠 | 451800 | True | False | False | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% | data_insufficient | 공식자료 기반 Asset Registry 미구축 | 공식 홈페이지·DART 투자보고서에서 자산 목록 확인 |
 | ESR켄달스퀘어리츠 | 365550 | True | False | False | 21 | 18 | 0 | 0.0% | 0.0% | 0.0% | official_partial | PNU·필지 목록 미확인; 건축물 시가표준액 미확인; 법적 납세의무자·분리과세 요건 미검증 | 토지대장·지적도·PNU 매핑 확보; 건축물 시가표준액 산출내역 확보; 등기·신탁·목적사업 사용·과세내역서 확인 |
@@ -46,11 +46,11 @@
 | 파일 | 행 수 | 기대 Grain Key | Key 누락 행 | 중복 Key 행 |
 |---|---:|---|---:|---:|
 | reit_master.csv | 23 | stock_code | 0 | 0 |
-| asset_master.csv | 21 | asset_id | 0 | 0 |
-| parcel_master.csv | 0 | parcel_id | 0 | 0 |
-| building_master.csv | 21 | building_id | 0 | 0 |
-| taxpayer_structure.csv | 21 | taxpayer_id, asset_id | 0 | 0 |
-| tax_calculation_detail.csv | 126 | tax_year, reit_name, taxpayer_id, asset_id, parcel_id, building_id, tax_name | 0 | 0 |
+| asset_master.csv | 22 | asset_id | 0 | 0 |
+| parcel_master.csv | 1 | parcel_id | 0 | 0 |
+| building_master.csv | 22 | building_id | 0 | 0 |
+| taxpayer_structure.csv | 22 | taxpayer_id, asset_id | 0 | 0 |
+| tax_calculation_detail.csv | 136 | tax_year, reit_name, taxpayer_id, asset_id, parcel_id, building_id, tax_name | 0 | 0 |
 
 ## 주요 차단사항
 

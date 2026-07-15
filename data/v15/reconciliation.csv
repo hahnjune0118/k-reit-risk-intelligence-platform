@@ -1,5 +1,4 @@
 ﻿reit_name,taxpayer_id,tax_year,metric,calculated_value,disclosed_or_verified_value,variance,variance_percent,reconciliation_reason,reviewer_status
-SK리츠,ALL_VERIFIED_TAXPAYERS,,holding_tax_notice_reconciliation,,,,,실제 재산세·종합부동산세 고지서 또는 과세내역서가 없어 대사 미완료. 재무제표 세금과공과 전체는 보유세 Ground Truth로 사용하지 않음.,open
 롯데리츠,ALL_VERIFIED_TAXPAYERS,,holding_tax_notice_reconciliation,,,,,실제 재산세·종합부동산세 고지서 또는 과세내역서가 없어 대사 미완료. 재무제표 세금과공과 전체는 보유세 Ground Truth로 사용하지 않음.,open
 한화리츠,ALL_VERIFIED_TAXPAYERS,,holding_tax_notice_reconciliation,,,,,실제 재산세·종합부동산세 고지서 또는 과세내역서가 없어 대사 미완료. 재무제표 세금과공과 전체는 보유세 Ground Truth로 사용하지 않음.,open
 ESR켄달스퀘어리츠,ALL_VERIFIED_TAXPAYERS,,holding_tax_notice_reconciliation,,,,,실제 재산세·종합부동산세 고지서 또는 과세내역서가 없어 대사 미완료. 재무제표 세금과공과 전체는 보유세 Ground Truth로 사용하지 않음.,open
@@ -22,3 +21,6 @@ NH프라임리츠,ALL_VERIFIED_TAXPAYERS,,holding_tax_notice_reconciliation,,,,,
 신한글로벌액티브리츠,ALL_VERIFIED_TAXPAYERS,,holding_tax_notice_reconciliation,,,,,실제 재산세·종합부동산세 고지서 또는 과세내역서가 없어 대사 미완료. 재무제표 세금과공과 전체는 보유세 Ground Truth로 사용하지 않음.,open
 케이탑리츠,ALL_VERIFIED_TAXPAYERS,,holding_tax_notice_reconciliation,,,,,실제 재산세·종합부동산세 고지서 또는 과세내역서가 없어 대사 미완료. 재무제표 세금과공과 전체는 보유세 Ground Truth로 사용하지 않음.,open
 마스턴프리미어리츠,ALL_VERIFIED_TAXPAYERS,,holding_tax_notice_reconciliation,,,,,실제 재산세·종합부동산세 고지서 또는 과세내역서가 없어 대사 미완료. 재무제표 세금과공과 전체는 보유세 Ground Truth로 사용하지 않음.,open
+SK리츠,SKR-TP-001,2026,holding_tax_notice_reconciliation,1250710968.55472,,,,2026년 재산세 고지서·과세내역서가 공개되지 않아 공식자료 계산액과 실제 고지세액 대사는 미완료,open
+SK리츠,SKR-TP-001,2026,parcel_area_register_to_building_ledger,5773.5,5778.8,-5.3,-0.09171454281165639,현행 토지대장에서 유효한 PNU 1111012300100990000만 계산하고 차이는 대사 미결사항으로 유지,open
+SK리츠,SKR-TP-001,2026,building_value_component_reconciliation,40221752104.0,40221752104,0,0,서울시 ETAX 건물분과 시설분 합계가 조회 합계와 일치,reviewed

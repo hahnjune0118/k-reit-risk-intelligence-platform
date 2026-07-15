@@ -1,6 +1,4 @@
 ﻿validation_id,reit_name,taxpayer_id,asset_id,parcel_id,building_id,check_name,severity,validation_status,message,source_url,reviewer_status
-0c630189d0a2a990,SK리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
-1bf5854f0272db78,SK리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
 2c007cb0854cdd44,롯데리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
 649b09b100f12ed9,롯데리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
 ae4ad70255550f6d,한화리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
@@ -170,3 +168,5 @@ e20e0643ee32a1ac,케이탑리츠,,,,,asset_registry,critical,failed,공식자료
 9af3e594fdb39166,케이탑리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
 759c62d68ee1d3c5,마스턴프리미어리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
 3e90c0ea0411c4e7,마스턴프리미어리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+1bf5854f0272db78,SK리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+d9f86273780660c8,SK리츠,SKR-TP-001,SKR-SEOUL-SEORIN-001,SKR-SEORIN-P-001,SKR-SEORIN-B-001,parcel_area_reconciliation,medium,failed,건축물대장 대지면적과 현행 토지대장 면적 간 5.3㎡ 차이 및 부속지번 91의 현재 상태를 최신 토지대장·지적도 또는 과세내역서로 대사해야 합니다.,https://land.seoul.go.kr/land/wskras/generalInfo.do,open

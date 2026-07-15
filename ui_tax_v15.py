@@ -23,6 +23,8 @@ STATUS_ORDER = [
     "not_applicable",
 ]
 
+GOLDEN_ASSET_ID = "SKR-SEOUL-SEORIN-001"
+
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def _load_tax_v15_data():
@@ -84,6 +86,147 @@ def _render_frame(frame: pd.DataFrame, *, height: int = 230) -> None:
         if column in frame.columns:
             config[column] = st.column_config.LinkColumn(column, display_text="원문")
     st.dataframe(frame, hide_index=True, width="stretch", height=height, column_config=config)
+
+
+def _render_golden_asset_summary(
+    assets: pd.DataFrame,
+    parcels: pd.DataFrame,
+    buildings: pd.DataFrame,
+    taxpayers: pd.DataFrame,
+    calculations: pd.DataFrame,
+    reconciliation: pd.DataFrame,
+) -> None:
+    golden_assets = assets[assets["asset_id"].fillna("").astype(str).eq(GOLDEN_ASSET_ID)]
+    if golden_assets.empty:
+        return
+
+    golden_parcels = parcels[
+        parcels["asset_id"].fillna("").astype(str).eq(GOLDEN_ASSET_ID)
+    ]
+    golden_buildings = buildings[
+        buildings["asset_id"].fillna("").astype(str).eq(GOLDEN_ASSET_ID)
+    ]
+    golden_taxpayers = taxpayers[
+        taxpayers["asset_id"].fillna("").astype(str).eq(GOLDEN_ASSET_ID)
+    ]
+    golden_calculations = calculations[
+        calculations["asset_id"].fillna("").astype(str).eq(GOLDEN_ASSET_ID)
+        | calculations["taxpayer_id"].fillna("").astype(str).eq("SKR-TP-001")
+    ].copy()
+    blocked = golden_calculations["calculation_status"].isin(
+        ["official_partial", "manual_review_required", "data_insufficient"]
+    ).any()
+    notice_rows = reconciliation[
+        reconciliation["metric"].fillna("").astype(str).eq(
+            "holding_tax_notice_reconciliation"
+        )
+    ]
+    notice_complete = (
+        not notice_rows.empty
+        and pd.to_numeric(
+            notice_rows["disclosed_or_verified_value"], errors="coerce"
+        ).notna().any()
+    )
+    taxpayer_verified = (
+        not golden_taxpayers.empty
+        and golden_taxpayers["validation_status"]
+        .fillna("")
+        .astype(str)
+        .isin(["verified_notice", "official_source_calculated"])
+        .all()
+    )
+    separation_verified = (
+        taxpayer_verified
+        and golden_taxpayers["tax_classification"]
+        .fillna("")
+        .astype(str)
+        .eq("separated_public_reit")
+        .all()
+    )
+    status_rows = pd.DataFrame(
+        [
+            {
+                "검증항목": "계산 완료 여부",
+                "상태": "공식자료 계산 완료" if not blocked else "추가자료 필요",
+                "확인 내용": "고지서 대사 전 계산값",
+            },
+            {
+                "검증항목": "토지 Coverage",
+                "상태": "공식자료 계산 완료" if len(golden_parcels) else "데이터 부족",
+                "확인 내용": (
+                    f"현행 PNU {len(golden_parcels)}건 / 개별공시지가 "
+                    f"{pd.to_numeric(golden_parcels.get('individual_land_price_per_m2'), errors='coerce').notna().sum()}건"
+                ),
+            },
+            {
+                "검증항목": "건축물 Coverage",
+                "상태": "공식자료 계산 완료" if len(golden_buildings) else "데이터 부족",
+                "확인 내용": (
+                    f"2026년 시가표준액 "
+                    f"{pd.to_numeric(golden_buildings.get('building_standard_value'), errors='coerce').notna().sum()}건"
+                ),
+            },
+            {
+                "검증항목": "납세의무자 검증",
+                "상태": "공식자료 판정" if taxpayer_verified else "수동 검토",
+                "확인 내용": "신탁 위탁자 기준",
+            },
+            {
+                "검증항목": "분리과세 검증",
+                "상태": "공식자료 판정" if separation_verified else "수동 검토",
+                "확인 내용": "공모리츠 목적사업용 토지",
+            },
+            {
+                "검증항목": "실제 고지서 대사",
+                "상태": "완료" if notice_complete else "미완료",
+                "확인 내용": "2026년 고지서·과세내역서 필요",
+            },
+        ]
+    )
+
+    tax_rows = golden_calculations[
+        golden_calculations["tax_name"].ne("토지 시가표준액")
+    ].copy()
+    tax_rows["구분"] = "납세의무자"
+    tax_rows.loc[tax_rows["parcel_id"].fillna("").astype(str).ne(""), "구분"] = "토지"
+    tax_rows.loc[tax_rows["building_id"].fillna("").astype(str).ne(""), "구분"] = "건축물"
+    tax_rows["근거 상태"] = tax_rows["calculation_status"].map(
+        lambda value: _status_label(str(value))
+    )
+    tax_rows["계산세액(원)"] = pd.to_numeric(
+        tax_rows["calculated_tax"], errors="coerce"
+    )
+    tax_display = tax_rows[["구분", "tax_name", "계산세액(원)", "근거 상태"]].rename(
+        columns={"tax_name": "세목"}
+    )
+    total = tax_rows.loc[
+        tax_rows["calculation_status"].isin(
+            ["verified_notice", "official_source_calculated", "not_applicable"]
+        ),
+        "계산세액(원)",
+    ].sum(min_count=1)
+
+    with st.container(border=True):
+        st.markdown("### Golden Asset: SK서린빌딩")
+        st.success(
+            f"공식자료 계산 합계는 {total:,.0f}원입니다. "
+            "토지·건물 공식 입력값을 사용했으며 실제 고지서 대사 전 수치입니다."
+        )
+        st.dataframe(status_rows, hide_index=True, width="stretch", height=250)
+        st.markdown("**세목별 공식자료 계산 결과**")
+        st.dataframe(
+            tax_display,
+            hide_index=True,
+            width="stretch",
+            height=330,
+            column_config={
+                "계산세액(원)": st.column_config.NumberColumn(format="%,.2f원"),
+            },
+        )
+        st.caption(
+            "건축물대장 부속지번 서린동 91과 현행 토지대장 간 5.3㎡ 차이는 "
+            "대사 미결사항으로 유지했습니다. 최신 토지대장·지적도 및 과세내역서가 필요합니다."
+        )
 
 
 def _rule_rows(rules: pd.DataFrame, codes: list[str]) -> pd.DataFrame:
@@ -183,8 +326,12 @@ def render_tax_mode(
         bundle.calculations["reit_name"].astype(str).eq(reit_name)
         & pd.to_numeric(bundle.calculations["tax_year"], errors="coerce").eq(int(tax_year))
     ].copy()
+    full_calculations = calculations.copy()
     validations = bundle.validations[bundle.validations["reit_name"].astype(str).eq(reit_name)].copy()
     requests = bundle.requests[bundle.requests["reit_name"].astype(str).eq(reit_name)].copy()
+    reconciliation = bundle.reconciliation[
+        bundle.reconciliation["reit_name"].astype(str).eq(reit_name)
+    ].copy()
 
     a1, a2, a3 = st.columns(3)
     with a1:
@@ -221,6 +368,15 @@ def render_tax_mode(
         calculations = calculations[calculations["asset_id"].astype(str).isin(ownership_ids)]
     if selected_statuses:
         calculations = calculations[calculations["calculation_status"].isin(selected_statuses)]
+
+    _render_golden_asset_summary(
+        assets,
+        parcels,
+        buildings,
+        taxpayers,
+        full_calculations,
+        reconciliation,
+    )
 
     coverage = summarize_coverage(assets, parcels, buildings, taxpayers, calculations)
     verified_rows = calculations[
