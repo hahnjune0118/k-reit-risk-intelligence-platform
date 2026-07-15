@@ -5,6 +5,9 @@ from api_manager import sanitize_secret_text
 from config import APP_VERSION_LABEL
 from data_source_policy import source_policy_table
 from metric_definitions import metric_definition_table, metric_lineage_table
+from src.tax_v15.constants import SOURCE_BADGES
+from src.tax_v15.loaders import load_v15_bundle
+from src.tax_v15.validation import summarize_coverage
 from ui_common import render_selected_company_header
 
 
@@ -21,7 +24,7 @@ def _source_confidence_table(asset_risk, debt_schedule, financials, kpis) -> pd.
 
 def _display_api_status(status: str) -> str:
     sanitized = sanitize_secret_text(status)
-    return "API 연결 완료" if sanitized == "connected" else sanitized
+    return "연결 준비 완료" if sanitized == "connected" else sanitized
 
 
 def render_methodology_page(
@@ -36,151 +39,146 @@ def render_methodology_page(
     data_dictionary,
     peer_context=None,
 ):
+    del macro_context
     st.markdown("## 분석 방법론 및 데이터 출처")
     render_selected_company_header(peer_context)
-    st.caption(f"현재 안정 공개 버전: {APP_VERSION_LABEL}")
+    st.caption(f"현재 공개 버전: {APP_VERSION_LABEL}")
 
-    st.markdown("### v14.1 안정화 범위")
+    st.markdown("### v15 검토 범위")
     st.info(
-        "v14.1은 새로운 분석 기능을 크게 늘리기보다 FFO proxy, 장부기준 NAV proxy, 총자산 기준 차입비율, "
-        "Cap rate proxy, WALE, 이자감당력처럼 화면에 노출되는 핵심 지표의 계산식과 출처 계보를 명확히 하는 버전입니다."
+        "v15는 회사 전체 장부가액이나 Peer 비율로 보유세를 추정하지 않습니다. 공식 출처가 연결된 자산·필지·건축물·"
+        "납세의무자 자료만 세목별 계산에 사용하고, 필수 근거가 없으면 데이터 부족 또는 수동 검토로 차단합니다."
     )
 
-    st.markdown("### v14 Tax Workflow Control 구조")
+    st.markdown("### 왜 상장리츠를 분석 대상으로 선택했나요?")
+    st.write(
+        "상장리츠는 다양한 업종 중에서도 수익 인식 구조가 비교적 단순한 편입니다. 주요 수익은 보유 부동산에서 발생하는 "
+        "임대료이며, 기본적으로 월 임대료와 임대기간을 바탕으로 이해할 수 있습니다. 기업 내부 장부, 세부 임대차계약, "
+        "감사조서 등 비공개 자료를 입수할 수 없는 환경에서도 사업보고서, 분기보고서, 공시자료와 공시가격 관련 자료를 통해 "
+        "자산 구성, 임대수익, 차입금, 공정가치 평가, 배당 및 보유세 부담의 기초 정보를 구조화할 수 있습니다."
+    )
+    st.caption(
+        "실제 감사조서나 회사 내부자료를 대체하지 않으며, 공개자료를 이용한 감사계획 단계의 위험평가와 Tax/Assurance "
+        "검토 포인트를 초기 선별하는 것이 목적입니다."
+    )
+
+    st.markdown("### v15 Tax 데이터 흐름")
     st.dataframe(
         pd.DataFrame(
             [
-                {"단계": "1. Source policy", "내용": "자료 출처를 공식 공시, Snapshot, Peer 추정, 데이터 부족으로 표준화"},
-                {"단계": "2. Holding tax bridge", "내용": "공시가격 또는 장부가액에서 과세표준, 추정 보유세, FFO proxy 부담으로 연결"},
-                {"단계": "3. Validation", "내용": "결측, fallback 사용, 0 denominator, 비정상 비율을 별도 검증 패널로 표시"},
-                {"단계": "4. Issue workflow", "내용": "Tax Issue Matrix를 요청자료 리스트와 Memo 초안으로 연결"},
-                {"단계": "5. Export", "내용": "Memo, Issue Matrix, Reconciliation, Request List를 검토용 파일로 다운로드"},
+                {"단계": "1. REIT Inventory", "검토 내용": "실행일 현재 공식 상장리츠 목록과 원천 URL 확인"},
+                {"단계": "2. Asset Registry", "검토 내용": "직접·간접 보유자산, 주소, 법적 소유자와 지분 구조화"},
+                {"단계": "3. Taxpayer", "검토 내용": "6월 1일 현재 소유자, 신탁 위탁자와 실제 납세의무자 판정"},
+                {"단계": "4. Parcel / PNU", "검토 내용": "복수 필지, PNU, 면적, 소유지분과 기준연도 개별공시지가 연결"},
+                {"단계": "5. Official Tax Base", "검토 내용": "토지·건축물 공식 입력값만 과세표준 계산에 사용"},
+                {"단계": "6. Classification", "검토 내용": "분리·별도·종합합산, 도시지역분과 소방분 적용요건 검증"},
+                {"단계": "7. Calculation", "검토 내용": "Tax Rule Master의 공식 검증 세율·구간·비율 적용"},
+                {"단계": "8. Validation", "검토 내용": "출처·완전성·중복·납세의무자·고지서 대사 통제"},
+                {"단계": "9. Review Output", "검토 내용": "요청자료와 Tax Review Memo·검토문서 생성"},
             ]
         ),
         hide_index=True,
         width="stretch",
-        height=210,
+        height=355,
     )
 
-    st.markdown("### 활성 공개 화면")
+    st.markdown("### 계산 상태와 Source Badge")
     st.dataframe(
         pd.DataFrame(
             [
-                {"화면": "일반 정보 및 시나리오", "목적": "REITs 기본 위험 프로필, 거시경제 Scenario, Peer Benchmark 요약"},
-                {"화면": "Tax: 보유세 분석", "목적": "Tax Summary, 보유세 브리지, Issue Matrix, Reconciliation, FFO Stress, Request List, Memo, Export, Validation"},
-                {"화면": "Assurance: 감사위험 분석", "목적": "감사계획, RMM, KAM, Peer 기반 감사위험 Red Flag"},
-                {"화면": "분석 방법론 및 데이터 출처", "목적": "자료 출처, Snapshot 구조, Red Flag 기준, 한계 및 공개 런타임 구조 설명"},
+                {"상태": status, "화면 표시": label, "의미": meaning}
+                for status, label, meaning in [
+                    ("verified_notice", SOURCE_BADGES["verified_notice"], "실제 고지서 또는 과세내역서 확인"),
+                    ("official_source_calculated", SOURCE_BADGES["official_source_calculated"], "공식 입력값과 검증된 규칙으로 계산"),
+                    ("official_partial", SOURCE_BADGES["official_partial"], "공식 근거가 일부만 확보됨"),
+                    ("manual_review_required", SOURCE_BADGES["manual_review_required"], "법적 분류나 핵심 입력값에 전문가 판단 필요"),
+                    ("data_insufficient", SOURCE_BADGES["data_insufficient"], "필수 자료 부족으로 계산 불가"),
+                    ("not_applicable", SOURCE_BADGES["not_applicable"], "검증된 법적 분류상 해당 세목 비적용"),
+                ]
             ]
         ),
         hide_index=True,
         width="stretch",
-        height=176,
+        height=250,
+    )
+    st.warning(
+        "상장 여부만으로 분리과세를 확정하지 않습니다. 법적 소유자, 과세기준일, 공모리츠 요건, 목적사업 사용, 신탁관계, "
+        "자산 분류를 모두 확인하기 전에는 종합부동산세 비과세 결론도 자동 확정하지 않습니다."
     )
 
-    st.markdown("### Source Type Taxonomy")
-    st.caption("Tax 화면의 배너, source expander, 요청자료 리스트, Memo 제한 문구는 같은 source policy를 사용합니다.")
-    st.dataframe(source_policy_table(), hide_index=True, width="stretch", height=260)
-
-    st.markdown("### 데이터 사용 원칙")
+    bundle = load_v15_bundle()
+    coverage = summarize_coverage(bundle.assets, bundle.parcels, bundle.buildings, bundle.taxpayers, bundle.calculations)
+    st.markdown("### 현재 공개 Snapshot Coverage")
     st.write(
-        "공개 런타임은 앱 시작 시 모든 상장리츠의 DART 자료를 일괄 호출하지 않습니다. 선택 회사와 내장 Snapshot을 중심으로 "
-        "빠르게 실행되며, 실시간 연결이 제한되면 예시 데이터로 안정적으로 전환합니다."
+        f"공식 목록 {len(bundle.reits)}개 리츠 · 식별 자산 {coverage['asset_count']}건 · "
+        f"주소 검증 {coverage['verified_address_count']}건 · PNU 검증 {coverage['verified_pnu_count']}건 · "
+        f"개별공시지가 확인 {coverage['verified_land_price_count']}건 · "
+        f"건축물 시가표준액 확인 {coverage['verified_building_value_count']}건"
     )
+    st.caption(
+        "Coverage가 0인 항목은 0원으로 가정한 것이 아니라 공식 근거가 확보되지 않아 계산에서 제외한 항목입니다. "
+        "리츠별 차단사유와 다음 조치는 docs/v15/COVERAGE_REPORT.md에 기록합니다."
+    )
+
+    st.markdown("### Tax Rule Master와 법령 통제")
     st.write(
-        "SK리츠의 자산·임차인·차입금 상세 sample은 SK리츠 선택 시에만 사용합니다. 다른 회사는 회사 전체 Snapshot과 "
-        "Peer 기반 추정 행으로 표시하며, SK리츠 자산 목록이나 상세 데이터를 재사용하지 않습니다."
+        "재산세, 도시지역분, 지방교육세, 소방분 지역자원시설세, 토지분 종합부동산세와 농어촌특별세 규칙은 "
+        "`data/v15/tax_rule_master.csv`에서 과세연도·법령·조문·시행기간·공식 URL과 함께 관리합니다. "
+        "`official_verified` 상태와 공식 URL이 모두 있는 규칙만 계산 엔진이 읽습니다."
+    )
+    st.caption(
+        "실제 신고·납부 전에는 해당 과세연도의 개정 법령, 지방자치단체 조례, 감면, 세부담상한, 고지내역을 다시 확인해야 합니다."
+    )
+
+    st.markdown("### 사용 데이터와 연결 상태")
+    st.dataframe(
+        pd.DataFrame(
+            [
+                {"자료": "DART", "사용 목적": "재무제표·정기공시 확인", "상태": _display_api_status(dart_status)},
+                {"자료": "ECOS", "사용 목적": "거시경제 지표·금리 시계열", "상태": _display_api_status(macro_history_status)},
+                {"자료": "리츠정보시스템", "사용 목적": "상장리츠 공식 목록", "상태": f"Snapshot {len(bundle.reits)}개"},
+                {"자료": "공식 리츠 홈페이지·IR", "사용 목적": "자산·주소·소유구조 근거", "상태": f"Manifest {len(bundle.documents)}건"},
+                {"자료": "V-World 등 공시가격 데이터", "사용 목적": "PNU·개별공시지가 공식 조회", "상태": "공식 응답 Snapshot만 사용"},
+                {"자료": "v15 내부 CSV", "사용 목적": "Source lineage와 검토 상태 보존", "상태": "앱에 포함"},
+            ]
+        ),
+        hide_index=True,
+        width="stretch",
+        height=250,
     )
     st.info(
-        "Tax 산출물은 신고 목적의 확정 세액, 법률의견, 투자 추천, 정식 가치평가 의견을 제공하지 않습니다. "
-        "실무 사용 전에는 원자료 확인, 회사 확인, 세무 전문가 검토가 필요합니다."
+        "공개 버전은 서버 측 데이터 연결 설정을 사용합니다. 사용자가 인증값을 입력할 필요가 없으며, 실시간 연결이 제한되면 "
+        "검증된 Snapshot을 사용하거나 해당 항목을 데이터 부족으로 표시합니다. 인증값은 화면·로그·다운로드에 표시하지 않습니다."
     )
 
-    st.markdown("### 핵심 재무지표 정의와 계산식")
-    st.caption("아래 표는 화면과 문서에서 공통으로 사용하는 v14.1 metric metadata입니다. 긴 설명은 셀을 클릭해 확인할 수 있습니다.")
+    st.markdown("### General·Assurance 재무지표 방법론")
+    st.caption("아래 지표는 General 및 Assurance 화면에 사용되며 v15 Tax 세액 계산의 대체 입력값으로 사용하지 않습니다.")
     st.dataframe(
         metric_definition_table(),
         hide_index=True,
         width="stretch",
-        height=360,
+        height=340,
         column_config={
             "구분": st.column_config.TextColumn("구분", width="small"),
             "지표": st.column_config.TextColumn("지표", width="medium"),
             "정의": st.column_config.TextColumn("정의", width="medium"),
             "계산식": st.column_config.TextColumn("계산식", width="large"),
             "사용 데이터": st.column_config.TextColumn("사용 데이터", width="large"),
-            "포함": st.column_config.TextColumn("포함", width="medium"),
-            "제외": st.column_config.TextColumn("제외", width="medium"),
             "제한사항": st.column_config.TextColumn("제한사항", width="large"),
         },
     )
-
-    st.markdown("### 지표별 데이터 계보")
-    st.dataframe(metric_lineage_table(), hide_index=True, width="stretch", height=230)
-    st.caption(
-        "장부기준 NAV proxy는 총부채 전체를 차감하지만, 총자산 기준 차입비율과 금리충격은 이자부 차입부채만 사용합니다. "
-        "충당부채, 이연법인세부채, 일반 영업채무는 차입비율 분자와 차입 스프레드·리파이낸싱 금리 shock 대상에서 제외합니다."
-    )
-
-    st.markdown("### 사용 데이터")
-    source_status = pd.DataFrame(
-        [
-            {"자료": "DART", "사용 목적": "재무제표와 최근 공시 목록 확인", "상태": _display_api_status(dart_status)},
-            {"자료": "ECOS", "사용 목적": "거시경제 지표와 과거 금리 시계열 확인", "상태": _display_api_status(macro_history_status)},
-            {"자료": "공시가격 계열 데이터", "사용 목적": "Tax 화면의 공시가격, 기준시가, 보유세 추정 입력값", "상태": "제한 시 예시 데이터 사용"},
-            {"자료": "REITs Peer Snapshot", "사용 목적": "Peer Benchmark와 Red Flag Engine의 기본 입력값", "상태": "앱에 포함"},
-            {"자료": "REITs Tax Snapshot", "사용 목적": "회사별 보유세 fallback 및 bridge 입력값", "상태": "앱에 포함"},
-            {"자료": "Red Flag Rules", "사용 목적": "Assurance 및 Tax 위험수준 판단 기준", "상태": "앱에 포함"},
-            {"자료": "내장 CSV", "사용 목적": "공개 데모가 안정적으로 실행되도록 포함한 공시 기반 테이블", "상태": "앱에 포함"},
-        ]
-    )
-    st.dataframe(source_status, hide_index=True, width="stretch", height=230)
-
-    st.markdown("### Peer Benchmark 및 Red Flag 방법론")
-    st.write(
-        "Peer Benchmark는 `data/reit_peer_snapshot.csv`의 Snapshot 데이터를 기준으로 선택 리츠와 상장 REITs peer group을 비교합니다. "
-        "총자산, 투자부동산, 이자부 차입부채, FFO proxy, 배당, 보유세, 공시가격 입력값을 이용해 감사위험과 보유세 부담 관련 비율을 계산합니다."
-    )
-    st.write(
-        "Red Flag 판단은 `data/red_flag_rules.json`의 규칙을 사용합니다. 각 규칙은 절대 기준과 peer percentile을 함께 보며, "
-        "정상·주의·높음·데이터 부족으로 표시합니다. 데이터가 없거나 0으로 나누는 계산은 강제로 추정하지 않고 데이터 부족으로 표시합니다."
-    )
-
-    st.markdown("### Tax 계산 및 검증 기준")
-    st.write(
-        "Tax mode는 `build_company_tax_dataset`으로 선택 회사의 tax dataset을 만들고, `build_holding_tax_bridge`로 공시가격 또는 "
-        "장부가액에서 과세표준과 추정 보유세를 연결합니다. `validate_tax_inputs`는 결측, fallback, denominator 안정성을 별도로 표시합니다."
-    )
-    st.caption(
-        "회사별 상세 자료가 부족한 경우 `회사 전체 추정` 행과 `source_type = peer_snapshot_estimate`가 표시됩니다. "
-        "이 값은 공식 고지세액이 아닌 공개자료 및 Snapshot 기반 예비 검토용 입력값입니다."
-    )
-
-    st.markdown("### 기준금리와 차입 스프레드·리파이낸싱 금리 shock 구분")
-    st.write(
-        "기준금리 변화는 한국은행 기준금리 또는 기준시장금리 변화가 리츠의 변동금리 차입과 신규 조달금리에 전이되는 효과입니다. "
-        "추가 신용스프레드 변화는 회사 신용, 담보가치, 만기 구조, 금융기관 가산금리, 시장 유동성 변화로 실제 조달금리가 추가로 변하는 효과입니다."
-    )
-    st.caption(
-        "확률가중 예상 기준금리 = Σ(각 기준금리 시나리오 × 해당 시나리오 확률). "
-        "따라서 전망 기반 확률가중 모드에서는 2.51%처럼 0.25%p 단위가 아닌 연속값이 표시될 수 있습니다."
-    )
-
-    st.markdown("### 데이터 연결 및 공개 런타임")
-    st.write(
-        "외부 데이터 인증값은 서버 측 데이터 연결 설정 또는 환경변수에서만 불러옵니다. 인증값은 화면에 표시하지 않으며, "
-        "디버그 문구와 API 응답도 표시 전 마스킹합니다."
-    )
-    st.info(
-        "본 공개 버전은 서버 측 데이터 연결 설정을 사용하도록 설계되어 있습니다. 사용자는 별도의 인증값을 입력할 필요가 없으며, "
-        "실시간 데이터 연결이 제한될 경우 예시 데이터로 자동 전환됩니다."
-    )
-
+    with st.expander("지표별 데이터 계보", expanded=False):
+        st.dataframe(metric_lineage_table(), hide_index=True, width="stretch", height=230)
+    with st.expander("General·Assurance Source Type 정책", expanded=False):
+        st.dataframe(source_policy_table(), hide_index=True, width="stretch", height=260)
     with st.expander("자료 신뢰도 요약", expanded=False):
-        st.dataframe(_source_confidence_table(asset_risk, debt_schedule, financials, kpis), width="stretch", hide_index=True, height=220)
-
+        st.dataframe(
+            _source_confidence_table(asset_risk, debt_schedule, financials, kpis),
+            width="stretch",
+            hide_index=True,
+            height=220,
+        )
     with st.expander("데이터 사전", expanded=False):
-        st.caption("원천 컬럼명은 재현성과 검증을 위해 일부 English identifier를 유지합니다.")
         st.dataframe(data_dictionary, width="stretch", hide_index=True, height=220)
-
     with st.expander("추가 자료 수집 계획", expanded=False):
         st.dataframe(source_plan, width="stretch", hide_index=True, height=220)

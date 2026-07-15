@@ -62,19 +62,34 @@ def render_mode_selector():
             index=0,
             format_func=lambda mode: PUBLIC_MODE_LABELS.get(mode, mode),
         )
-        st.caption("v14.1은 Tax Workflow Control 구조를 유지하면서 핵심 재무지표의 정의, 계산식, 출처 계보를 더 명확히 표시합니다.")
+        st.caption(
+            "v15 Tax는 SK리츠의 SK서린빌딩을 Golden Asset으로 선정해 "
+            "자산·필지·납세의무자 단위 검토 흐름을 구현합니다."
+        )
         st.divider()
+    if selected_user_mode == "Tax":
+        st.markdown(
+            """
+            <style>
+            section[data-testid="stSidebar"] > div {background:#fff9df; border-right:3px solid #d6aa00;}
+            section[data-testid="stSidebar"] {color:#25210f;}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
     return selected_user_mode
 
 
 def render_intro(selected_user_mode: str):
     st.title(APP_TITLE)
     st.caption(APP_VERSION_LABEL)
-    st.info(APP_SUBTITLE)
 
     if selected_user_mode != "General Info & Scenario":
-        render_user_mode_panel(selected_user_mode)
+        if selected_user_mode != "Tax":
+            render_user_mode_panel(selected_user_mode)
         return
+
+    st.info(APP_SUBTITLE)
 
     with st.expander("상장리츠 리스크 분석 개요", expanded=False):
         st.markdown(
@@ -92,11 +107,11 @@ def render_intro(selected_user_mode: str):
             리츠 업무를 처음 접하는 회계사와 감사·세무·자문 업무 담당자가 공개자료 기반으로
             먼저 확인할 위험 영역을 좁힐 수 있도록 설계했습니다.
 
-            **v14.1 현재 범위**
+            **v15 현재 범위**
             공개 버전은 일반 정보 및 시나리오, Tax: 보유세 분석, Assurance: 감사위험 분석,
-            분석 방법론 및 데이터 출처에 집중합니다. v14.1에서는 source policy, 보유세 bridge,
-            데이터 검증, 요청자료 export를 유지하면서 FFO proxy, 장부기준 NAV proxy, 총자산 기준 차입비율 등
-            핵심 지표의 산식과 한계를 더 명확히 설명합니다.
+            분석 방법론 및 데이터 출처에 집중합니다. v15 Tax는 SK리츠의 SK서린빌딩을
+            Golden Asset으로 선정하고, Asset Registry, 필지·PNU, 실제 납세의무자,
+            공식 과세입력, 민감도 Scenario, Issue Matrix와 요청자료를 순서대로 연결합니다.
             """
         )
 

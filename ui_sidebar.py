@@ -150,6 +150,94 @@ def render_data_sidebar(
     realty_conn = get_api_key("V-World", manual_realty_value)
     macro_context = build_macro_context(ecos_conn.key)
 
+    if selected_user_mode == "Tax":
+        macro_scenario = {
+            "selected_scenario": "SK서린빌딩 Tax Case Study",
+            "scenario_explain": (
+                "Tax 화면은 거시경제 Scenario와 분리된 자산별 공시가격·시가표준액 "
+                "민감도 분석을 사용합니다."
+            ),
+            "scenario_probabilities": {},
+            "scenario_base_rate_note": "Tax 전용 민감도는 Tax 화면에서 설정합니다.",
+            "rate_shock_bp": 0,
+            "refinancing_share_pct": 0.0,
+            "ffo_haircut_pct": 0.0,
+            "cap_rate_shock_bp": 0,
+            "policy_rate_change_bp": 0,
+            "credit_spread_change_bp": 0,
+            "rate_shock_formula": "Tax Case Study에는 적용하지 않음",
+        }
+        reit_master = load_reit_master()
+        options = company_options(reit_master)
+        sk_option = next(
+            (option for option in options if "395400" in str(option)),
+            None,
+        )
+        if sk_option is None:
+            raise ValueError("Tax Case Study의 SK리츠 종목코드 395400을 찾을 수 없습니다.")
+        company_profile = get_selected_company_profile(
+            sk_option,
+            reit_master,
+            peer_snapshot,
+        )
+        target_company = company_profile["company_name"]
+        recent_5y_financials = pd.DataFrame()
+        recent_5y_status = "SK서린빌딩 Golden Asset Snapshot 기준"
+        st.session_state["selected_company"] = target_company
+        st.session_state["selected_stock_code"] = company_profile.get("stock_code", "")
+        st.session_state["selected_dart_corp_code"] = company_profile.get("dart_corp_code", "")
+        st.session_state["selected_company_profile"] = company_profile
+        st.session_state["recent_5y_financials"] = recent_5y_financials
+        dart_status = "Snapshot 기준: v15 Asset Registry"
+        with _sidebar_slot("company"):
+            st.write("**SK서린빌딩 Tax Case Study**")
+            st.caption("SK서린빌딩 Tax Case Study의 분석단계를 아래에서 확인하세요.")
+            st.write("SK리츠 · SK서린빌딩 · 2026년")
+            st.divider()
+        with _sidebar_slot("data_status"):
+            data_connection_status = _render_data_status(macro_context, dart_status, ecos_conn, dart_conn, realty_conn)
+            st.caption("Tax 계산은 공식 출처가 연결된 SK서린빌딩 v15 Snapshot만 사용합니다.")
+        return {
+            "mode": selected_user_mode,
+            "selected_mode": selected_user_mode,
+            "selected_period": selected_period,
+            "latest_kpi": latest_kpi,
+            "latest_fin": latest_fin,
+            "selected_company": target_company,
+            "target_company": target_company,
+            "selected_stock_code": company_profile.get("stock_code", ""),
+            "selected_dart_corp_code": company_profile.get("dart_corp_code", ""),
+            "peer_group": "Tax Case Study 범위 외",
+            "selected_company_profile": company_profile,
+            "recent_5y_financials": recent_5y_financials,
+            "recent_5y_status": recent_5y_status,
+            "selected_company_assets": st.session_state.get("selected_company_assets", pd.DataFrame()),
+            "selected_company_tax_data": st.session_state.get("selected_company_tax_data", pd.DataFrame()),
+            "selected_scenario": macro_scenario.get("selected_scenario", FORECAST_WEIGHTED_SCENARIO_NAME),
+            "scenario": macro_scenario,
+            "analysis_run_id": st.session_state.get("analysis_run_id", 0),
+            "data_connection_status": data_connection_status,
+            "ecos_conn": ecos_conn,
+            "dart_conn": dart_conn,
+            "realty_conn": realty_conn,
+            "ecos_api_key": ecos_conn.key,
+            "dart_api_key": dart_conn.key,
+            "realty_api_key": realty_conn.key,
+            "realty_price_api_key": realty_conn.key,
+            "macro_context": macro_context,
+            "dart_history": pd.DataFrame(),
+            "dart_reports": pd.DataFrame(),
+            "dart_status": dart_status,
+            "market_history": pd.DataFrame(),
+            "market_status": "시장가격 데이터 모듈은 공개 런타임에서 비활성화되어 있습니다.",
+            "macro_scenario": macro_scenario,
+            "rate_shock_bp": macro_scenario["rate_shock_bp"],
+            "refinancing_share_pct": macro_scenario["refinancing_share_pct"],
+            "ffo_haircut_pct": macro_scenario["ffo_haircut_pct"],
+            "cap_rate_shock_bp": macro_scenario["cap_rate_shock_bp"],
+            "professional_assumptions": {"realty_conn": realty_conn},
+        }
+
     with _sidebar_slot("scenario"):
         st.write("**시나리오 선택**")
         selected_macro_scenario = st.selectbox(
@@ -270,25 +358,8 @@ def render_data_sidebar(
                 help="평가액 비중이 이 기준 이상인 자산은 공정가치 평가위험 검토 우선순위가 올라갑니다.",
             )
         elif selected_user_mode == "Tax":
-            st.caption("Tax 모드는 양도세를 제외하고 보유세만 분석합니다.")
-            professional_assumptions["land_fmv_ratio_pct"] = st.slider("토지 공정시장가액비율", 40.0, 100.0, 70.0, 5.0)
-            professional_assumptions["building_fmv_ratio_pct"] = st.slider("건축물 공정시장가액비율", 40.0, 100.0, 70.0, 5.0)
-            professional_assumptions["building_tax_rate_pct"] = st.slider(
-                "일반 건축물 재산세율 추정치(proxy)",
-                min_value=0.05,
-                max_value=1.00,
-                value=0.25,
-                step=0.05,
-                help="상업용 일반 건축물에 대한 단순 추정치(proxy)입니다. 실제 용도별 세율 검토가 필요합니다.",
-            )
-            professional_assumptions["include_urban_area_tax"] = st.checkbox("도시지역분 포함", value=True)
-            professional_assumptions["include_local_education_tax"] = st.checkbox("지방교육세 포함", value=True)
-            professional_assumptions["apply_tax_burden_cap"] = st.checkbox("세부담상한 단순 적용", value=False)
-            professional_assumptions["tax_burden_cap_pct"] = st.slider("세부담상한 추정치(proxy)", 110.0, 200.0, 150.0, 10.0)
-            with st.expander("공시가격 실시간 조회 제한 시 추정치(proxy) 가정", expanded=False):
-                professional_assumptions["proxy_land_growth_pct"] = st.slider("연간 공시지가 상승률 추정치(proxy)", 0.0, 15.0, 3.0, 0.5)
-                professional_assumptions["official_to_appraisal_ratio_pct"] = st.slider("토지 공시가격/감정가 추정치(proxy)", 10.0, 90.0, 55.0, 5.0)
-                professional_assumptions["building_standard_ratio_pct"] = st.slider("건물 기준시가/감정가 추정치(proxy)", 0.0, 60.0, 20.0, 5.0)
+            st.caption("Tax 세율과 공정시장가액비율은 공식 검증된 Tax Rule Master에서만 읽습니다.")
+            st.caption("자산·필지·납세의무자 입력이 불충분하면 계산하지 않고 추가 요청자료를 표시합니다.")
 
     dart_history = recent_5y_financials
     dart_reports = pd.DataFrame()

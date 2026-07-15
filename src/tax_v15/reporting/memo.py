@@ -1,0 +1,255 @@
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pandas as pd
+
+from ..constants import DISCLAIMER_KO, SOURCE_BADGES
+from ..validation.controls import summarize_coverage
+
+
+SECTIONS = [
+    "Executive Conclusion",
+    "Scope and Limitation",
+    "Ownership and Taxpayer Structure",
+    "Public REIT Separate-Tax Eligibility",
+    "Land Property Tax",
+    "Building Property Tax",
+    "Urban Area and Local Education Tax",
+    "Fire Resource Facility Tax",
+    "Comprehensive Real Estate Holding Tax",
+    "Tax Sensitivity Scenario",
+    "Tax Issue Matrix",
+    "Request List",
+    "Reconciliation",
+    "Reviewer Sign-off",
+]
+
+
+def _verified_total(calculations: pd.DataFrame) -> Decimal | None:
+    if calculations is None or calculations.empty:
+        return None
+    eligible = calculations[
+        calculations["calculation_status"].isin(
+            ["verified_notice", "official_source_calculated"]
+        )
+        & calculations["tax_name"].ne("토지 시가표준액")
+    ]
+    values = eligible["calculated_tax"].dropna()
+    if values.empty:
+        return None
+    return sum((Decimal(str(value)) for value in values), Decimal("0"))
+
+
+def _status_summary(frame: pd.DataFrame, column: str, fallback: str) -> str:
+    if frame is None or frame.empty or column not in frame.columns:
+        return fallback
+    values = sorted(
+        {
+            str(value).strip()
+            for value in frame[column]
+            if not pd.isna(value) and str(value).strip()
+        }
+    )
+    return ", ".join(values) if values else fallback
+
+
+def _markdown_value(value) -> str:
+    if value is None or value is pd.NA:
+        return ""
+    try:
+        if pd.isna(value):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    text = f"{value:,}" if isinstance(value, Decimal) else str(value)
+    return text.replace("|", "\\|").replace("\n", " ")
+
+
+def _markdown_table(frame: pd.DataFrame | None, columns: list[str]) -> str:
+    if frame is None or frame.empty:
+        return "- 현재 표시할 행이 없습니다."
+    available = [column for column in columns if column in frame.columns]
+    if not available:
+        return "- 현재 표시할 열이 없습니다."
+    lines = [
+        "| " + " | ".join(available) + " |",
+        "|" + "|".join("---" for _ in available) + "|",
+    ]
+    for row in frame[available].itertuples(index=False, name=None):
+        lines.append("| " + " | ".join(_markdown_value(value) for value in row) + " |")
+    return "\n".join(lines)
+
+
+def build_tax_review_memo(
+    reit_name: str,
+    tax_year: int,
+    assets: pd.DataFrame,
+    parcels: pd.DataFrame,
+    buildings: pd.DataFrame,
+    taxpayers: pd.DataFrame,
+    calculations: pd.DataFrame,
+    validations: pd.DataFrame,
+    requests: pd.DataFrame,
+    sensitivity_summary: pd.DataFrame | None = None,
+    issue_matrix: pd.DataFrame | None = None,
+) -> str:
+    del validations
+    coverage = summarize_coverage(
+        assets,
+        parcels,
+        buildings,
+        taxpayers,
+        calculations,
+    )
+    verified_total = _verified_total(calculations)
+    completed = int(coverage["completed_calculation_rows"])
+    blocked = int(coverage["blocked_calculation_rows"])
+    recalculation_label = f"{tax_year}년 공식 입력자료 기반 보유세 산식 재계산액"
+    statutory_status = _status_summary(
+        taxpayers,
+        "statutory_eligibility_status",
+        "미판정",
+    )
+    notice_status = _status_summary(
+        taxpayers,
+        "actual_notice_classification",
+        "미확인",
+    )
+    legal_status = _status_summary(taxpayers, "legal_review_status", "검토 필요")
+    reconciliation_status = _status_summary(
+        taxpayers,
+        "notice_reconciliation_status",
+        "미대사",
+    )
+    asset_name = (
+        str(assets.iloc[0].get("asset_name", ""))
+        if assets is not None and not assets.empty
+        else "분석대상 자산"
+    )
+    conclusion = (
+        f"{asset_name}의 확인된 공식 입력자료와 현행 표준 산식에 따른 "
+        f"{tax_year}년 보유세 재계산액은 "
+        + (
+            f"{verified_total:,}원입니다. "
+            if verified_total is not None
+            else "공개자료만으로 산식 재계산할 수 있는 금액은 없습니다. "
+        )
+        + "이는 실제 고지세액이 아니며, 실제 과세내역서상 분리과세 코드, "
+        "법정 절사, 감면, 세부담상한, 지방자치단체 조정 및 고지서 대사는 "
+        "미완료 상태입니다."
+    )
+    scenario_text = (
+        "본 시나리오는 공시가격 및 시가표준액 변화에 대한 기계적 민감도 분석이며, "
+        "미래 세액 예측이나 과세관청의 결정세액이 아닙니다.\n\n"
+        + _markdown_table(
+            sensitivity_summary,
+            [
+                "Scenario",
+                "토지 시가표준액",
+                "건축물 시가표준액",
+                "총 보유세",
+                "Base 대비 증감액",
+                "Base 대비 증감률",
+            ],
+        )
+    )
+    issue_text = _markdown_table(
+        issue_matrix,
+        [
+            "priority",
+            "issue_code",
+            "tax_issue",
+            "current_status",
+            "evidence_status",
+            "potential_tax_effect",
+            "quantitative_sensitivity",
+            "required_document",
+            "resolution_status",
+        ],
+    )
+    request_document_column = (
+        "required_document"
+        if requests is not None and "required_document" in requests.columns
+        else "request_document"
+    )
+    request_issue_column = (
+        "tax_issue"
+        if requests is not None and "tax_issue" in requests.columns
+        else "issue"
+    )
+    request_text = _markdown_table(
+        requests,
+        [
+            "priority",
+            "issue_code",
+            request_issue_column,
+            request_document_column,
+            "request_reason",
+            "reviewer_status",
+        ],
+    )
+    section_text = {
+        "Executive Conclusion": conclusion,
+        "Scope and Limitation": (
+            f"본 Tax 모듈은 {reit_name} 전체 자산의 확정 세액을 산출하는 도구가 아니라, "
+            f"대표 자산인 {asset_name}을 대상으로 공모리츠 보유세 검토 프로세스를 구현한 "
+            f"심층 Case Study입니다.\n\n{DISCLAIMER_KO}"
+        ),
+        "Ownership and Taxpayer Structure": (
+            f"자산 {coverage['asset_count']}건 중 공개자료와 법령을 연결해 납세의무자를 "
+            f"판정한 행은 {coverage['verified_taxpayer_count']}건입니다. 투자 보유형태, "
+            "등기 보유형태, 등기명의자, 위탁자·수탁자, 경제적 보유주체와 "
+            "재산세 납세의무자를 서로 구분합니다."
+        ),
+        "Public REIT Separate-Tax Eligibility": (
+            f"법정 적격성은 {statutory_status}, 실제 고지 과세구분은 {notice_status}, "
+            f"법률 검토 상태는 {legal_status}입니다. 법정 적용 가능성과 실제 고지 "
+            "과세구분을 동일한 상태로 표시하지 않습니다."
+        ),
+        "Land Property Tax": (
+            "필지별 개별공시지가 × 과세면적 × 소유지분으로 토지 시가표준액을 "
+            "계산하고 Tax Rule Master의 공정시장가액비율과 세율을 적용합니다."
+        ),
+        "Building Property Tax": (
+            f"공식 건축물 시가표준액 확인 건은 "
+            f"{coverage['verified_building_value_count']}건입니다. 시가표준액은 재산세 "
+            "과세표준이나 실제 고지세액과 구분하며, 미확인 건은 계산하지 않습니다."
+        ),
+        "Urban Area and Local Education Tax": (
+            "도시지역분은 적용대상 고시와 조례가 확인된 자산만 계산하며, "
+            "지방교육세는 도시지역분을 제외한 재산세 본세를 기준으로 계산합니다."
+        ),
+        "Fire Resource Facility Tax": (
+            "공식 건축물 시가표준액과 위험유형이 모두 확인된 경우에만 누진세율 및 "
+            "100%·200%·300% 배율을 적용합니다. 실제 고지 위험코드는 미대사입니다."
+        ),
+        "Comprehensive Real Estate Holding Tax": (
+            "분리과세 토지는 not_applicable로 표시합니다. 종합·별도합산 토지는 "
+            "납세의무자별 전국 합산 공시가격과 재산세 공제액이 없으면 계산을 차단합니다."
+        ),
+        "Tax Sensitivity Scenario": scenario_text,
+        "Tax Issue Matrix": issue_text,
+        "Request List": request_text,
+        "Reconciliation": (
+            f"고지 대사 상태는 {reconciliation_status}입니다. 세금과공과 전체를 보유세 "
+            "Ground Truth로 사용하지 않으며 실제 고지서 또는 과세내역서와 세목별로 "
+            "대사해야 합니다."
+        ),
+        "Reviewer Sign-off": (
+            "검토자: ____________________  검토일: ____________________  "
+            "승인: ____________________"
+        ),
+    }
+    lines = [
+        f"# {reit_name} — {asset_name} {tax_year} Tax Review Memo",
+        "",
+        f"계산 상태: {SOURCE_BADGES.get(coverage['final_status'], coverage['final_status'])}",
+        f"산식 재계산 가능 세목: {completed}건 / 추가자료 필요 행: {blocked}건",
+        f"계산 명칭: {recalculation_label}",
+        "실제 고지세액: 미확인",
+        "",
+    ]
+    for number, title in enumerate(SECTIONS, start=1):
+        lines.extend([f"## {number}. {title}", "", section_text[title], ""])
+    return "\n".join(lines).strip() + "\n"

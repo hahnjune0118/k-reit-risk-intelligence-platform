@@ -104,7 +104,6 @@ def build_holding_tax_estimator(asset_risk: pd.DataFrame, official_price_history
 def summarize_holding_tax_history(tax_history: pd.DataFrame) -> pd.DataFrame:
     if tax_history is None or tax_history.empty:
         return pd.DataFrame()
-    latest_year = int(tax_history["year"].max())
     first_year = int(tax_history["year"].min())
     value_columns = [
         "보유세_추정_백만원",

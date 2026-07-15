@@ -1,60 +1,47 @@
 # PROJECT ROADMAP
 
-## 현재 위치
+## 현재 릴리스
 
-현재 활성 개발 및 공개 포트폴리오 버전은 **v14.1 - Metric Definition & Source Lineage Stabilization**입니다.
+현재 공개 포트폴리오 버전은 **v15.0.0 - SK Seorin Golden Asset Tax Case Study**입니다.
 
-v14.1은 상장리츠의 공시자료, 거시경제 지표, Peer Snapshot, Tax Snapshot을 연결하여 Tax 업무에서 반복적으로 수행되는 보유세 검토, 요청자료 정리, Memo 초안 작성, 데이터 검증을 하나의 workflow로 안정화하고, FFO proxy·장부기준 NAV proxy·총자산 기준 차입비율 등 핵심 지표의 정의와 출처 계보를 명확히 한 버전입니다.
+공개 Tax UI는 SK리츠의 SK서린빌딩 한 건을 대상으로 주소, PNU, 공식 시가표준액, 신탁구조와 납세의무자를 연결하여 보유세 표준 산식을 재계산합니다. 범용 Asset·Parcel·Building·Taxpayer 스키마는 유지하지만, 증빙 수준이 동일하지 않은 다른 리츠 결과는 공개 화면에 표시하지 않습니다.
 
-## v14.1 현재 범위
+## v15.0.0 완료 범위
 
-활성 Streamlit 모드는 네 가지입니다.
+- SK리츠·SK서린빌딩·2026년 Case Scope 고정
+- 공식 입력자료 기반 보유세 산식 재계산
+- Tax Rule Master 기반 토지·건축물·부가세목 계산
+- Base, Moderate, Severe, Custom Tax Sensitivity Scenario
+- P0/P1 우선순위 기반 Tax Issue Matrix
+- Validation, Reconciliation과 Request List 연결
+- 17단계 Tax Review 화면과 Markdown·HTML·Excel Export
+- 실제 고지세액 미확인, 고지서 대사 미완료 상태의 Fail-closed 표시
 
-1. 일반 정보 및 시나리오
-2. Tax: 보유세 분석
-3. Assurance: 감사위험 분석
-4. 분석 방법론 및 데이터 출처
+General, Assurance와 Methodology 화면은 기존 다회사 기능을 유지합니다. Deals와 KRX API는 공개 런타임에서 계속 비활성화합니다.
 
-v14의 중심 기능:
+## v15.x 안정화 후보
 
-- 상장리츠 Peer Benchmark
-- Tax 보유세 부담 Benchmark
-- Source reliability framework
-- Holding Tax Bridge
-- Tax Issue Matrix
-- Holding Tax Reconciliation
-- Issue 기반 Tax Request List
-- Tax Review Memo 초안
-- Tax 입력 검증 패널
-- CSV/Markdown/ZIP export
-- Assurance Red Flag Engine 유지
-- DART API-first, Snapshot fallback 기반 공개 리뷰 경험
-- 핵심 지표 정의 및 source lineage 설명
+- 2026년 실제 재산세·지역자원시설세 고지서 확보 및 재계산액 대사
+- 분리과세 코드가 표시된 과세내역서로 실제 과세구분 검증
+- 과세기준일 현재 등기부등본·신탁원부로 납세의무자 판정 검증
+- 토지대장·부속지번 자료로 5.3㎡ 면적 차이 해소
+- 소방분 실제 위험유형 코드와 300% 배율 대사
+- 법정 절사, 감면, 세부담상한과 지방자치단체 조정 반영 검토
 
-## 공개 버전에서 제외된 범위
+## v16 확장 조건
 
-다음 기능은 현재 공개 런타임에서 비활성화되어 있습니다.
+다른 자산 또는 리츠로 확대하기 전 다음 조건을 충족해야 합니다.
 
-- Deals mode
-- KRX API 기반 시장가격 수집
-- KRX 기반 market-implied valuation
-- 거래 목적 가치평가
-
-위 기능은 공개 포트폴리오 버전의 시작 경로에서 제외되어 있으며, v14는 Tax workflow의 통제, 검증, source transparency를 우선합니다.
-
-## 다음 후보
-
-향후 버전에서는 다음 항목을 검토할 수 있습니다.
-
-- Tax Snapshot 갱신 프로세스 고도화
-- 여러 회계연도 trend 기반 Tax Red Flag
-- 공시가격·고지세액 대사 자동화
-- 보유세 민감도 분석의 자산별 상세화
-- source_type별 데이터 품질 리포트 자동 생성
+1. 자산과 필지별 공식 주소·PNU 증빙 확보
+2. 기준연도 개별공시지가와 건축물 시가표준액 확보
+3. 법적 소유자, 신탁구조와 납세의무자 검증
+4. 분리과세 등 법적 분류에 대한 검토 근거 확보
+5. 실제 고지서 또는 과세내역서와의 Reconciliation 수행
+6. Golden Asset과 동일한 자동 테스트와 Evidence Review 통과
 
 ## 버전 관리 원칙
 
-- 현재 버전은 `VERSION` 파일에 기록합니다.
-- 화면 표시 버전은 `config.py`에서 관리합니다.
-- 주요 기능 추가 시 `CHANGELOG.md`를 업데이트합니다.
-- 공개 UI에서 비활성화된 기능은 앱 시작 경로에 의존하지 않도록 유지합니다.
+- 현재 버전은 `VERSION`과 `config.py`에서 관리합니다.
+- 기능, 데이터 계약과 공개 범위 변경은 `CHANGELOG.md`에 기록합니다.
+- 증빙이 부족한 항목은 완료로 표시하지 않고 `docs/v15/COVERAGE_REPORT.md`에 제한사항을 남깁니다.
+- main 병합과 운영 배포는 별도 Release 검토 후 수행합니다.

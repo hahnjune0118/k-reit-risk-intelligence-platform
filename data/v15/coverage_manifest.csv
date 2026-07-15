@@ -1,0 +1,24 @@
+﻿reit_name,stock_code,official_website_found,ir_documents_checked,dart_documents_checked,asset_count_identified,address_count_verified,parcel_count_verified,land_price_coverage,building_value_coverage,taxpayer_coverage,tax_calculation_status,blocking_reason,next_action
+SK리츠,395400,True,True,True,1,1,1,100.0%,100.0%,100.0%,official_source_calculated,추가 차단사항 없음,고지서 대사 및 reviewer sign-off
+롯데리츠,330590,True,True,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+한화리츠,451800,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+ESR켄달스퀘어리츠,365550,True,False,False,21,18,0,0.0%,0.0%,0.0%,official_partial,PNU·필지 목록 미확인; 건축물 시가표준액 미확인; 법적 납세의무자·분리과세 요건 미검증,토지대장·지적도·PNU 매핑 확보; 건축물 시가표준액 산출내역 확보; 등기·신탁·목적사업 사용·과세내역서 확인
+신한알파리츠,293940,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+삼성FN리츠,448730,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+코람코더원리츠,417310,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+코람코라이프인프라리츠,357120,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+이지스밸류플러스리츠,334890,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+제이알글로벌리츠,348950,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+대신밸류리츠,0030R0,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+신한서부티엔디리츠,404990,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+KB스타리츠,432320,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+이리츠코크렙,088260,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+디앤디플랫폼리츠,377190,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+NH올원리츠,400760,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+이지스레지던스리츠,350520,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+NH프라임리츠,338100,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+미래에셋글로벌리츠,396690,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+미래에셋맵스리츠,357250,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+신한글로벌액티브리츠,481850,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+케이탑리츠,145270,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인
+마스턴프리미어리츠,357430,True,False,False,0,0,0,0.0%,0.0%,0.0%,data_insufficient,공식자료 기반 Asset Registry 미구축,공식 홈페이지·DART 투자보고서에서 자산 목록 확인

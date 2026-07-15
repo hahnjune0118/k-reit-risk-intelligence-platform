@@ -52,3 +52,5 @@ powerbi/_backup_before_codex_automation/
 powerbi/*_backup*.pbix
 powerbi/**/.pbi/
 _backup/
+data/v15/raw_documents/
+data/v15/ocr_cache/

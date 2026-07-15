@@ -1,0 +1,172 @@
+﻿validation_id,reit_name,taxpayer_id,asset_id,parcel_id,building_id,check_name,severity,validation_status,message,source_url,reviewer_status
+2c007cb0854cdd44,롯데리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+649b09b100f12ed9,롯데리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+ae4ad70255550f6d,한화리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+71059ac4eb4afa67,한화리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+77aa10ee0523695d,ESR켄달스퀘어리츠,TP-729af1be4e67,365550-ESR-001,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+a75ce73865645123,ESR켄달스퀘어리츠,,365550-ESR-001,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+20dfa10998cd42b7,ESR켄달스퀘어리츠,,365550-ESR-001,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+2b7ad537e20f607d,ESR켄달스퀘어리츠,TP-735582351853,365550-ESR-002,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+2805ccebabc6d653,ESR켄달스퀘어리츠,,365550-ESR-002,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+29bca3e55f773a39,ESR켄달스퀘어리츠,,365550-ESR-002,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+34a65ab1d774279e,ESR켄달스퀘어리츠,TP-6b77029f696f,365550-ESR-003,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+44f997920c7e67f7,ESR켄달스퀘어리츠,,365550-ESR-003,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+d124fe8f0c4c14bb,ESR켄달스퀘어리츠,,365550-ESR-003,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+18a16fec97bde31d,ESR켄달스퀘어리츠,TP-85211d4583fa,365550-ESR-004,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+36f24581b228288f,ESR켄달스퀘어리츠,,365550-ESR-004,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+427fa3c3aa1d547e,ESR켄달스퀘어리츠,,365550-ESR-004,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+04c28e395d4d6e5c,ESR켄달스퀘어리츠,TP-4caa39164421,365550-ESR-005,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+85a7578dd630c9c7,ESR켄달스퀘어리츠,,365550-ESR-005,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+4064f2b2446d2c12,ESR켄달스퀘어리츠,,365550-ESR-005,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+7ac9f3372c8429aa,ESR켄달스퀘어리츠,TP-0affebc1928e,365550-ESR-006,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+7a38c609c4366afa,ESR켄달스퀘어리츠,,365550-ESR-006,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+eea84073495c8653,ESR켄달스퀘어리츠,,365550-ESR-006,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+ec9e260305cd09d8,ESR켄달스퀘어리츠,TP-e9477fd28340,365550-ESR-007,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+23a8b01364d214dd,ESR켄달스퀘어리츠,,365550-ESR-007,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+eb289e56c91c72dc,ESR켄달스퀘어리츠,,365550-ESR-007,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+73a293c6f66a1c56,ESR켄달스퀘어리츠,TP-e03f462db3ec,365550-ESR-008,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+c181a1a2c71783a3,ESR켄달스퀘어리츠,,365550-ESR-008,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+f87b60a8cdca8844,ESR켄달스퀘어리츠,,365550-ESR-008,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+746065eb69efe8de,ESR켄달스퀘어리츠,TP-a8cd66996ecd,365550-ESR-009,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+ee2802dc95e8a7a5,ESR켄달스퀘어리츠,,365550-ESR-009,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+276c6474d4d72984,ESR켄달스퀘어리츠,,365550-ESR-009,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+aed7e73515c4a070,ESR켄달스퀘어리츠,TP-4d4784bea15b,365550-ESR-010,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+842fd3f6173b06ff,ESR켄달스퀘어리츠,,365550-ESR-010,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+38aea3388000c44a,ESR켄달스퀘어리츠,,365550-ESR-010,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+edcdca2c90360eb9,ESR켄달스퀘어리츠,TP-95f462aa61f6,365550-ESR-011,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+1cbb714d2a31a941,ESR켄달스퀘어리츠,,365550-ESR-011,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+8759ca90690891b5,ESR켄달스퀘어리츠,,365550-ESR-011,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+8d4edda650fa1c8f,ESR켄달스퀘어리츠,TP-c45d964dd501,365550-ESR-012,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+5c80161f0af46fa5,ESR켄달스퀘어리츠,,365550-ESR-012,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+63575d23f93fb67b,ESR켄달스퀘어리츠,,365550-ESR-012,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+995b1d06c53812ff,ESR켄달스퀘어리츠,TP-42486f7a9dfb,365550-ESR-013,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+4c957da49fac2401,ESR켄달스퀘어리츠,,365550-ESR-013,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+a1c26f6999368c23,ESR켄달스퀘어리츠,,365550-ESR-013,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+17bdc58179fe8975,ESR켄달스퀘어리츠,TP-f35c0dd6088b,365550-ESR-014,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+4d523d187bee7c90,ESR켄달스퀘어리츠,,365550-ESR-014,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+e7d604e80ed5f9b9,ESR켄달스퀘어리츠,,365550-ESR-014,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+2c313267d78dfb61,ESR켄달스퀘어리츠,TP-c301e85c9cde,365550-ESR-015,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+c0616e666c0f03f5,ESR켄달스퀘어리츠,,365550-ESR-015,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+dd16ec36d5958a43,ESR켄달스퀘어리츠,,365550-ESR-015,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+9a2adc49e564e7d9,ESR켄달스퀘어리츠,TP-b0ecddc79c1d,365550-ESR-016,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+1b404b29285bcd86,ESR켄달스퀘어리츠,,365550-ESR-016,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+263fcb104251c0a5,ESR켄달스퀘어리츠,,365550-ESR-016,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+a82a30ce8287568a,ESR켄달스퀘어리츠,TP-8edaf38e7112,365550-ESR-017,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+649f48435638b593,ESR켄달스퀘어리츠,,365550-ESR-017,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+e8ebf29dcd91ed32,ESR켄달스퀘어리츠,,365550-ESR-017,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+8168079726ecf9ee,ESR켄달스퀘어리츠,TP-2d34d3889869,365550-ESR-018,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+8720dd1fc98101e4,ESR켄달스퀘어리츠,,365550-ESR-018,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+529cab910e7de550,ESR켄달스퀘어리츠,,365550-ESR-018,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+6b1960fa37d5283f,ESR켄달스퀘어리츠,TP-94d699294842,365550-ESR-019,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+6c0464b77c3fb0a3,ESR켄달스퀘어리츠,,365550-ESR-019,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+7a65e293c662b254,ESR켄달스퀘어리츠,,365550-ESR-019,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+6f6281698125d571,ESR켄달스퀘어리츠,TP-bf1f8097e308,365550-ESR-020,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+d205b9684241e24e,ESR켄달스퀘어리츠,,365550-ESR-020,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+fe03d7c1abcb7111,ESR켄달스퀘어리츠,,365550-ESR-020,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+4d2a418effa788ba,ESR켄달스퀘어리츠,TP-e322d62a2d54,365550-ESR-021,,,taxpayer_verification,critical,failed,과세기준일 현재 법적 납세의무자가 공식 검증되지 않았습니다.,,open
+70e834cec11a617f,ESR켄달스퀘어리츠,,365550-ESR-021,,,separation_tax_eligibility,high,failed,공모리츠 분리과세 요건과 목적사업 사용 여부가 확인되지 않았습니다.,,open
+c25b07a642d7d1aa,ESR켄달스퀘어리츠,,365550-ESR-021,,,parcel_registry,critical,failed,자산에 연결된 공식 PNU·필지 목록이 없습니다.,,open
+2a7c749d068e8ec7,ESR켄달스퀘어리츠,,365550-ESR-001,,365550-ESR-001-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+91ab79fd12c4b0e7,ESR켄달스퀘어리츠,,365550-ESR-001,,365550-ESR-001-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+f9628588b9aee418,ESR켄달스퀘어리츠,,365550-ESR-001,,365550-ESR-001-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+bf986e1446138870,ESR켄달스퀘어리츠,,365550-ESR-002,,365550-ESR-002-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+d4a065bf9d50b46f,ESR켄달스퀘어리츠,,365550-ESR-002,,365550-ESR-002-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+1129087c52c216bd,ESR켄달스퀘어리츠,,365550-ESR-002,,365550-ESR-002-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+339500e569b8e3f3,ESR켄달스퀘어리츠,,365550-ESR-003,,365550-ESR-003-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+6b6662cfad400233,ESR켄달스퀘어리츠,,365550-ESR-003,,365550-ESR-003-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+80287a8acd0f133f,ESR켄달스퀘어리츠,,365550-ESR-003,,365550-ESR-003-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+aec23508dae093e3,ESR켄달스퀘어리츠,,365550-ESR-004,,365550-ESR-004-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+dd7c2380a87b0bc7,ESR켄달스퀘어리츠,,365550-ESR-004,,365550-ESR-004-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+31fbd46091d30902,ESR켄달스퀘어리츠,,365550-ESR-004,,365550-ESR-004-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+249f8577e07ff0f1,ESR켄달스퀘어리츠,,365550-ESR-005,,365550-ESR-005-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+cac57f120cad05fc,ESR켄달스퀘어리츠,,365550-ESR-005,,365550-ESR-005-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+9dfb1477a1210db9,ESR켄달스퀘어리츠,,365550-ESR-005,,365550-ESR-005-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+56c30718115d865d,ESR켄달스퀘어리츠,,365550-ESR-006,,365550-ESR-006-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+a4e5259a7b6baa32,ESR켄달스퀘어리츠,,365550-ESR-006,,365550-ESR-006-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+cf8b7d0bdb31cce5,ESR켄달스퀘어리츠,,365550-ESR-006,,365550-ESR-006-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+4e8e4a5225e04df2,ESR켄달스퀘어리츠,,365550-ESR-007,,365550-ESR-007-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+f2ad0bd334673253,ESR켄달스퀘어리츠,,365550-ESR-007,,365550-ESR-007-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+a0191589d7bfdf73,ESR켄달스퀘어리츠,,365550-ESR-007,,365550-ESR-007-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+77d5110f3ffcea9c,ESR켄달스퀘어리츠,,365550-ESR-008,,365550-ESR-008-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+342b72cfccbbc314,ESR켄달스퀘어리츠,,365550-ESR-008,,365550-ESR-008-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+526a39d1a99337e9,ESR켄달스퀘어리츠,,365550-ESR-008,,365550-ESR-008-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+e2b3dea71f658020,ESR켄달스퀘어리츠,,365550-ESR-009,,365550-ESR-009-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+bc41a6eaf8e92d87,ESR켄달스퀘어리츠,,365550-ESR-009,,365550-ESR-009-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+673a1287953fc23a,ESR켄달스퀘어리츠,,365550-ESR-009,,365550-ESR-009-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+80d86f72f758eb17,ESR켄달스퀘어리츠,,365550-ESR-010,,365550-ESR-010-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+92dd34c686181e71,ESR켄달스퀘어리츠,,365550-ESR-010,,365550-ESR-010-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+b7615ab8f7678d7d,ESR켄달스퀘어리츠,,365550-ESR-010,,365550-ESR-010-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+00749834e5a6668f,ESR켄달스퀘어리츠,,365550-ESR-011,,365550-ESR-011-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+d1d94053c3a264ec,ESR켄달스퀘어리츠,,365550-ESR-011,,365550-ESR-011-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+c3f0d744485d0703,ESR켄달스퀘어리츠,,365550-ESR-011,,365550-ESR-011-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+e95156e843f0863e,ESR켄달스퀘어리츠,,365550-ESR-012,,365550-ESR-012-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+2cd3f5ec32f122a9,ESR켄달스퀘어리츠,,365550-ESR-012,,365550-ESR-012-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+0a385d377d320ce4,ESR켄달스퀘어리츠,,365550-ESR-012,,365550-ESR-012-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+e630fb9d46943ca6,ESR켄달스퀘어리츠,,365550-ESR-013,,365550-ESR-013-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+59d6756661afae31,ESR켄달스퀘어리츠,,365550-ESR-013,,365550-ESR-013-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+3ae5e8785179220a,ESR켄달스퀘어리츠,,365550-ESR-013,,365550-ESR-013-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+e3179e3f80b427d0,ESR켄달스퀘어리츠,,365550-ESR-014,,365550-ESR-014-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+dbe3b07442a4b927,ESR켄달스퀘어리츠,,365550-ESR-014,,365550-ESR-014-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+091cdae8eca786dc,ESR켄달스퀘어리츠,,365550-ESR-014,,365550-ESR-014-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+ccd24b69028f198c,ESR켄달스퀘어리츠,,365550-ESR-015,,365550-ESR-015-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+f0831f388a003ba5,ESR켄달스퀘어리츠,,365550-ESR-015,,365550-ESR-015-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+755c48cbff4785ce,ESR켄달스퀘어리츠,,365550-ESR-015,,365550-ESR-015-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+5e75450be6b0d866,ESR켄달스퀘어리츠,,365550-ESR-016,,365550-ESR-016-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+84bedd1b2b514d44,ESR켄달스퀘어리츠,,365550-ESR-016,,365550-ESR-016-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+49a8ff49513d104d,ESR켄달스퀘어리츠,,365550-ESR-016,,365550-ESR-016-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+520eadc24c98d5e0,ESR켄달스퀘어리츠,,365550-ESR-017,,365550-ESR-017-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+1eaebca34ade8183,ESR켄달스퀘어리츠,,365550-ESR-017,,365550-ESR-017-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+5dfaa4b346ea7b37,ESR켄달스퀘어리츠,,365550-ESR-017,,365550-ESR-017-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+415c8d388189e9a2,ESR켄달스퀘어리츠,,365550-ESR-018,,365550-ESR-018-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+598afeda105f87c3,ESR켄달스퀘어리츠,,365550-ESR-018,,365550-ESR-018-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+df8fb86e251faf28,ESR켄달스퀘어리츠,,365550-ESR-018,,365550-ESR-018-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+a60458b2b64801c7,ESR켄달스퀘어리츠,,365550-ESR-019,,365550-ESR-019-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+41e8471015f81512,ESR켄달스퀘어리츠,,365550-ESR-019,,365550-ESR-019-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+d82d8dac72a8233b,ESR켄달스퀘어리츠,,365550-ESR-019,,365550-ESR-019-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+8a11393eb711e2b4,ESR켄달스퀘어리츠,,365550-ESR-020,,365550-ESR-020-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+fc8a1bf6a15259e4,ESR켄달스퀘어리츠,,365550-ESR-020,,365550-ESR-020-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+7d2c04a01775f25a,ESR켄달스퀘어리츠,,365550-ESR-020,,365550-ESR-020-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+46d58fbbd8930f7e,ESR켄달스퀘어리츠,,365550-ESR-021,,365550-ESR-021-B001,building_standard_value,high,failed,공식 건축물 시가표준액이 없습니다.,,open
+9727fb603fb1ccb8,ESR켄달스퀘어리츠,,365550-ESR-021,,365550-ESR-021-B001,fire_risk_classification,high,failed,소방분 지역자원시설세의 건축물 위험유형과 가중배율이 확인되지 않았습니다.,,open
+f88a4d807a291f36,ESR켄달스퀘어리츠,,365550-ESR-021,,365550-ESR-021-B001,urban_area_applicability,medium,failed,도시지역분 적용대상 고시와 조례 적용 여부가 확인되지 않았습니다.,,open
+c74b01e154c04633,ESR켄달스퀘어리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+a517955a8c9061b2,신한알파리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+41ae71d364e00dff,신한알파리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+87465acc0e9c9e16,삼성FN리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+ffe3266990fcba60,삼성FN리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+24ae99ff815ab100,코람코더원리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+05ed706993200b1a,코람코더원리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+c34038570269abfa,코람코라이프인프라리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+d8b1b6c9eabc8ce0,코람코라이프인프라리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+a109445a9e0eff34,이지스밸류플러스리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+d78d696a0fc71209,이지스밸류플러스리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+01ba36cc2c476302,제이알글로벌리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+90fb4c0df94f6219,제이알글로벌리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+b359fd18527c1830,대신밸류리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+553d466e266f743d,대신밸류리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+0a38cf43d5141371,신한서부티엔디리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+c986a0ece7f7f061,신한서부티엔디리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+473605adb156fc74,KB스타리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+da1dc6169406f18f,KB스타리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+219949935068e423,이리츠코크렙,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+8011a010e8ae3dc9,이리츠코크렙,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+64aa6b744441f3af,디앤디플랫폼리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+b0a13c731fd83508,디앤디플랫폼리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+4ef35fb31b8e52a9,NH올원리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+a928f5cf8fed6b50,NH올원리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+cf5a1011f1ebb5f1,이지스레지던스리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+584ead42ac19a28b,이지스레지던스리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+9a0d2c373e2ecdf4,NH프라임리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+3844b930c07b8f93,NH프라임리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+0c8f88ece1bac8e5,미래에셋글로벌리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+410b7926e75938e9,미래에셋글로벌리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+e9bbb2f315672fb0,미래에셋맵스리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+7a3e2dd8a3e2a5db,미래에셋맵스리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+3c8463d7f28da602,신한글로벌액티브리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+048f02efa0d29787,신한글로벌액티브리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+e20e0643ee32a1ac,케이탑리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+9af3e594fdb39166,케이탑리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+759c62d68ee1d3c5,마스턴프리미어리츠,,,,,asset_registry,critical,failed,공식자료에서 식별된 자산이 없습니다.,,open
+3e90c0ea0411c4e7,마스턴프리미어리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+1bf5854f0272db78,SK리츠,,,,,tax_notice,high,failed,실제 재산세·종합부동산세 고지서 또는 과세내역서 대사가 완료되지 않았습니다.,,open
+d9f86273780660c8,SK리츠,SKR-TP-001,SKR-SEOUL-SEORIN-001,SKR-SEORIN-P-001,SKR-SEORIN-B-001,parcel_area_reconciliation,medium,failed,건축물대장 대지면적과 현행 토지대장 면적 간 5.3㎡ 차이 및 부속지번 91의 현재 상태를 최신 토지대장·지적도 또는 과세내역서로 대사해야 합니다.,https://land.seoul.go.kr/land/wskras/generalInfo.do,open
