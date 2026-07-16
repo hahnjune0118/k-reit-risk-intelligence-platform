@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import plotly.express as px
 import streamlit as st
 
@@ -8,6 +8,185 @@ from formatting import format_pct_from_100, format_ratio, format_score, format_t
 from api_manager import sanitize_secret_text
 from ui_common import compact_fig, fmt_metric_value, fmt_mn_to_bn, mode_specific_action_items, render_selected_company_header
 from ui_peer import build_peer_metric_table, format_peer_percentile, format_peer_value, render_overall_risk_message
+
+
+AX_RUNTIME_SCOPE_NOTE = (
+    "공개 Runtime의 세액 계산은 재현 가능한 규칙엔진을 사용합니다. "
+    "생성형 AI는 비정형 문서 구조화와 검토문서 작성 지원을 위한 확장계층으로 "
+    "설계하며, 확정적인 세법 판단과 신고·납부 의사결정은 전문가 검토 대상으로 "
+    "유지합니다."
+)
+
+
+def _render_ax_advisory_overview():
+    st.markdown("## AX 적용 개요 — 공시·세무검토 Workflow 재설계")
+    st.write(
+        "분산된 리츠 공시, 세법, 공시가격 및 재무자료를 연결하여 검토대상 식별, "
+        "법정산식 계산, 과세근거 추적, 주요 세무쟁점 도출, 추가 요청자료 및 "
+        "검토메모 생성을 하나의 통제된 업무 프로세스로 구조화했습니다."
+    )
+
+    pain_point, solution, effect = st.columns(3)
+    with pain_point:
+        st.markdown("#### 고객 Pain Point")
+        st.markdown(
+            "- 공시·IR·세법·공시가격 자료의 분산\n"
+            "- 주소·소유구조·과세정보의 반복 확인\n"
+            "- Excel 계산과 근거자료의 분리\n"
+            "- 담당자별 검토절차와 문서 양식의 차이\n"
+            "- 공식자료가 부족한 경우 추정값 사용 위험"
+        )
+    with solution:
+        st.markdown("#### AX Solution")
+        st.markdown(
+            "- 자산·필지·납세의무자 단위 데이터 표준화\n"
+            "- 법정 산식 기반 규칙엔진\n"
+            "- Source Lineage와 과세근거 연결\n"
+            "- 주요 세무쟁점과 추가 요청자료 자동 연결\n"
+            "- Fail-closed 및 Human-in-the-loop 통제"
+        )
+    with effect:
+        st.markdown("#### 업무효과")
+        st.markdown(
+            "- 검토 순서의 표준화\n"
+            "- 계산 재현성\n"
+            "- 근거 추적성\n"
+            "- 누락·중복 통제\n"
+            "- Review-ready 산출물 생성"
+        )
+
+    st.markdown("### As-Is·To-Be Workflow")
+    workflow = pd.DataFrame(
+        [
+            {
+                "구분": "As-Is",
+                "업무 프로세스": (
+                    "공시 PDF 검색 → 주소·소유관계 수작업 확인 → 공시가격 별도 조회 "
+                    "→ Excel 세액 계산 → 근거 재확인 → 쟁점·요청자료·메모 수작업 작성"
+                ),
+            },
+            {
+                "구분": "To-Be",
+                "업무 프로세스": (
+                    "공식자료 수집 → 자산·필지·납세의무자 구조화 → 과세기초자료 검증 "
+                    "→ 법정 산식 계산 → 검증통제 → 주요 세무쟁점 → 추가 요청자료 "
+                    "→ 검토메모 → 전문가 승인"
+                ),
+            },
+        ]
+    )
+    st.dataframe(
+        workflow,
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "구분": st.column_config.TextColumn(width="small"),
+            "업무 프로세스": st.column_config.TextColumn(width="large"),
+        },
+    )
+
+    st.markdown("### AI·Data·Automation·Human Review 역할")
+    roles = pd.DataFrame(
+        [
+            {
+                "역할": "Data",
+                "적용 내용": "공시·주소·PNU·시가표준액·납세의무자 구조화",
+            },
+            {
+                "역할": "Automation",
+                "적용 내용": "세액 계산, 끝수 처리, 검증, 민감도 분석, 문서 출력",
+            },
+            {
+                "역할": "AI 지원영역",
+                "적용 내용": (
+                    "비정형 문서 구조화, 주요 쟁점 요약, 추가 요청자료 및 "
+                    "검토메모 초안 지원"
+                ),
+            },
+            {
+                "역할": "Control Harness",
+                "적용 내용": (
+                    "Source Grounding, Schema 검증, Fail-closed, 회귀테스트, "
+                    "검증상태 관리"
+                ),
+            },
+            {
+                "역할": "Human Review",
+                "적용 내용": "법적 판단, 실제 고지서 대사, 최종 승인",
+            },
+        ]
+    )
+    st.dataframe(
+        roles,
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "역할": st.column_config.TextColumn(width="medium"),
+            "적용 내용": st.column_config.TextColumn(width="large"),
+        },
+    )
+    st.info(AX_RUNTIME_SCOPE_NOTE)
+
+    st.markdown("### 구현범위와 한계")
+    implementation_scope = pd.DataFrame(
+        [
+            {
+                "상태": "구현",
+                "범위": (
+                    "공식자료 기반 데이터 구조화, 법정 산식 계산, 민감도 분석, "
+                    "Source Lineage, 주요 세무쟁점, 추가 요청자료, 검토메모, "
+                    "CSV·Excel·Markdown·HTML 출력"
+                ),
+            },
+            {
+                "상태": "설계·확장영역",
+                "범위": "AI 기반 비정형 문서 추출, 쟁점 요약 및 문서 초안 지원",
+            },
+            {
+                "상태": "전문가 확인 필요",
+                "범위": (
+                    "실제 과세내역서, 과세기준일 소유·신탁관계, 감면·세부담상한, "
+                    "실제 고지세액, 최종 세법 판단"
+                ),
+            },
+        ]
+    )
+    st.dataframe(
+        implementation_scope,
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "상태": st.column_config.TextColumn(width="medium"),
+            "범위": st.column_config.TextColumn(width="large"),
+        },
+    )
+
+    st.markdown("### 구현 증빙")
+    # v15 공개 검증 Snapshot과 Tax Case Study의 확정된 범위만 표시합니다.
+    evidence = pd.DataFrame(
+        [
+            {"항목": "핵심 분석대상 자산", "확인 결과": "SK서린빌딩"},
+            {"항목": "공식 과세근거자료", "확인 결과": "16건"},
+            {"항목": "주요 세무쟁점", "확인 결과": "6건"},
+            {
+                "항목": "출력형식",
+                "확인 결과": "CSV·Excel·Markdown·HTML",
+            },
+            {"항목": "검증 방식", "확인 결과": "Fail-closed"},
+            {"항목": "실제 고지세액 대사", "확인 결과": "미완료"},
+        ]
+    )
+    st.dataframe(evidence, width="stretch", hide_index=True)
+
+    with st.expander("3분 권장 열람 순서", expanded=False):
+        st.markdown(
+            "1. AX 적용 개요와 As-Is·To-Be Workflow\n"
+            "2. 일반 정보 및 시나리오의 데이터 분석\n"
+            "3. SK서린빌딩 보유세 재계산과 민감도 분석\n"
+            "4. 주요 세무쟁점·추가 요청자료·과세근거자료"
+        )
+
+    st.markdown("---")
 
 
 def _display_api_status(status: str) -> str:
@@ -164,6 +343,7 @@ def render_general_dashboard(
     dart_reports,
     peer_context=None,
 ):
+    _render_ax_advisory_overview()
     company_profile = (peer_context or {}).get("selected_company_profile", {})
     recent_5y_status = (peer_context or {}).get("recent_5y_status", "")
     st.markdown("## 1. 한눈에 보는 결론")

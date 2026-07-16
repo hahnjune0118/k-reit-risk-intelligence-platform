@@ -1,3 +1,14 @@
+# 변경 이력
+
+## v15.1.0 - AX Workflow & Advisory Portfolio
+
+- 일반 정보 화면 최상단에 고객 Pain Point와 AX Solution, 업무효과 추가
+- 공시·세무검토의 As-Is·To-Be Workflow와 역할분담 명시
+- 규칙엔진, AI 확장계층, Control Harness와 Human Review의 경계 명확화
+- 구현 증빙, 미완료 대사와 전문가 확인 필요사항을 함께 표시
+- AX Advisory Case Brief와 Requirements Definition 문서 추가
+- Tax·Assurance 계산 로직과 네 가지 공개 모드는 변경하지 않음
+
 ## v15.0.1 - SK서린빌딩 핵심 자산 보유세 세무검토
 
 - 「지방회계법」 제55조에 따른 10원 미만 끝수 미계산 기준 반영
@@ -5,17 +16,6 @@
 - SK서린빌딩 보유세 재계산액 및 민감도 분석 갱신
 - Tax 화면 사이드바 전체 노란색 배경 제거
 - 사용자 화면의 한국어 세법 용어 정비
-- 토지분 종합부동산세를 과세대상 제외로 명확화
-# 변경 이력
-
-## v15.0.1
-
-- 지방회계법 제55조에 따른 10원 미만 끝수 미계산 기준 반영
-- 세목별 끝수 처리 전·후 산출세액 구분
-- SK서린빌딩 보유세 재계산액 및 민감도 분석 갱신
-- Tax 사이드바 전체 노란색 배경 제거
-- 사용자 화면의 한국어 세법 용어 정비
-- Golden Asset 및 Seorin 사용자 노출 표현 제거
 - 토지분 종합부동산세를 과세대상 제외로 명확화
 
 ## v15.0.0 - SK Seorin Golden Asset Tax Case Study

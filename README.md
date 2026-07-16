@@ -1,11 +1,11 @@
 # K-REIT Risk Intelligence Platform
 
 
-**현재 버전: v15.0.1 - SK서린빌딩 핵심 자산 보유세 세무검토**
+**현재 버전: v15.1.0 - AX Workflow & Advisory Portfolio**
 
 상장리츠의 공시자료, 거시경제 지표, 자산별 정보와 공시가격 데이터를 연결하여 Assurance 및 Tax 관점의 초기 위험 검토를 지원하는 Streamlit 기반 공개 포트폴리오 프로젝트입니다.
 
-**현재 버전: v15.0.1 - SK서린빌딩 핵심 자산 보유세 세무검토**
+K-REIT Risk Intelligence Platform은 분산된 공시와 회계·세무 검토 업무를 데이터 기반의 통제된 Workflow로 전환한 AX 적용 사례입니다.
 
 ## 프로젝트 개요
 
@@ -116,6 +116,8 @@ py -m ruff check .
 
 ## 검토 문서
 
+- [AX Advisory Case Brief](docs/AX_ADVISORY_CASE_BRIEF.md)
+- [AX Requirements Definition](docs/AX_REQUIREMENTS_DEFINITION.md)
 - [v15 Case Study 사용 가이드](docs/v15/USER_GUIDE.md)
 - [Tax 계산 및 시나리오 로직](docs/v15/TAX_LOGIC.md)
 - [Golden Asset Evidence Review](docs/v15/golden_asset/GOLDEN_ASSET_TAX_REVIEW.md)

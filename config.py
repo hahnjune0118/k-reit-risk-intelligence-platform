@@ -1,8 +1,8 @@
 from pathlib import Path
 
 
-APP_VERSION = "v15.0.1"
-APP_VERSION_NAME = "SK서린빌딩 핵심 자산 보유세 세무검토"
+APP_VERSION = "v15.1.0"
+APP_VERSION_NAME = "AX Workflow & Advisory Portfolio"
 APP_VERSION_LABEL = f"{APP_VERSION} - {APP_VERSION_NAME}"
 APP_TITLE = "K-REITs Risk Intelligence Platform"
 APP_SUBTITLE = (

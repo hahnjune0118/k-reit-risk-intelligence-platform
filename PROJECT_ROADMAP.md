@@ -2,9 +2,18 @@
 
 ## 현재 릴리스
 
-현재 공개 포트폴리오 버전은 **v15.0.1 - SK서린빌딩 핵심 자산 보유세 세무검토**입니다.
+현재 공개 포트폴리오 버전은 **v15.1.0 - AX Workflow & Advisory Portfolio**입니다.
 
 공개 Tax UI는 SK리츠의 SK서린빌딩 한 건을 대상으로 주소, PNU, 공식 시가표준액, 신탁구조와 납세의무자를 연결하여 보유세 표준 산식을 재계산합니다. 범용 Asset·Parcel·Building·Taxpayer 스키마는 유지하지만, 증빙 수준이 동일하지 않은 다른 리츠 결과는 공개 화면에 표시하지 않습니다.
+
+## v15.1.0 완료 범위
+
+- 공시·세무검토 업무의 고객 Pain Point와 AX Solution 정리
+- 수작업 중심 As-Is와 통제된 To-Be Workflow 비교
+- Data, Automation, AI 지원영역, Control Harness, Human Review 역할 구분
+- 구현 기능, 설계·확장영역과 전문가 확인 필요사항의 상태 표시
+- AX Advisory Case Brief와 Requirements Definition 제공
+- 기존 Tax·Assurance 계산 및 데이터 계약 유지
 
 ## v15.0.0 완료 범위
 
