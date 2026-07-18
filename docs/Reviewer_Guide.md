@@ -1,42 +1,38 @@
-현재 적용 버전: v15.0.1 - SK서린빌딩 핵심 자산 보유세 세무검토
+# 3분 검토 가이드
 
-# 3분 리뷰 가이드
+현재 적용 버전: **v15.1.0 - Decision-First Tax Review**
 
-## 1분: 문제와 범위
+## 1분: 문제와 결론
 
-[README](../README.md)에서 공개자료가 분산된 문제와 v15 Tax Case Study 범위를 확인합니다. 공개 Tax 화면은 여러 리츠의 미완성 추정치를 나열하지 않고, 공식 입력 Evidence를 연결할 수 있는 **SK리츠·SK서린빌딩·2026년** 한 건을 깊이 검토합니다.
+[README](../README.md)에서 프로젝트 범위와 데이터 한계를 확인한 뒤 Streamlit의 **Tax: 보유세 분석**으로 이동합니다. 첫 탭에서 다음 핵심 상태를 바로 확인할 수 있습니다.
 
-핵심 구분은 다음과 같습니다.
+- 2026년 보유세 재계산액: 약 12.51억원
+- 공식 입력근거 Coverage: 5/5
+- 실제 고지서 대사 Coverage: 0%
+- 미해결 이슈: P0 3건, P1 3건
+- 계산 완료 세목: 9개
 
-- 공식 입력자료 기반 산식 재계산액: `1,250,710,968.55472원`
-- 화면 표시: 약 `12.51억원`
-- 실제 고지세액: 미확인
-- 고지서 Reconciliation: 미완료
+재계산액은 공식 과세기초자료와 Tax Rule Master를 이용한 결과이며 실제 고지세액이 아닙니다.
 
-## 2분: 실제 화면
+## 2분: 네 개의 Tax 탭
 
-Streamlit의 **Tax: 보유세 분석**에서 다음을 확인합니다.
+1. **결론 및 시나리오**: Base, +5%, +10%, 사용자 설정 시나리오와 세목별 구성
+2. **주요 이슈 및 요청자료**: 우선순위, 필요 증빙, 예상 영향과 다음 조치
+3. **계산조서**: 세목별 입력값, 적용률·세율, 재계산액, 근거상태와 고지서 대사상태
+4. **근거 및 다운로드**: Reconciliation, Source Lineage, Evidence Matrix, 검토메모와 출력파일
 
-- 17단계 Golden Asset Tax Review 흐름
-- 자산·필지·건축물·납세의무자 단위의 Source 연결
-- 토지·건축물·도시지역분·지방교육세·소방분·종부세의 분리 계산
-- Base, Moderate, Severe와 Custom Tax Sensitivity Scenario
-- P0 Open 3건과 P1 Open 3건의 Tax Issue Matrix
-- 각 Issue에서 Request List와 Tax Review Memo로 이어지는 추적성
-- CSV·Excel·Markdown·HTML 다운로드
+등기·신탁·담보 자료는 소유·권리관계 분석을 지원하지만 공식가액과 실제 세금 고지서를 대체하지 않는다는 경계를 함께 확인합니다.
 
-Tax 화면에는 다른 리츠, 자산 또는 납세의무자를 선택하는 UI가 없습니다. 일반 정보 및 시나리오 화면의 다회사 기능은 유지됩니다.
+## 3분: 코드와 업무문서
 
-## 3분: 코드와 검증
-
-1. [`src/tax_v15/case_study.py`](../src/tax_v15/case_study.py): Golden Case 선택, Scenario, Issue Matrix와 Request 연결
-2. [`src/tax_v15/calculators`](../src/tax_v15/calculators): Decimal 기반 세목별 계산
-3. [`src/tax_v15/rules.py`](../src/tax_v15/rules.py): 공식 검증 Tax Rule Master 게이트
+1. [`ui_tax_decision_first.py`](../ui_tax_decision_first.py): 네 탭 Tax 화면과 기존 엔진 출력의 시각화
+2. [`src/tax_v15/case_study.py`](../src/tax_v15/case_study.py): 기준 사례, 시나리오, 이슈와 요청자료 연결
+3. [`src/tax_v15/calculators`](../src/tax_v15/calculators): Decimal 기반 세목별 계산
 4. [`src/tax_v15/validation`](../src/tax_v15/validation): Source·Coverage·Fail-closed 통제
-5. [`ui_tax_case_study.py`](../ui_tax_case_study.py): 고정된 Case Study 공개 화면
-6. [`tests/test_tax_v15_seorin_case_study.py`](../tests/test_tax_v15_seorin_case_study.py): Scope, Scenario, Issue, Memo와 Export 회귀 검증
-7. [Golden Asset Review](v15/golden_asset/GOLDEN_ASSET_TAX_REVIEW.md): 공식 출처, 산식과 미해결 이슈
+5. [Business Process Case Brief](BUSINESS_PROCESS_CASE_BRIEF.md): As-Is·To-Be 업무 재설계
+6. [Business Requirements Definition](BUSINESS_REQUIREMENTS_DEFINITION.md): 기능·데이터·검증·예외처리 요건
+7. [`tests`](../tests): 계산 불변값, 공개 UI와 버전 일관성 검증
 
-## 평가 시 유의점
+## 검토 시 유의점
 
-이 프로젝트는 SK리츠 전체 자산 또는 전체 상장리츠의 확정 신고세액 데이터베이스라고 주장하지 않습니다. 현재 확보한 공식 입력과 미확보 증빙을 분리하고, 실제 고지서 확인 전에는 `verified_notice`를 생성하지 않는 통제 설계가 주요 검토 대상입니다.
+이 프로젝트는 공개자료 기반 초기 Tax Screening과 의사결정 지원을 목적으로 합니다. 실제 과세내역서, 과세기준일 소유·신탁관계, 감면, 세부담상한과 고지세액은 전문가 검토와 추가 증빙이 필요합니다.

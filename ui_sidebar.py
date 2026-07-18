@@ -190,8 +190,8 @@ def render_data_sidebar(
         st.session_state["recent_5y_financials"] = recent_5y_financials
         dart_status = "Snapshot 기준: v15 Asset Registry"
         with _sidebar_slot("company"):
-            st.write("**SK서린빌딩 Tax Case Study**")
-            st.caption("SK서린빌딩 Tax Case Study의 분석단계를 아래에서 확인하세요.")
+            st.write("**SK서린빌딩 보유세 검토**")
+            st.caption("결론·시나리오·이슈·계산조서·근거를 네 탭에서 확인하세요.")
             st.write("SK리츠 · SK서린빌딩 · 2026년")
             st.divider()
         with _sidebar_slot("data_status"):

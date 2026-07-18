@@ -2,9 +2,18 @@
 
 ## 현재 릴리스
 
-현재 공개 포트폴리오 버전은 **v15.0.1 - SK서린빌딩 핵심 자산 보유세 세무검토**입니다.
+현재 공개 포트폴리오 버전은 **v15.1.0 - Decision-First Tax Review**입니다.
 
 공개 Tax UI는 SK리츠의 SK서린빌딩 한 건을 대상으로 주소, PNU, 공식 시가표준액, 신탁구조와 납세의무자를 연결하여 보유세 표준 산식을 재계산합니다. 범용 Asset·Parcel·Building·Taxpayer 스키마는 유지하지만, 증빙 수준이 동일하지 않은 다른 리츠 결과는 공개 화면에 표시하지 않습니다.
+
+## v15.1.0 완료 범위
+
+- 보유세 검토의 결론과 미해결 이슈를 첫 화면에서 확인하는 Decision-First 구성
+- Base, +5%, +10%와 사용자 설정 시나리오 비교
+- Tax Issue Matrix와 Request List의 통합 검토표
+- 세목별 계산조서와 상세 Tax Rule·Source Lineage의 단계적 공개
+- Evidence Matrix, Fail-closed 원칙과 CSV·Excel·Markdown·HTML 출력 유지
+- 중립적 업무분석 및 요구사항 정의 문서 제공
 
 ## v15.0.0 완료 범위
 
@@ -14,7 +23,7 @@
 - Base, Moderate, Severe, Custom Tax Sensitivity Scenario
 - P0/P1 우선순위 기반 Tax Issue Matrix
 - Validation, Reconciliation과 Request List 연결
-- 17단계 Tax Review 화면과 Markdown·HTML·Excel Export
+- 자산·필지·납세의무자 단위 Tax Review와 Markdown·HTML·Excel Export
 - 실제 고지세액 미확인, 고지서 대사 미완료 상태의 Fail-closed 표시
 
 General, Assurance와 Methodology 화면은 기존 다회사 기능을 유지합니다. Deals와 KRX API는 공개 런타임에서 계속 비활성화합니다.
