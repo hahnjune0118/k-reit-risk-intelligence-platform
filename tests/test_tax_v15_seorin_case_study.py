@@ -72,11 +72,11 @@ def test_tax_scope_is_only_sk_reit_and_sk_seorin(case):
 
 
 def test_tax_ui_has_no_cross_reit_or_asset_selectors():
-    source = (ROOT / "ui_tax_case_study.py").read_text(encoding="utf-8")
+    source = (ROOT / "ui_tax_decision_first.py").read_text(encoding="utf-8")
     wrapper = (ROOT / "ui_tax_v15.py").read_text(encoding="utf-8")
 
-    assert "Tax Case Study" in source
-    assert "SK리츠 — SK서린빌딩" in source
+    assert "Tax: 의사결정 중심 보유세 검토" in source
+    assert "ui_tax_decision_first" in wrapper
     assert "st.selectbox" not in source
     assert "분석대상 리츠" not in source
     assert '"전체 자산"' not in source
@@ -89,6 +89,50 @@ def test_tax_ui_has_no_cross_reit_or_asset_selectors():
     assert '**Raw statutory recalculation:** `{base_total:,}원`' in source
 
 
+def test_tax_ui_uses_four_decision_first_tabs():
+    source = (ROOT / "ui_tax_decision_first.py").read_text(encoding="utf-8")
+
+    for tab_name in (
+        "결론 및 시나리오",
+        "주요 이슈 및 요청자료",
+        "계산조서",
+        "근거 및 다운로드",
+    ):
+        assert tab_name in source
+
+    assert "공식 과세기초자료를 이용한 재계산 결과이며" in source
+    assert "17. Downloads" not in source
+    assert "_render_stage" not in source
+
+
+def test_tax_ui_preserves_decision_metrics_and_downloads():
+    source = (ROOT / "ui_tax_decision_first.py").read_text(encoding="utf-8")
+
+    for label in (
+        "2026 보유세 재계산액",
+        "공식 입력근거 Coverage",
+        "실제 고지서 대사 Coverage",
+        "미해결 P0",
+        "미해결 P1",
+        "재계산 세목",
+        "시나리오별 보유세 재계산액",
+        "Base 대비 증감액 및 증감률",
+        "Base 세목별 구성",
+    ):
+        assert label in source
+
+    for download in (
+        "계산내역 CSV",
+        "시나리오 CSV",
+        "이슈 목록 CSV",
+        "요청자료 CSV",
+        "검토팩 Excel",
+        "검토메모 Markdown",
+        "검토문서 HTML",
+    ):
+        assert download in source
+
+
 def test_general_mode_keeps_multi_company_selector_and_tax_highlight():
     sidebar = (ROOT / "ui_sidebar.py").read_text(encoding="utf-8")
     layout = (ROOT / "ui_layout.py").read_text(encoding="utf-8")
@@ -97,7 +141,7 @@ def test_general_mode_keeps_multi_company_selector_and_tax_highlight():
     assert 'st.selectbox(\n                "분석 대상회사"' in sidebar
     assert 'selected_user_mode == "Tax"' in layout
     assert "background:#fff9df" in layout
-    assert "SK서린빌딩 Tax Case Study의 분석단계를 아래에서 확인하세요." in sidebar
+    assert "결론·시나리오·이슈·계산조서·근거를 네 탭에서 확인하세요." in sidebar
 
 
 def test_base_scenario_matches_golden_raw_total(scenario_frames):
@@ -156,8 +200,8 @@ def test_scenario_keeps_classification_and_is_not_notice(case, scenario_frames):
     assert case.taxpayers["tax_classification"].eq("separated_public_reit").all()
     assert case.taxpayers["actual_notice_classification"].eq("unverified").all()
     assert not breakdown["계산상태"].str.contains("verified_notice").any()
-    ui_source = (ROOT / "ui_tax_case_study.py").read_text(encoding="utf-8")
-    assert "미래 세액 예측이나 과세관청의 결정세액이 아닙니다." in ui_source
+    ui_source = (ROOT / "ui_tax_decision_first.py").read_text(encoding="utf-8")
+    assert "과세관청의 결정세액을 예측하지 않습니다." in ui_source
 
 
 def test_each_scenario_total_equals_breakdown_sum(scenario_frames):
@@ -259,7 +303,7 @@ def test_no_notice_or_fallback_claim_is_reintroduced(case):
     source = (ROOT / "src" / "tax_v15" / "case_study.py").read_text(
         encoding="utf-8"
     )
-    ui_source = (ROOT / "ui_tax_case_study.py").read_text(encoding="utf-8")
+    ui_source = (ROOT / "ui_tax_decision_first.py").read_text(encoding="utf-8")
 
     assert case.taxpayers["actual_notice_classification"].eq("unverified").all()
     assert case.taxpayers["notice_reconciliation_status"].eq("not_reconciled").all()
@@ -267,4 +311,14 @@ def test_no_notice_or_fallback_claim_is_reintroduced(case):
     assert "peer_snapshot" not in source
     assert "장부가액" not in ui_source
     assert "Peer" not in ui_source
-    assert "실제 고지세액이 아니며" in ui_source
+    assert "실제 고지서와의 " in ui_source
+    assert "대사는 완료되지 않았습니다." in ui_source
+
+
+def test_tax_ui_keeps_expert_review_and_private_evidence_boundary():
+    source = (ROOT / "ui_tax_decision_first.py").read_text(encoding="utf-8")
+
+    assert "공동담보목록" in source
+    assert "공식가액이나 실제 세금 고지서를 대체하지 않습니다." in source
+    assert "비공개 등기·신탁 원문은 공개 앱에 노출하지 않으며" in source
+    assert "Fail-closed" in source
