@@ -1,0 +1,25 @@
+name: Keep Streamlit App Awake
+
+on:
+  schedule:
+    # 매일 6시간마다 실행: 한국시간 03시, 09시, 15시, 21시
+    - cron: "0 3,9,15,21 * * *"
+      timezone: "Asia/Seoul"
+
+  # GitHub Actions 화면에서 직접 테스트할 수 있게 설정
+  workflow_dispatch:
+
+jobs:
+  ping-streamlit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send request to Streamlit app
+        run: |
+          curl --fail \
+               --location \
+               --max-time 120 \
+               --retry 3 \
+               --retry-delay 10 \
+               --user-agent "GitHub-Actions-Streamlit-Keep-Alive" \
+               "https://hahnjune0118-k-reit-risk-intelligence-platform-app.streamlit.app/"
