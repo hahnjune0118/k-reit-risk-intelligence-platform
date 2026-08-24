@@ -18,5 +18,11 @@ jobs:
           python -m pip install -r requirements.txt -r requirements-dev.txt
       - name: Compile
         run: python -m compileall -q . -x "(\.git|\.venv|venv|__pycache__|\.cache|\.vscode)"
+      - name: Lint
+        run: >-
+          python -m ruff check k_reits_marimo.py marimo_assurance.py
+          marimo_ui.py tests/test_marimo_assurance.py tests/test_marimo_ui.py
+      - name: Check Marimo notebook
+        run: python -m marimo check --strict k_reits_marimo.py
       - name: Test
         run: python -m pytest -q
