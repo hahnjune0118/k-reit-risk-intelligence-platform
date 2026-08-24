@@ -209,7 +209,7 @@ py -m marimo run --headless --host 127.0.0.1 --port 2718 --no-token k_reits_mari
 - `plotly>=6.0`
 - `openpyxl>=3.1` — Excel export 사용 시
 
-공식 Molab GitHub mirror URL은 `https://molab.marimo.io/github/hahnjune0118/k-reit-risk-intelligence-platform/blob/main/k_reits_marimo.py/server`이며 저장소 파일과 Python 파일 export를 사용하는 이 앱은 Server 모드를 권장한다. setup bootstrap은 notebook 위치와 CWD의 제한된 상위 경로에서 `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `src/tax_v15`, `data/v15` marker가 모두 있는 root만 선택한다. 실제 Server smoke test에서는 mirror가 notebook만 `/marimo/notebook.py`로 배치했다. 이 경로에서만 공식 GitHub archive를 최대 50 MiB로 내려받아 zip-slip·symlink를 차단하고 marker를 다시 검증한다. 병합 전에는 검증 commit fallback, 병합 후에는 `main` archive가 우선된다. `codeload.github.com` 접근이 실패하거나 marker가 불완전하면 package 설치를 유발하는 `ModuleNotFoundError` 대신 실행환경, 확인 경로와 누락 marker를 정리한 안전한 진단 오류를 낸다.
+공식 Molab GitHub mirror URL은 `https://molab.marimo.io/github/hahnjune0118/k-reit-risk-intelligence-platform/blob/main/k_reits_marimo.py/server`이며 저장소 파일과 Python 파일 export를 사용하는 이 앱은 Server 모드를 권장한다. setup bootstrap은 notebook 위치와 CWD의 제한된 상위 경로에서 `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `src/tax_v15`, `data/v15` marker가 모두 있고 top-level Streamlit import가 없는 호환 root만 선택한다. 실제 Server smoke test에서는 mirror가 notebook만 `/marimo/notebook.py`로 배치했다. 이 경로에서만 공식 GitHub archive를 최대 50 MiB로 내려받아 zip-slip·symlink를 차단하고 marker와 Molab 호환성을 다시 검증한다. 병합 전에는 검증 commit fallback, 병합 후에는 `main` archive가 우선된다. `codeload.github.com` 접근이 실패하거나 호환 root가 없으면 package 설치를 유발하는 `ModuleNotFoundError` 대신 실행환경, 확인 경로와 누락 marker를 정리한 안전한 진단 오류를 낸다.
 
 검증된 root를 `sys.path[0]`에 등록한 뒤 `importlib.import_module()`로 로컬 모듈을 불러오므로 Marimo가 이를 외부 dependency로 정적으로 추론하지 않는다. CSS와 Snapshot은 내려받은 repository root 안에서 기존 module-relative loader를 그대로 사용한다.
 

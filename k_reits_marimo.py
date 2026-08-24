@@ -15,6 +15,7 @@ app = marimo.App(width="full")
 
 
 with app.setup:
+    import ast
     import importlib
     import io
     import os
@@ -43,11 +44,35 @@ with app.setup:
             if _candidate not in _candidate_roots:
                 _candidate_roots.append(_candidate)
 
+    def _root_is_compatible(_candidate):
+        if not all(
+            (_candidate / _marker).exists() for _marker in _repository_markers
+        ):
+            return False
+        try:
+            _formatting_tree = ast.parse(
+                (_candidate / "formatting.py").read_text(encoding="utf-8-sig")
+            )
+        except (OSError, SyntaxError, UnicodeError):
+            return False
+        for _node in _formatting_tree.body:
+            if isinstance(_node, ast.Import) and any(
+                _alias.name.split(".")[0] == "streamlit" for _alias in _node.names
+            ):
+                return False
+            if (
+                isinstance(_node, ast.ImportFrom)
+                and _node.module
+                and _node.module.split(".")[0] == "streamlit"
+            ):
+                return False
+        return True
+
     _repository_root = next(
         (
             _candidate
             for _candidate in _candidate_roots
-            if all((_candidate / _marker).exists() for _marker in _repository_markers)
+            if _root_is_compatible(_candidate)
         ),
         None,
     )
@@ -79,7 +104,7 @@ with app.setup:
         _repository = "hahnjune0118/k-reit-risk-intelligence-platform"
         _refs = (
             "main",
-            "e3e3adb97b22502b4a5afea010fa954d77b93f43",
+            "aed3f0f39bb68f1bd4e0eb2ea4f38884d82931b5",
         )
         _maximum_archive_bytes = 50 * 1024 * 1024
         for _ref in _refs:
@@ -115,10 +140,7 @@ with app.setup:
                     (
                         _candidate
                         for _candidate in _extracted_candidates
-                        if all(
-                            (_candidate / _marker).exists()
-                            for _marker in _repository_markers
-                        )
+                        if _root_is_compatible(_candidate)
                     ),
                     None,
                 )

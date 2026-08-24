@@ -190,7 +190,7 @@ Molab 배포에는 notebook 진입 파일뿐 아니라 다음 저장소 상대�
 
 Python 3.10 이상이 필요하며 Molab의 Python 3.13 계열에서 사용할 수 있는 버전으로 검증합니다. PEP 723에는 실제 외부 패키지인 `marimo==0.24.0`, `pandas>=2.3`, `plotly>=6.0`, `openpyxl>=3.1`만 기록합니다. `marimo_assurance`, `marimo_risk`, `marimo_ui`, `src`는 PyPI 패키지가 아니라 저장소 내부 코드이므로 dependency에 추가하지 않습니다.
 
-setup cell은 먼저 notebook 위치, current working directory와 각 경로의 제한된 상위 디렉터리를 조사합니다. `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `src/tax_v15`, `data/v15`가 함께 있는 디렉터리만 저장소 root로 인정합니다. 실제 Molab Server smoke test에서는 GitHub mirror가 notebook만 `/marimo/notebook.py`로 배치하고 repository files를 제공하지 않는 것이 확인됐습니다. 이 환경에서만 bootstrap이 공식 GitHub 저장소 archive를 50 MiB 제한과 zip 경로·symlink 검사를 적용해 임시 디렉터리에 내려받고 같은 marker를 재검증합니다. 병합 후에는 `main`, 병합 전 PR 검증에는 고정된 검증 commit을 fallback으로 사용합니다.
+setup cell은 먼저 notebook 위치, current working directory와 각 경로의 제한된 상위 디렉터리를 조사합니다. `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `src/tax_v15`, `data/v15`가 함께 있고 UI helper의 Streamlit import가 함수 내부로 격리된 디렉터리만 호환 저장소 root로 인정합니다. 실제 Molab Server smoke test에서는 GitHub mirror가 notebook만 `/marimo/notebook.py`로 배치하고 repository files를 제공하지 않는 것이 확인됐습니다. 이 환경에서만 bootstrap이 공식 GitHub 저장소 archive를 50 MiB 제한과 zip 경로·symlink 검사를 적용해 임시 디렉터리에 내려받고 marker와 Molab 호환성을 재검증합니다. 병합 후에는 `main`, 병합 전 PR 검증에는 고정된 검증 commit을 fallback으로 사용합니다.
 
 검증된 root는 local import 전에 `sys.path[0]`에 한 번 등록합니다. 로컬 모듈은 root 확인 후 `importlib.import_module()`로 불러와 Marimo의 정적 package inference가 `marimo-risk`, `marimo-ui`, `marimo-assurance` 또는 무관한 `src` 배포판 설치를 시도하지 않게 합니다. CSS는 `marimo_ui.py` 위치, 데이터는 각 loader의 module 위치를 기준으로 읽습니다.
 
