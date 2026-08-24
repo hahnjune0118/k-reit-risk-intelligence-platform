@@ -11,7 +11,7 @@
 import marimo
 
 __generated_with = "0.24.0"
-app = marimo.App(width="full", css_file="marimo_styles.css")
+app = marimo.App(width="full")
 
 
 with app.setup:
@@ -31,22 +31,11 @@ with app.setup:
     import plotly.graph_objects as go
 
     _repository_markers = (
-        Path("marimo_styles.css"),
         Path("marimo_assurance.py"),
         Path("marimo_risk.py"),
         Path("marimo_ui.py"),
         Path("src/tax_v15"),
         Path("data/v15"),
-    )
-    _required_css_selectors = (
-        ".app-shell",
-        ".dense-header",
-        ".dense-panel",
-        ".dense-metric",
-        ".dense-metric-grid",
-        ".dashboard-grid",
-        ".audit-table",
-        "@media (max-width: 760px)",
     )
     _notebook_path = Path(__file__).resolve()
     _candidate_roots = []
@@ -55,23 +44,10 @@ with app.setup:
             if _candidate not in _candidate_roots:
                 _candidate_roots.append(_candidate)
 
-    def _css_is_valid(_candidate):
-        try:
-            _css_text = (_candidate / "marimo_styles.css").read_text(
-                encoding="utf-8"
-            )
-        except (OSError, UnicodeError):
-            return False
-        return bool(_css_text.strip()) and all(
-            _selector in _css_text for _selector in _required_css_selectors
-        )
-
     def _root_is_compatible(_candidate):
         if not all(
             (_candidate / _marker).exists() for _marker in _repository_markers
         ):
-            return False
-        if not _css_is_valid(_candidate):
             return False
         try:
             _formatting_tree = ast.parse(
@@ -127,6 +103,7 @@ with app.setup:
     def _download_molab_repository():
         _repository = "hahnjune0118/k-reit-risk-intelligence-platform"
         _refs = (
+            "fix/molab-css-prebootstrap",
             "main",
             "aed3f0f39bb68f1bd4e0eb2ea4f38884d82931b5",
         )
@@ -191,7 +168,6 @@ with app.setup:
         raise RuntimeError(
             "K-REIT 저장소 파일을 찾지 못했습니다.\n"
             f"실행 환경: {_runtime_label()}\n"
-            "사용자 정의 CSS 발견·검증 여부: 아니요\n"
             "저장소 root 발견 여부: 아니요\n"
             f"현재 working directory: {_public_path(Path.cwd())}\n"
             f"notebook file 위치: {_public_path(_notebook_path)}\n"
@@ -235,10 +211,12 @@ with app.setup:
     compact_header = _ui_module.compact_header
     dense_metric = _ui_module.dense_metric
     dense_metric_grid = _ui_module.dense_metric_grid
+    dense_panel = _ui_module.dense_panel
     format_eok = _ui_module.format_eok
     format_krw = _ui_module.format_krw
     html_table = _ui_module.html_table
     mini_stat = _ui_module.mini_stat
+    mini_stat_grid = _ui_module.mini_stat_grid
     panel = _ui_module.panel
     reconciliation_flow = _ui_module.reconciliation_flow
     build_tax_review_memo = _reporting_module.build_tax_review_memo
@@ -516,15 +494,15 @@ def _(
     def _pct(value):
         return "미확인" if pd.isna(value) else f"{float(value):,.1f}%"
 
-    metrics = mo.Html('<section class="dense-panel"><div class="dense-panel-title"><h2>핵심 판단</h2><span>현재 → 시나리오 후</span></div>' + dense_metric_grid([
+    metrics = mo.Html(dense_panel("핵심 판단", dense_metric_grid([
         dense_metric("종합 위험도", f"{risk_view.total_risk:.1f} · {risk_view.risk_level}", baseline="규칙 기반 예비점수", delta=risk_view.verdict[0], severity=risk_severity),
         dense_metric("시나리오 후 FFO", _mn(scenario["stressed_ffo"]), baseline=f"현재 {_mn(scenario['base_ffo'])}", delta=_pct(scenario["ffo_decline_pct"]), severity="warning" if pd.notna(scenario["ffo_decline_pct"]) and scenario["ffo_decline_pct"] < -5 else "ok"),
         dense_metric("FFO 이자감당력", "미확인" if pd.isna(scenario["stressed_icr"]) else f"{scenario['stressed_icr']:.2f}배", baseline="현재 " + ("미확인" if pd.isna(scenario["reported_icr"]) else f"{scenario['reported_icr']:.2f}배"), delta=scenario["interest_basis"], severity="critical" if pd.notna(scenario["stressed_icr"]) and scenario["stressed_icr"] < 1.5 else "warning" if pd.notna(scenario["stressed_icr"]) and scenario["stressed_icr"] < 2 else "ok"),
         dense_metric("장부 NAV 변화", _pct(scenario["nav_change_pct"]), baseline=_mn(scenario["base_nav"]), delta=_mn(scenario["stressed_nav"]), severity="warning" if pd.notna(scenario["nav_change_pct"]) and scenario["nav_change_pct"] <= -8 else "neutral"),
         dense_metric("투자부동산 가치 기준 차입비율", _pct(scenario["stressed_ltv_proxy"]), baseline="현재 " + _pct(scenario["base_ltv_proxy"]), delta="상세 자산 기준" if risk_view.detail_available else "상세자료 미제공", severity="warning"),
         dense_metric("배당 후 여력", _mn(scenario["dividend_cushion"]), baseline="배당부담 " + _pct(scenario["stressed_payout"]), delta="FFO proxy 기준", severity="critical" if pd.notna(scenario["dividend_cushion"]) and scenario["dividend_cushion"] < 0 else "ok"),
-    ]) + '</section>')
-    peer_table = mo.Html('<section class="dense-panel dense-table"><div class="dense-panel-title"><h2>Peer Benchmark</h2><span>8개 상장리츠 저장 시점 자료</span></div>' + html_table(risk_view.peer_comparison, numeric_formats={"현재": "{:,.2f}", "Peer 중앙값": "{:,.2f}", "백분위": "{:,.1f}%"}, max_rows=8, caption="Peer Benchmark 비교") + '</section>')
+    ]), subtitle="현재 → 시나리오 후"))
+    peer_table = mo.Html(dense_panel("Peer Benchmark", html_table(risk_view.peer_comparison, numeric_formats={"현재": "{:,.2f}", "Peer 중앙값": "{:,.2f}", "백분위": "{:,.1f}%"}, max_rows=8, caption="Peer Benchmark 비교"), subtitle="8개 상장리츠 저장 시점 자료"))
     risk_center = mo.vstack([metrics, peer_table], gap=0.65).style({"min-width": "0", "overflow": "hidden"})
     charts = mo.vstack([
         mo.ui.plotly(dashboard_charts.risk_heatmap, config={"responsive": True, "displaylogo": False, "displayModeBar": False}),
@@ -533,22 +511,22 @@ def _(
     top = mo.hstack([controls, risk_center, charts], widths=[25, 38, 37], gap=0.65, align="start", wrap=True)
 
     if lower_detail_select.value == "최근 흐름":
-        lower_body = mo.vstack([mo.Html('<div class="decision-strip">공시된 기간별 총자산·차입금·장부 NAV proxy 흐름입니다. 인과관계가 아니라 위험 신호로만 사용합니다.</div>'), mo.ui.plotly(detail_charts.historical, config={"responsive": True, "displaylogo": False, "displayModeBar": False})], gap=0.3)
+        lower_body = mo.vstack([mo.Html(callout("warning", "해석 유의사항", "공시된 기간별 총자산·차입금·장부 NAV proxy 흐름입니다. 인과관계가 아니라 위험 신호로만 사용합니다.")), mo.ui.plotly(detail_charts.historical, config={"responsive": True, "displaylogo": False, "displayModeBar": False})], gap=0.3)
     elif lower_detail_select.value == "자산·임차인 집중도":
         concentration_summary = "상세자료 미제공"
         if not risk_view.asset_concentration.empty:
             shares = risk_view.asset_concentration["portfolio_value_share_pct"]
             concentration_summary = f"최대 자산 {shares.max():.1f}% · 상위 3개 {shares.head(3).sum():.1f}% · HHI {risk_view.asset_concentration['hhi_component'].sum():.3f}"
         lower_body = mo.hstack([
-            mo.vstack([mo.Html(f'<div class="decision-strip">{concentration_summary}</div>'), mo.ui.plotly(detail_charts.asset_concentration, config={"responsive": True, "displaylogo": False, "displayModeBar": False})], gap=0.3),
-            mo.Html('<div class="dense-table">' + html_table(risk_view.tenant_exposure, columns=["major_tenant", "tenant_credit", "portfolio_value_share_pct"], labels={"major_tenant": "주요 임차인", "tenant_credit": "신용도", "portfolio_value_share_pct": "평가액 비중"}, numeric_formats={"portfolio_value_share_pct": "{:,.1f}%"}, max_rows=8, caption="임차인 집중도") + '</div>'),
+            mo.vstack([mo.Html(callout("warning", "집중도 판단", concentration_summary)), mo.ui.plotly(detail_charts.asset_concentration, config={"responsive": True, "displaylogo": False, "displayModeBar": False})], gap=0.3),
+            mo.Html(html_table(risk_view.tenant_exposure, columns=["major_tenant", "tenant_credit", "portfolio_value_share_pct"], labels={"major_tenant": "주요 임차인", "tenant_credit": "신용도", "portfolio_value_share_pct": "평가액 비중"}, numeric_formats={"portfolio_value_share_pct": "{:,.1f}%"}, max_rows=8, caption="임차인 집중도")),
         ], widths=[1, 1], gap=0.6, wrap=True)
     else:
         total_debt = risk_view.debt_schedule["principal_mn_krw"].sum() if not risk_view.debt_schedule.empty else pd.NA
         near = risk_view.debt_schedule.loc[risk_view.debt_schedule["days_to_maturity"].between(0, 365), "principal_mn_krw"].sum() if not risk_view.debt_schedule.empty else pd.NA
         near_pct = near / total_debt * 100 if pd.notna(total_debt) and total_debt else pd.NA
         lower_body = mo.vstack([
-            mo.Html('<div class="decision-strip">' + (f"총차입금 {total_debt/1000:,.1f}십억원 · 1년 내 만기 {near_pct:.1f}% · 차환금리 충격에 따른 추가 이자비용 {scenario['incremental_interest']:,.1f}백만원" if pd.notna(total_debt) else "회사별 차입금 만기 상세자료 미제공") + '</div>'),
+            mo.Html(callout("warning", "차입금 만기 판단", f"총차입금 {total_debt/1000:,.1f}십억원 · 1년 내 만기 {near_pct:.1f}% · 차환금리 충격에 따른 추가 이자비용 {scenario['incremental_interest']:,.1f}백만원" if pd.notna(total_debt) else "회사별 차입금 만기 상세자료 미제공")),
             mo.ui.plotly(detail_charts.maturity, config={"responsive": True, "displaylogo": False, "displayModeBar": False}),
         ], gap=0.3)
     lower = mo.vstack([lower_detail_select, lower_body], gap=0.35).style({"border": "1px solid #b8c5d1", "border-radius": "12px", "padding": "0.65rem", "background": "#ffffff"})
@@ -588,9 +566,9 @@ def _(
     filtered_rmm = risk_view.rmm.copy()
     if account_filter.value != "전체":
         filtered_rmm = filtered_rmm[filtered_rmm["관련 계정과목"].str.contains(account_filter.value, na=False)]
-    rmm_table = mo.Html('<section class="dense-panel dense-table"><div class="dense-panel-title"><h2>RMM와 감사대응</h2><span>선택 시 상세절차 연동</span></div>' + html_table(filtered_rmm, columns=["감사영역", "관련 계정과목", "경영진 주장", "발생가능성", "영향", "감사증거 상태", "권장 감사절차"], max_rows=8, caption="중요왜곡표시위험과 감사대응") + '</section>')
+    rmm_table = mo.Html(dense_panel("RMM와 감사대응", html_table(filtered_rmm, columns=["감사영역", "관련 계정과목", "경영진 주장", "발생가능성", "영향", "감사증거 상태", "권장 감사절차"], max_rows=8, caption="중요왜곡표시위험과 감사대응"), subtitle="선택 시 상세절차 연동"))
     selected_rmm = risk_view.rmm[risk_view.rmm["감사영역"].eq(rmm_select.value)].iloc[0]
-    rmm_summary = mo.Html('<div class="mini-stat-grid">' + mini_stat("주요 중요왜곡표시위험", rmm_select.value, str(selected_rmm["RMM 신호"]), "warning") + mini_stat("현재 미해결 감사증거", f"P0 {assurance_view.kpis['p0_open']} · P1 {assurance_view.kpis['p1_open']}", "고지서·과세구분·소유관계 추가 검증", "critical") + '</div>')
+    rmm_summary = mo.Html(mini_stat_grid([mini_stat("주요 중요왜곡표시위험", rmm_select.value, str(selected_rmm["RMM 신호"]), "warning"), mini_stat("현재 미해결 감사증거", f"P0 {assurance_view.kpis['p0_open']} · P1 {assurance_view.kpis['p1_open']}", "고지서·과세구분·소유관계 추가 검증", "critical")]))
 
     if audit_detail_select.value == "감사계획·위험평가":
         audit_detail = mo.Html(panel("선택 위험의 감사계획", f'<p><strong>관련 계정:</strong> {selected_rmm["관련 계정과목"]}</p><p><strong>경영진 주장:</strong> {selected_rmm["경영진 주장"]}</p><p><strong>위험 판단:</strong> {selected_rmm["왜 중요한가"]}</p><p><strong>대응 감사절차:</strong> {selected_rmm["권장 감사절차"]}</p>'))
@@ -598,16 +576,16 @@ def _(
         priority_assets = risk_view.assurance_assets
         if risk_filter.value != "전체" and not priority_assets.empty:
             priority_assets = priority_assets[priority_assets["감사 우선순위"].eq(risk_filter.value)]
-        audit_detail = mo.Html('<div class="dense-table">' + html_table(priority_assets, columns=["자산", "평가액비중_%", "Cap_rate_%", "시나리오가치변화_%", "감사중점점수", "감사 우선순위", "중점검토사유"], numeric_formats={"평가액비중_%": "{:,.1f}%", "Cap_rate_%": "{:,.2f}%", "시나리오가치변화_%": "{:,.1f}%", "감사중점점수": "{:,.0f}"}, max_rows=8, caption="자산별 감사 우선순위") + '</div>')
+        audit_detail = mo.Html(html_table(priority_assets, columns=["자산", "평가액비중_%", "Cap_rate_%", "시나리오가치변화_%", "감사중점점수", "감사 우선순위", "중점검토사유"], numeric_formats={"평가액비중_%": "{:,.1f}%", "Cap_rate_%": "{:,.2f}%", "시나리오가치변화_%": "{:,.1f}%", "감사중점점수": "{:,.0f}"}, max_rows=8, caption="자산별 감사 우선순위"))
     elif audit_detail_select.value == "통제·실증절차":
         audit_detail = mo.Html(panel("통제테스트·실증절차·요청자료", '<p><strong>IPE 검증:</strong> 입력자료 모집단 완전성, 계산식 접근권한, 검토 증적 확인</p><p><strong>외부자료 검증:</strong> 평가보고서·차입약정·등기·고지서 원문 대사</p><p><strong>통제테스트:</strong> 변경 승인, 독립 검토, 예외 후속조치 표본검사</p><p><strong>실증절차:</strong> 재계산·외부조회·후속입금·기간귀속 테스트</p><p><strong>요청자료:</strong> 외부평가 입력, 임대차계약, 차입금 master, 보유세 과세내역서</p>'))
     else:
-        audit_detail = mo.Html('<div class="dense-table">' + html_table(risk_view.kam_candidates, max_rows=6, caption="KAM 후보 모의 검토") + html_table(risk_view.icfr_controls, max_rows=8, caption="내부회계관리제도 핵심통제") + '</div>')
+        audit_detail = mo.Html(html_table(risk_view.kam_candidates, max_rows=6, caption="KAM 후보 모의 검토") + html_table(risk_view.icfr_controls, max_rows=8, caption="내부회계관리제도 핵심통제"))
     audit_center = mo.vstack([rmm_summary, rmm_select, rmm_table, audit_detail_select, audit_detail], gap=0.45).style({"min-width": "0", "overflow": "hidden"})
 
     calc = assurance_view.verified_calculations.copy()
-    tax_metrics = mo.Html('<div class="mini-stat-grid">' + mini_stat("공식자료 재계산액", format_eok(assurance_view.base_total), "원 단위 " + format_krw(assurance_view.base_total, 5), "ok") + mini_stat("실제 고지세액", "미확인", "2026 고지서 미수령", "critical") + mini_stat("고지서 대사율", str(assurance_view.kpis["notice_coverage"]), "미대사", "critical") + mini_stat("미해결 사항", f"P0 {assurance_view.kpis['p0_open']} · P1 {assurance_view.kpis['p1_open']}", "추가 감사증거 필요", "warning") + '</div>')
-    calc_table = mo.Html('<div class="dense-table">' + html_table(calc, columns=["tax_name", "tax_base", "tax_rate", "calculated_tax", "calculation_status"], labels={"tax_name": "세목", "tax_base": "과세표준", "tax_rate": "세율", "calculated_tax": "산출세액", "calculation_status": "근거 상태"}, numeric_formats={"tax_base": "{:,.0f}", "tax_rate": "{:,.6f}", "calculated_tax": "{:,.0f}"}, status_columns=["calculation_status"], max_rows=9, caption="세목별 계산조서") + '</div>')
+    tax_metrics = mo.Html(mini_stat_grid([mini_stat("공식자료 재계산액", format_eok(assurance_view.base_total), "원 단위 " + format_krw(assurance_view.base_total, 5), "ok"), mini_stat("실제 고지세액", "미확인", "2026 고지서 미수령", "critical"), mini_stat("고지서 대사율", str(assurance_view.kpis["notice_coverage"]), "미대사", "critical"), mini_stat("미해결 사항", f"P0 {assurance_view.kpis['p0_open']} · P1 {assurance_view.kpis['p1_open']}", "추가 감사증거 필요", "warning")]))
+    calc_table = mo.Html(html_table(calc, columns=["tax_name", "tax_base", "tax_rate", "calculated_tax", "calculation_status"], labels={"tax_name": "세목", "tax_base": "과세표준", "tax_rate": "세율", "calculated_tax": "산출세액", "calculation_status": "근거 상태"}, numeric_formats={"tax_base": "{:,.0f}", "tax_rate": "{:,.6f}", "calculated_tax": "{:,.0f}"}, status_columns=["calculation_status"], max_rows=9, caption="세목별 계산조서"))
     tax_column = mo.vstack([
         tax_metrics,
         mo.ui.plotly(dashboard_charts.tax_scenario, config={"responsive": True, "displaylogo": False, "displayModeBar": False}),
@@ -640,20 +618,20 @@ def _(
         source_detail="GitHub 검증 저장 시점 자료(data/v15/) · 공식 입력자료와 세법 규칙 기준표로 독립 재수행",
         retrieved_at=risk_snapshot.retrieved_at,
     ))
-    evidence_stats = mo.Html('<div class="mini-stat-grid">' + mini_stat("핵심 입력자료 근거 확보율", str(assurance_view.kpis["evidence_coverage"]), "주소·PNU·지가·건물가액·납세의무자", "ok") + mini_stat("IPE 완전성·정확성", "5/5 확인", "계산 입력과 원천자료 연결", "ok") + mini_stat("외부자료 신뢰성", "공식 원문·해시", "검증상태와 계산 사용 여부 기록", "ok") + mini_stat("고지서 확보", "미확인", "실제 고지세액·과세코드 미입수", "critical") + '</div>')
-    evidence_table = mo.Html('<div class="dense-table">' + html_table(assurance_view.evidence_matrix, columns=["metric_or_fact", "value", "source_name", "verification_status", "used_in_calculation"], labels={"metric_or_fact": "지표·사실", "source_name": "원천자료", "verification_status": "검증 상태", "used_in_calculation": "계산 사용"}, status_columns=["verification_status"], max_rows=10, caption="감사증거 매트릭스") + '</div>')
-    lineage_table = mo.Html('<div class="dense-table">' + html_table(assurance_view.source_lineage, max_rows=8, caption="원천자료 계보") + '</div>')
+    evidence_stats = mo.Html(mini_stat_grid([mini_stat("핵심 입력자료 근거 확보율", str(assurance_view.kpis["evidence_coverage"]), "주소·PNU·지가·건물가액·납세의무자", "ok"), mini_stat("IPE 완전성·정확성", "5/5 확인", "계산 입력과 원천자료 연결", "ok"), mini_stat("외부자료 신뢰성", "공식 원문·해시", "검증상태와 계산 사용 여부 기록", "ok"), mini_stat("고지서 확보", "미확인", "실제 고지세액·과세코드 미입수", "critical")]))
+    evidence_table = mo.Html(html_table(assurance_view.evidence_matrix, columns=["metric_or_fact", "value", "source_name", "verification_status", "used_in_calculation"], labels={"metric_or_fact": "지표·사실", "source_name": "원천자료", "verification_status": "검증 상태", "used_in_calculation": "계산 사용"}, status_columns=["verification_status"], max_rows=10, caption="감사증거 매트릭스"))
+    lineage_table = mo.Html(html_table(assurance_view.source_lineage, max_rows=8, caption="원천자료 계보"))
     left = mo.vstack([evidence_stats, mo.accordion({"감사증거 매트릭스(Evidence Matrix)": evidence_table, "원천자료 계보(Source Lineage)": lineage_table})], gap=0.45).style({"border": "1px solid #b8c5d1", "border-radius": "12px", "padding": "0.6rem", "background": "#ffffff", "min-width": "0", "overflow": "hidden"})
 
     flow = mo.Html(reconciliation_flow(format_krw(assurance_view.base_total, 5)))
     visible_issues = assurance_view.issue_matrix
     if issue_filter.value in {"P0", "P1"}:
         visible_issues = visible_issues[visible_issues["priority"].eq(issue_filter.value)]
-    issue_table = mo.Html('<section class="dense-panel dense-table"><div class="dense-panel-title"><h2>P0/P1 미해결 사항</h2><span>증거·담당절차·다음 조치 연결</span></div>' + html_table(visible_issues, columns=["priority", "tax_issue", "evidence_status", "potential_tax_effect", "required_document", "responsible_reviewer", "resolution_status"], labels={"priority": "우선순위", "tax_issue": "미해결 사항", "evidence_status": "증거 상태", "potential_tax_effect": "예상 영향", "required_document": "필요 감사증거", "responsible_reviewer": "담당 절차", "resolution_status": "상태"}, status_columns=["evidence_status", "resolution_status"], max_rows=8, caption="P0 P1 미해결 사항") + '</section>')
+    issue_table = mo.Html(dense_panel("P0/P1 미해결 사항", html_table(visible_issues, columns=["priority", "tax_issue", "evidence_status", "potential_tax_effect", "required_document", "responsible_reviewer", "resolution_status"], labels={"priority": "우선순위", "tax_issue": "미해결 사항", "evidence_status": "증거 상태", "potential_tax_effect": "예상 영향", "required_document": "필요 감사증거", "responsible_reviewer": "담당 절차", "resolution_status": "상태"}, status_columns=["evidence_status", "resolution_status"], max_rows=8, caption="P0 P1 미해결 사항"), subtitle="증거·담당절차·다음 조치 연결"))
     conclusion_center = mo.vstack([flow, mo.Html(callout("critical", "대사 결론 보류", "실제 고지서가 확보되지 않아 실제 고지세액과 차이는 계산하지 않았으며, 대사 결론도 보류했습니다.")), issue_table], gap=0.45).style({"min-width": "0", "overflow": "hidden"})
 
-    conclusion = mo.Html('<section class="dense-panel"><h2>검토자 결론</h2><div class="mini-stat-grid">' + mini_stat("현재 판단", "추가 감사증거 필요", "독립적 재계산 완료·고지서 대사 미완료", "warning") + mini_stat("결론 승인 상태", "보류", "모의 감사검토 단계", "critical") + '</div>' + panel("판단 근거", f'<p>공식 입력자료 기반 재수행액은 <strong>{format_eok(assurance_view.base_total)}</strong>입니다. 실제 고지서·과세구분 코드·과세기준일 등기 및 신탁상태가 미확인되어 확정세액으로 결론내리지 않습니다.</p>') + panel("미해결 감사증거 공백", bullet_list(assurance_view.snapshot_payload.get("open_items", []))) + '</section>')
-    request_table = mo.Html('<div class="dense-table">' + html_table(assurance_view.request_list, columns=["priority", "required_document", "request_reason", "reviewer_status"], labels={"priority": "우선순위", "required_document": "추가 요청자료", "request_reason": "후속조치", "reviewer_status": "상태"}, status_columns=["reviewer_status"], max_rows=8, caption="추가 요청자료") + '</div>')
+    conclusion = mo.Html(dense_panel("검토자 결론", mini_stat_grid([mini_stat("현재 판단", "추가 감사증거 필요", "독립적 재계산 완료·고지서 대사 미완료", "warning"), mini_stat("결론 승인 상태", "보류", "모의 감사검토 단계", "critical")]) + panel("판단 근거", f'<p>공식 입력자료 기반 재수행액은 <strong>{format_eok(assurance_view.base_total)}</strong>입니다. 실제 고지서·과세구분 코드·과세기준일 등기 및 신탁상태가 미확인되어 확정세액으로 결론내리지 않습니다.</p>') + panel("미해결 감사증거 공백", bullet_list(assurance_view.snapshot_payload.get("open_items", [])))))
+    request_table = mo.Html(html_table(assurance_view.request_list, columns=["priority", "required_document", "request_reason", "reviewer_status"], labels={"priority": "우선순위", "required_document": "추가 요청자료", "request_reason": "후속조치", "reviewer_status": "상태"}, status_columns=["reviewer_status"], max_rows=8, caption="추가 요청자료"))
     exports = mo.vstack([
         mo.md("### 검토조서 내려받기"),
         mo.hstack([calculation_download, scenario_download], gap=0.4, wrap=True),

@@ -29,8 +29,9 @@ def test_notebook_hides_repository_modules_from_static_package_inference():
     assert 'importlib.import_module("marimo_risk")' in source
     assert 'importlib.import_module("marimo_ui")' in source
     assert 'importlib.import_module("src.tax_v15.reporting")' in source
-    assert 'css_file="marimo_styles.css"' in source
+    assert "css_file=" not in source
     assert 'mo.Html(f"<style>{load_css()}</style>")' not in source
+    assert "<style>" not in source
 
     tree = ast.parse(source)
     app_call = next(
@@ -39,9 +40,7 @@ def test_notebook_hides_repository_modules_from_static_package_inference():
         if isinstance(node, ast.Assign)
         and any(isinstance(target, ast.Name) and target.id == "app" for target in node.targets)
     )
-    css_keyword = next(keyword for keyword in app_call.keywords if keyword.arg == "css_file")
-    assert isinstance(css_keyword.value, ast.Constant)
-    assert css_keyword.value.value == "marimo_styles.css"
+    assert all(keyword.arg != "css_file" for keyword in app_call.keywords)
 
 
 def test_molab_archive_fallback_is_bounded_and_path_checked():
@@ -51,10 +50,11 @@ def test_molab_archive_fallback_is_bounded_and_path_checked():
     assert "_maximum_archive_bytes = 50 * 1024 * 1024" in source
     assert "stat.S_ISLNK(_mode)" in source
     assert "_extract_root not in _destination.parents" in source
+    assert '"fix/molab-css-prebootstrap"' in source
     assert '"main"' in source
     assert '"aed3f0f39bb68f1bd4e0eb2ea4f38884d82931b5"' in source
-    assert 'Path("marimo_styles.css")' in source
-    assert "_css_is_valid(_candidate)" in source
+    assert 'Path("marimo_styles.css")' not in source
+    assert "_css_is_valid" not in source
 
 
 def test_notebook_loads_css_modules_and_snapshots_outside_repository_cwd(tmp_path):
@@ -69,8 +69,8 @@ assurance_view = namespace["build_view_model_from_snapshot"](assurance_snapshot)
 assert risk_snapshot.reit_master.shape[0] > 0
 assert assurance_view.kpis["p0_open"] == 3
 assert assurance_view.kpis["p1_open"] == 3
-assert namespace["app"]._config.css_file == "marimo_styles.css"
-assert namespace["_ui_module"].load_css().strip()
+assert namespace["app"]._config.css_file is None
+assert 'style="' in namespace["_ui_module"].dense_metric("검토", "정상")
 assert "src.tax_v15.reporting" in sys.modules
 print(assurance_view.base_total)
 """
@@ -116,7 +116,5 @@ else:
     assert "marimo_assurance.py" in completed.stdout
     assert "src/tax_v15" in completed.stdout
     assert "data/v15" in completed.stdout
-    assert "marimo_styles.css" in completed.stdout
-    assert "사용자 정의 CSS 발견·검증 여부: 아니요" in completed.stdout
     assert "GitHub mirror" in completed.stdout
     assert str(Path.home()) not in completed.stdout

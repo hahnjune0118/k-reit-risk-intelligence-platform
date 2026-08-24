@@ -57,8 +57,8 @@ def test_html_table_escapes_cells_and_allows_only_http_links():
     assert "&lt;script&gt;" in rendered
     assert 'href="javascript:' not in rendered
     assert 'href="https://example.com/evidence?a=1&amp;b=2"' in rendered
-    assert '<th scope="col">' in rendered
-    assert '<caption class="sr-only">' in rendered
+    assert '<th scope="col" style=' in rendered
+    assert '<caption class="sr-only" style=' in rendered
     assert 'tabindex="0"' in rendered
     assert 'aria-label="source 원문 열기:' in rendered
 
