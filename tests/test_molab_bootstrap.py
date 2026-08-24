@@ -32,6 +32,17 @@ def test_notebook_hides_repository_modules_from_static_package_inference():
     assert 'css_file="marimo_styles.css"' in source
     assert 'mo.Html(f"<style>{load_css()}</style>")' not in source
 
+    tree = ast.parse(source)
+    app_call = next(
+        node.value
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "app" for target in node.targets)
+    )
+    css_keyword = next(keyword for keyword in app_call.keywords if keyword.arg == "css_file")
+    assert isinstance(css_keyword.value, ast.Constant)
+    assert css_keyword.value.value == "marimo_styles.css"
+
 
 def test_molab_archive_fallback_is_bounded_and_path_checked():
     source = NOTEBOOK.read_text(encoding="utf-8")
@@ -42,6 +53,8 @@ def test_molab_archive_fallback_is_bounded_and_path_checked():
     assert "_extract_root not in _destination.parents" in source
     assert '"main"' in source
     assert '"aed3f0f39bb68f1bd4e0eb2ea4f38884d82931b5"' in source
+    assert 'Path("marimo_styles.css")' in source
+    assert "_css_is_valid(_candidate)" in source
 
 
 def test_notebook_loads_css_modules_and_snapshots_outside_repository_cwd(tmp_path):
@@ -103,5 +116,7 @@ else:
     assert "marimo_assurance.py" in completed.stdout
     assert "src/tax_v15" in completed.stdout
     assert "data/v15" in completed.stdout
+    assert "marimo_styles.css" in completed.stdout
+    assert "사용자 정의 CSS 발견·검증 여부: 아니요" in completed.stdout
     assert "GitHub mirror" in completed.stdout
     assert str(Path.home()) not in completed.stdout

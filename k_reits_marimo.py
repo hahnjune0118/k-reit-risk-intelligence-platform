@@ -31,11 +31,22 @@ with app.setup:
     import plotly.graph_objects as go
 
     _repository_markers = (
+        Path("marimo_styles.css"),
         Path("marimo_assurance.py"),
         Path("marimo_risk.py"),
         Path("marimo_ui.py"),
         Path("src/tax_v15"),
         Path("data/v15"),
+    )
+    _required_css_selectors = (
+        ".app-shell",
+        ".dense-header",
+        ".dense-panel",
+        ".dense-metric",
+        ".dense-metric-grid",
+        ".dashboard-grid",
+        ".audit-table",
+        "@media (max-width: 760px)",
     )
     _notebook_path = Path(__file__).resolve()
     _candidate_roots = []
@@ -44,10 +55,23 @@ with app.setup:
             if _candidate not in _candidate_roots:
                 _candidate_roots.append(_candidate)
 
+    def _css_is_valid(_candidate):
+        try:
+            _css_text = (_candidate / "marimo_styles.css").read_text(
+                encoding="utf-8"
+            )
+        except (OSError, UnicodeError):
+            return False
+        return bool(_css_text.strip()) and all(
+            _selector in _css_text for _selector in _required_css_selectors
+        )
+
     def _root_is_compatible(_candidate):
         if not all(
             (_candidate / _marker).exists() for _marker in _repository_markers
         ):
+            return False
+        if not _css_is_valid(_candidate):
             return False
         try:
             _formatting_tree = ast.parse(
@@ -167,6 +191,7 @@ with app.setup:
         raise RuntimeError(
             "K-REIT 저장소 파일을 찾지 못했습니다.\n"
             f"실행 환경: {_runtime_label()}\n"
+            "사용자 정의 CSS 발견·검증 여부: 아니요\n"
             "저장소 root 발견 여부: 아니요\n"
             f"현재 working directory: {_public_path(Path.cwd())}\n"
             f"notebook file 위치: {_public_path(_notebook_path)}\n"

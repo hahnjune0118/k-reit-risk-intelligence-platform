@@ -153,7 +153,7 @@ py -m marimo run k_reits_marimo.py
 py -m marimo edit k_reits_marimo.py
 ```
 
-Windows의 `py` launcher를 사용하지 않는 환경에서는 같은 명령의 `py`를 `python`으로 바꾸면 됩니다. Marimo notebook은 notebook 위치와 제한된 상위 경로에서 저장소 marker를 확인한 뒤 root를 `sys.path` 앞에 등록합니다. CSS와 Snapshot도 각각 helper module과 저장소 root 기준 절대경로를 사용하므로 저장소 밖 working directory에서 notebook 절대경로로 실행할 수 있습니다.
+Windows의 `py` launcher를 사용하지 않는 환경에서는 같은 명령의 `py`를 `python`으로 바꾸면 됩니다. Marimo notebook은 notebook 위치와 제한된 상위 경로에서 저장소 marker를 확인한 뒤 root를 `sys.path` 앞에 등록합니다. 사용자 정의 CSS는 `marimo.App(css_file="marimo_styles.css")`로 앱 문서의 head에 주입되고, Snapshot은 저장소 root 기준 절대경로를 사용하므로 저장소 밖 working directory에서도 notebook 절대경로로 실행할 수 있습니다.
 
 ## 검증 명령
 
@@ -190,9 +190,9 @@ Molab 배포에는 notebook 진입 파일뿐 아니라 다음 저장소 상대�
 
 Python 3.10 이상이 필요하며 Molab의 Python 3.13 계열에서 사용할 수 있는 버전으로 검증합니다. PEP 723에는 실제 외부 패키지인 `marimo==0.24.0`, `pandas>=2.3`, `plotly>=6.0`, `openpyxl>=3.1`만 기록합니다. `marimo_assurance`, `marimo_risk`, `marimo_ui`, `src`는 PyPI 패키지가 아니라 저장소 내부 코드이므로 dependency에 추가하지 않습니다.
 
-setup cell은 먼저 notebook 위치, current working directory와 각 경로의 제한된 상위 디렉터리를 조사합니다. `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `src/tax_v15`, `data/v15`가 함께 있고 UI helper의 Streamlit import가 함수 내부로 격리된 디렉터리만 호환 저장소 root로 인정합니다. 실제 Molab Server smoke test에서는 GitHub mirror가 notebook만 `/marimo/notebook.py`로 배치하고 repository files를 제공하지 않는 것이 확인됐습니다. 이 환경에서만 bootstrap이 공식 GitHub 저장소 archive를 50 MiB 제한과 zip 경로·symlink 검사를 적용해 임시 디렉터리에 내려받고 marker와 Molab 호환성을 재검증합니다. 병합 후에는 `main`, 병합 전 PR 검증에는 고정된 검증 commit을 fallback으로 사용합니다.
+Marimo는 앱 생성문의 `css_file`을 notebook 파일 기준으로 해석하므로 `marimo_styles.css`를 정적 앱 설정에 선언합니다. setup cell은 notebook 위치, current working directory와 각 경로의 제한된 상위 디렉터리를 조사합니다. `marimo_styles.css`, `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `src/tax_v15`, `data/v15`가 함께 있고 CSS가 비어 있지 않으며 핵심 dashboard selector를 포함하고 UI helper의 Streamlit import가 함수 내부로 격리된 디렉터리만 호환 저장소 root로 인정합니다. 실제 Molab Server smoke test에서는 GitHub mirror가 notebook만 `/marimo/notebook.py`로 배치하고 repository files를 제공하지 않는 것이 확인됐습니다. 이 환경에서만 bootstrap이 공식 GitHub 저장소 archive를 50 MiB 제한과 zip 경로·symlink 검사를 적용해 임시 디렉터리에 내려받고 marker와 Molab 호환성을 재검증합니다. 병합 후에는 `main`, 병합 전 PR 검증에는 고정된 검증 commit을 fallback으로 사용합니다.
 
-검증된 root는 local import 전에 `sys.path[0]`에 한 번 등록합니다. 로컬 모듈은 root 확인 후 `importlib.import_module()`로 불러와 Marimo의 정적 package inference가 `marimo-risk`, `marimo-ui`, `marimo-assurance` 또는 무관한 `src` 배포판 설치를 시도하지 않게 합니다. CSS는 `marimo_ui.py` 위치, 데이터는 각 loader의 module 위치를 기준으로 읽습니다.
+검증된 root는 local import 전에 `sys.path[0]`에 한 번 등록합니다. 로컬 모듈은 root 확인 후 `importlib.import_module()`로 불러와 Marimo의 정적 package inference가 `marimo-risk`, `marimo-ui`, `marimo-assurance` 또는 무관한 `src` 배포판 설치를 시도하지 않게 합니다. CSS는 셀의 `<style>` 출력에 의존하지 않고 앱 설정을 통해 전역 적용하며, 데이터는 각 loader의 module 위치를 기준으로 읽습니다. CSS가 없거나 비어 있거나 핵심 selector가 누락되면 손상된 기본 화면으로 계속하지 않고 명확한 bootstrap 오류를 표시합니다.
 
 현재 지원 export는 화면에서 제공하는 CSV, Markdown, HTML과 Excel 검토팩입니다. Server 모드에서는 Python 파일 생성과 `openpyxl` 기반 Excel export를 사용할 수 있습니다. 브라우저 전용 WASM 모드는 저장소 내부 Python module, 파일 기반 Snapshot과 Excel export 호환성을 보장하지 않으므로 현재 지원하지 않습니다. Molab bootstrap에는 `codeload.github.com` 네트워크 접근이 필요하고 세션은 영구 호스팅이나 영구 파일 저장소가 아닙니다. 공개 URL에서의 실제 smoke test가 끝나기 전에는 배포 완료로 간주하지 않습니다. Molab notebook은 공개될 수 있으므로 API 키나 `.streamlit/secrets.toml`을 업로드하지 마십시오.
 

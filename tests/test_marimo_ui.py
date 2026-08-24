@@ -111,9 +111,16 @@ def test_notebook_preserves_active_tab_and_wraps_mobile_hstacks():
 def test_dense_dashboard_css_preserves_contrast_and_responsive_stack():
     css = load_css()
 
+    assert len(css.encode("utf-8")) > 0
+    assert ".app-shell" in css
     assert ".dense-header" in css
+    assert "linear-gradient(120deg, #0c263f" in css
+    assert ".dense-title-row h1" in css
+    assert ".dense-panel" in css
+    assert ".dense-metric" in css
     assert ".dense-metric-grid" in css
     assert ".dashboard-grid" in css
+    assert ".audit-table" in css
     assert "grid-template-columns: repeat(3" in css
     assert "@media (max-width: 1250px)" in css
     assert "@media (max-width: 760px)" in css
