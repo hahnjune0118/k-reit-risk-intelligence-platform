@@ -29,8 +29,8 @@ def test_notebook_hides_repository_modules_from_static_package_inference():
     assert 'importlib.import_module("marimo_risk")' in source
     assert 'importlib.import_module("marimo_ui")' in source
     assert 'importlib.import_module("src.tax_v15.reporting")' in source
-    assert "load_css = _ui_module.load_css" in source
-    assert 'mo.Html(f"<style>{load_css()}</style>")' in source
+    assert 'css_file="marimo_styles.css"' in source
+    assert 'mo.Html(f"<style>{load_css()}</style>")' not in source
 
 
 def test_molab_archive_fallback_is_bounded_and_path_checked():
@@ -56,6 +56,7 @@ assurance_view = namespace["build_view_model_from_snapshot"](assurance_snapshot)
 assert risk_snapshot.reit_master.shape[0] > 0
 assert assurance_view.kpis["p0_open"] == 3
 assert assurance_view.kpis["p1_open"] == 3
+assert namespace["app"]._config.css_file == "marimo_styles.css"
 assert namespace["_ui_module"].load_css().strip()
 assert "src.tax_v15.reporting" in sys.modules
 print(assurance_view.base_total)

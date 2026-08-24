@@ -11,7 +11,7 @@
 import marimo
 
 __generated_with = "0.24.0"
-app = marimo.App(width="full")
+app = marimo.App(width="full", css_file="marimo_styles.css")
 
 
 with app.setup:
@@ -213,7 +213,6 @@ with app.setup:
     format_eok = _ui_module.format_eok
     format_krw = _ui_module.format_krw
     html_table = _ui_module.html_table
-    load_css = _ui_module.load_css
     mini_stat = _ui_module.mini_stat
     panel = _ui_module.panel
     reconciliation_flow = _ui_module.reconciliation_flow
@@ -221,12 +220,6 @@ with app.setup:
     dataframe_csv_bytes = _reporting_module.dataframe_csv_bytes
     review_document_html = _reporting_module.review_document_html
     review_pack_excel_bytes = _reporting_module.review_pack_excel_bytes
-
-
-@app.cell
-def _():
-    mo.Html(f"<style>{load_css()}</style>")
-
 
 @app.cell
 def _():
