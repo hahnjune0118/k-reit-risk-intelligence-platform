@@ -16,8 +16,13 @@ app = marimo.App(width="full")
 
 with app.setup:
     import importlib
+    import io
     import os
+    import stat
     import sys
+    import tempfile
+    import urllib.request
+    import zipfile
     from pathlib import Path
 
     import marimo as mo
@@ -60,7 +65,71 @@ with app.setup:
             _name.startswith("MOLAB") or _name.startswith("MARIMO_CLOUD")
             for _name in os.environ
         )
-        return "Molab Server" if _molab_env_present or "molab" in _location_hint else "Local"
+        _molab_server_path = (
+            _notebook_path.as_posix() == "/marimo/notebook.py"
+            or Path.cwd().resolve().as_posix() == "/marimo"
+        )
+        return (
+            "Molab Server"
+            if _molab_env_present or _molab_server_path or "molab" in _location_hint
+            else "Local"
+        )
+
+    def _download_molab_repository():
+        _repository = "hahnjune0118/k-reit-risk-intelligence-platform"
+        _refs = (
+            "main",
+            "e3e3adb97b22502b4a5afea010fa954d77b93f43",
+        )
+        _maximum_archive_bytes = 50 * 1024 * 1024
+        for _ref in _refs:
+            _archive_url = f"https://codeload.github.com/{_repository}/zip/{_ref}"
+            try:
+                _request = urllib.request.Request(
+                    _archive_url,
+                    headers={"User-Agent": "k-reits-marimo-molab-bootstrap"},
+                )
+                with urllib.request.urlopen(_request, timeout=30) as _response:
+                    _archive_bytes = _response.read(_maximum_archive_bytes + 1)
+                if len(_archive_bytes) > _maximum_archive_bytes:
+                    raise ValueError("repository archive exceeds size limit")
+
+                _extract_root = Path(tempfile.mkdtemp(prefix="k-reits-molab-"))
+                with zipfile.ZipFile(io.BytesIO(_archive_bytes)) as _archive:
+                    for _member in _archive.infolist():
+                        _mode = _member.external_attr >> 16
+                        if stat.S_ISLNK(_mode):
+                            raise ValueError("repository archive contains a symbolic link")
+                        _destination = (_extract_root / _member.filename).resolve()
+                        if (
+                            _destination != _extract_root
+                            and _extract_root not in _destination.parents
+                        ):
+                            raise ValueError("repository archive contains an unsafe path")
+                    _archive.extractall(_extract_root)
+
+                _extracted_candidates = [
+                    _path for _path in _extract_root.iterdir() if _path.is_dir()
+                ]
+                _downloaded_root = next(
+                    (
+                        _candidate
+                        for _candidate in _extracted_candidates
+                        if all(
+                            (_candidate / _marker).exists()
+                            for _marker in _repository_markers
+                        )
+                    ),
+                    None,
+                )
+                if _downloaded_root is not None:
+                    return _downloaded_root
+            except (OSError, ValueError, zipfile.BadZipFile):
+                continue
+        return None
+
+    if _repository_root is None and _runtime_label() == "Molab Server":
+        _repository_root = _download_molab_repository()
 
     if _repository_root is None:
         _candidate_summary = []

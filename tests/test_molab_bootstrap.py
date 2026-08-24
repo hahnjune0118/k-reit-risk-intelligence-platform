@@ -32,6 +32,17 @@ def test_notebook_hides_repository_modules_from_static_package_inference():
     assert 'importlib.import_module("src.tax_v15.reporting")' in source
 
 
+def test_molab_archive_fallback_is_bounded_and_path_checked():
+    source = NOTEBOOK.read_text(encoding="utf-8")
+
+    assert "https://codeload.github.com/{_repository}/zip/{_ref}" in source
+    assert "_maximum_archive_bytes = 50 * 1024 * 1024" in source
+    assert "stat.S_ISLNK(_mode)" in source
+    assert "_extract_root not in _destination.parents" in source
+    assert '"main"' in source
+    assert '"e3e3adb97b22502b4a5afea010fa954d77b93f43"' in source
+
+
 def test_notebook_loads_css_modules_and_snapshots_outside_repository_cwd(tmp_path):
     script = f"""
 import runpy
