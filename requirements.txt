@@ -1,4 +1,5 @@
 streamlit>=1.58
+marimo==0.24.0
 pandas>=2.3
 plotly>=6.0
 requests>=2.32
