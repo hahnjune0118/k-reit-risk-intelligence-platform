@@ -1,7 +1,6 @@
 ﻿import re
 
 import pandas as pd
-import streamlit as st
 
 
 def _is_na(value) -> bool:
@@ -67,6 +66,8 @@ def extract_number(value):
 
 
 def add_download_button(df: pd.DataFrame, label: str, file_name: str):
+    import streamlit as st
+
     st.download_button(
         label=label,
         data=df.to_csv(index=False).encode("utf-8-sig"),
