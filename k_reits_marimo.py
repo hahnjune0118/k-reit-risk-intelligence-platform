@@ -87,7 +87,7 @@ with app.setup:
             return "WASM"
         _location_hint = f"{_notebook_path} {Path.cwd()}".lower()
         _molab_env_present = any(
-            _name.startswith("MOLAB") or _name.startswith("MARIMO_CLOUD")
+            _name.startswith(("MOLAB", "MARIMO_CLOUD"))
             for _name in os.environ
         )
         _molab_server_path = (
@@ -226,7 +226,6 @@ with app.setup:
 @app.cell
 def _():
     mo.Html(f"<style>{load_css()}</style>")
-    return
 
 
 @app.cell
