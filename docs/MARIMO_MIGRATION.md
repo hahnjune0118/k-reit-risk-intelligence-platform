@@ -161,7 +161,7 @@ py -m marimo run k_reits_marimo.py
 py -m marimo edit k_reits_marimo.py
 ```
 
-Snapshot 전용 실행에도 별도 flag나 API 키가 필요하지 않다. 저장소 루트에서 실행해야 `data/v15`, CSS와 로컬 모듈 경로를 함께 찾을 수 있다.
+Snapshot 전용 실행에도 별도 flag나 API 키가 필요하지 않다. notebook은 저장소 marker를 사용해 root를 찾고 CSS와 데이터 loader는 module 위치 기준 절대경로를 사용하므로, 저장소 루트 또는 저장소 밖 working directory에서 notebook 절대경로로 실행할 수 있다.
 
 ```powershell
 py -m compileall -q .
@@ -209,7 +209,11 @@ py -m marimo run --headless --host 127.0.0.1 --port 2718 --no-token k_reits_mari
 - `plotly>=6.0`
 - `openpyxl>=3.1` — Excel export 사용 시
 
-공식 Molab 문서에 따르면 GitHub URL로 notebook을 열 때 같은 저장소의 모든 파일이 notebook에 제공된다. 따라서 위 helper, CSS, 로컬 모듈과 Snapshot을 동일 branch와 상대경로로 커밋한다. 다만 package 설치, CSS·Snapshot 경로, Excel export가 Molab의 선택된 server-backed 또는 WASM 실행에서 실제로 동작하는지는 공개 URL에서 별도로 검증해야 한다. 따라서 현재 산출물은 Molab-ready 배포본이 아니라 배포 준비본이다. Portable dependency 설치를 위해 `k_reits_marimo.py`의 PEP 723 inline metadata에도 위 Python 및 package 조건을 기록했다. 변경 시 `marimo edit --sandbox k_reits_marimo.py`로 metadata를 관리하고 `requirements.txt`와 함께 갱신한다. `requirements.txt`는 로컬·서버 배포에는 사용하지만 Molab notebook의 유일한 의존성 계약으로 가정하지 않는다. Molab notebook은 공개될 수 있으므로 API 키나 `.streamlit/secrets.toml`은 업로드하지 않고 배포 secret 또는 환경변수만 사용한다.
+공식 Molab GitHub mirror URL은 `https://molab.marimo.io/github/hahnjune0118/k-reit-risk-intelligence-platform/blob/main/k_reits_marimo.py/server`이며 저장소 파일과 Python 파일 export를 사용하는 이 앱은 Server 모드를 권장한다. setup bootstrap은 notebook 위치와 CWD의 제한된 상위 경로에서 `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `src/tax_v15`, `data/v15` marker가 모두 있는 root만 선택한다. root를 `sys.path[0]`에 등록한 뒤 `importlib.import_module()`로 로컬 모듈을 불러오므로 Marimo가 이를 외부 dependency로 정적으로 추론하지 않는다. root를 찾지 못하면 package 설치를 유발하는 `ModuleNotFoundError` 대신 실행환경, 확인 경로와 누락 marker를 정리한 안전한 진단 오류를 낸다.
+
+Portable dependency 설치를 위해 `k_reits_marimo.py`의 PEP 723 inline metadata에는 `marimo`, `pandas`, `plotly`, `openpyxl`만 기록한다. `marimo-assurance`, `marimo-risk`, `marimo-ui`, `src`는 PyPI dependency가 아니므로 추가하지 않는다. `requirements.txt`는 로컬·서버 배포에 사용하지만 Molab notebook의 유일한 의존성 계약으로 가정하지 않는다. Python 3.10 이상을 지원하고 Python 3.13에서 notebook import, Snapshot 로드와 strict check를 검증한다.
+
+CSV, Markdown, HTML과 Excel 검토팩 export는 Server 모드에서 지원한다. 브라우저 전용 WASM은 repository module, 파일 Snapshot 및 `openpyxl` Excel export 호환성이 확인되지 않아 현재 지원하지 않는다. 공개 URL smoke test 전에는 `Molab-ready` 또는 정상 배포 완료라고 주장하지 않는다. Molab notebook은 공개될 수 있으므로 API 키나 `.streamlit/secrets.toml`은 업로드하지 않고 배포 secret 또는 환경변수만 사용한다.
 
 정적 session preview를 별도로 제공할 때는 `marimo export session k_reits_marimo.py`가 생성하는 `__marimo__/session/*.json`을 검토한 뒤 명시적으로 포함할 수 있다. 이 경로는 secret이나 실행 출력의 우발적 커밋을 막기 위해 기본적으로 `.gitignore`에 포함되어 있으므로, 공개 범위 검토가 끝난 파일만 `git add -f`로 추가한다. 현재 앱은 로컬 파일과 Python 모듈을 사용하므로 별도 WASM 호환성 검증 전에는 저장소 전체를 제공하는 server-backed 실행을 기본으로 한다.
 
@@ -217,10 +221,10 @@ py -m marimo run --headless --host 127.0.0.1 --port 2718 --no-token k_reits_mari
 
 1. 위 파일과 `data/v15`를 notebook과 동일 branch·상대경로로 커밋한다.
 2. PEP 723 metadata가 `marimo==0.24.0`과 필요한 package를 포함하고 `requirements.txt`와 충돌하지 않는다.
-3. 작업 디렉터리가 저장소 루트다.
+3. bootstrap이 저장소 root를 발견하고 정적 local import가 남아 있지 않다.
 4. API 키 없이 Snapshot으로 세 페이지가 렌더링된다.
 5. `marimo check --strict`, 회귀 테스트와 mobile/desktop smoke test를 통과한다.
-6. 공개 링크에서 import, CSS, Snapshot 접근과 Excel export를 실제로 확인한다.
+6. 위 `/server` 공개 링크에서 import, CSS, Snapshot 접근과 Excel export를 실제로 확인한다.
 7. Source URL만 노출되고 secret, 로컬 절대경로와 traceback은 노출되지 않는다.
 
 운영 수준 배포에서는 read-only app 모드(`marimo run`)와 서버 측 secret을 사용하고, Molab 공개 notebook의 접근정책과 데이터 공개 범위를 별도로 검토한다.

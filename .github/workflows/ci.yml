@@ -22,6 +22,7 @@ jobs:
         run: >-
           python -m ruff check k_reits_marimo.py marimo_assurance.py
           marimo_ui.py tests/test_marimo_assurance.py tests/test_marimo_ui.py
+          tests/test_molab_bootstrap.py
       - name: Check Marimo notebook
         run: python -m marimo check --strict k_reits_marimo.py
       - name: Test

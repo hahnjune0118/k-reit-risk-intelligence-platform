@@ -11,41 +11,130 @@
 import marimo
 
 __generated_with = "0.24.0"
-app = marimo.App(width="full", css_file="marimo_styles.css")
+app = marimo.App(width="full")
 
 
 with app.setup:
+    import importlib
+    import os
+    import sys
+    from pathlib import Path
+
     import marimo as mo
     import pandas as pd
     import plotly.graph_objects as go
 
-    from marimo_assurance import build_view_model_from_snapshot, load_assurance_snapshot
-    from marimo_risk import (
-        DashboardCharts,
-        DetailCharts,
-        build_risk_view,
-        load_risk_snapshot,
-        scenario_presets,
+    _repository_markers = (
+        Path("marimo_assurance.py"),
+        Path("marimo_risk.py"),
+        Path("marimo_ui.py"),
+        Path("src/tax_v15"),
+        Path("data/v15"),
     )
-    from marimo_ui import (
-        bullet_list,
-        callout,
-        compact_header,
-        dense_metric,
-        dense_metric_grid,
-        format_eok,
-        format_krw,
-        html_table,
-        mini_stat,
-        panel,
-        reconciliation_flow,
+    _notebook_path = Path(__file__).resolve()
+    _candidate_roots = []
+    for _origin in (_notebook_path.parent, Path.cwd().resolve()):
+        for _candidate in (_origin, *_origin.parents[:3]):
+            if _candidate not in _candidate_roots:
+                _candidate_roots.append(_candidate)
+
+    _repository_root = next(
+        (
+            _candidate
+            for _candidate in _candidate_roots
+            if all((_candidate / _marker).exists() for _marker in _repository_markers)
+        ),
+        None,
     )
-    from src.tax_v15.reporting import (
-        build_tax_review_memo,
-        dataframe_csv_bytes,
-        review_document_html,
-        review_pack_excel_bytes,
-    )
+
+    def _public_path(_path):
+        _resolved = str(_path.resolve())
+        _home = str(Path.home().resolve())
+        return _resolved.replace(_home, "<home>", 1) if _resolved.startswith(_home) else _resolved
+
+    def _runtime_label():
+        if sys.platform in {"emscripten", "wasi"}:
+            return "WASM"
+        _location_hint = f"{_notebook_path} {Path.cwd()}".lower()
+        _molab_env_present = any(
+            _name.startswith("MOLAB") or _name.startswith("MARIMO_CLOUD")
+            for _name in os.environ
+        )
+        return "Molab Server" if _molab_env_present or "molab" in _location_hint else "Local"
+
+    if _repository_root is None:
+        _candidate_summary = []
+        for _candidate in _candidate_roots:
+            _missing = [
+                _marker.as_posix()
+                for _marker in _repository_markers
+                if not (_candidate / _marker).exists()
+            ]
+            _candidate_summary.append(
+                f"- {_public_path(_candidate)} (누락: {', '.join(_missing)})"
+            )
+        raise RuntimeError(
+            "K-REIT 저장소 파일을 찾지 못했습니다.\n"
+            f"실행 환경: {_runtime_label()}\n"
+            "저장소 root 발견 여부: 아니요\n"
+            f"현재 working directory: {_public_path(Path.cwd())}\n"
+            f"notebook file 위치: {_public_path(_notebook_path)}\n"
+            "확인한 후보 경로와 누락 marker:\n"
+            + "\n".join(_candidate_summary)
+            + "\nGitHub mirror가 notebook과 같은 branch의 repository files를 제공하는지 "
+            "확인해 주세요."
+        )
+
+    _repository_root_text = str(_repository_root)
+    if not sys.path or sys.path[0] != _repository_root_text:
+        if _repository_root_text in sys.path:
+            sys.path.remove(_repository_root_text)
+        sys.path.insert(0, _repository_root_text)
+
+    try:
+        _assurance_module = importlib.import_module("marimo_assurance")
+        _risk_module = importlib.import_module("marimo_risk")
+        _ui_module = importlib.import_module("marimo_ui")
+        _reporting_module = importlib.import_module("src.tax_v15.reporting")
+    except ImportError as _local_import_error:
+        _missing_module = getattr(_local_import_error, "name", None) or "저장소 내부 모듈"
+        raise RuntimeError(
+            "K-REIT 로컬 모듈을 불러오지 못했습니다.\n"
+            f"실행 환경: {_runtime_label()}\n"
+            "저장소 root 발견 여부: 예\n"
+            f"누락된 모듈 또는 파일: {_missing_module}\n"
+            "notebook, helper, src/tax_v15, data/v15가 같은 GitHub branch에 "
+            "있는지 확인해 주세요."
+        ) from None
+
+    build_view_model_from_snapshot = _assurance_module.build_view_model_from_snapshot
+    load_assurance_snapshot = _assurance_module.load_assurance_snapshot
+    DashboardCharts = _risk_module.DashboardCharts
+    DetailCharts = _risk_module.DetailCharts
+    build_risk_view = _risk_module.build_risk_view
+    load_risk_snapshot = _risk_module.load_risk_snapshot
+    scenario_presets = _risk_module.scenario_presets
+    bullet_list = _ui_module.bullet_list
+    callout = _ui_module.callout
+    compact_header = _ui_module.compact_header
+    dense_metric = _ui_module.dense_metric
+    dense_metric_grid = _ui_module.dense_metric_grid
+    format_eok = _ui_module.format_eok
+    format_krw = _ui_module.format_krw
+    html_table = _ui_module.html_table
+    mini_stat = _ui_module.mini_stat
+    panel = _ui_module.panel
+    reconciliation_flow = _ui_module.reconciliation_flow
+    build_tax_review_memo = _reporting_module.build_tax_review_memo
+    dataframe_csv_bytes = _reporting_module.dataframe_csv_bytes
+    review_document_html = _reporting_module.review_document_html
+    review_pack_excel_bytes = _reporting_module.review_pack_excel_bytes
+
+
+@app.cell
+def _():
+    mo.Html(f"<style>{_ui_module.load_css()}</style>")
+    return
 
 
 @app.cell

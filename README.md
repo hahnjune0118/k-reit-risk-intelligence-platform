@@ -153,7 +153,7 @@ py -m marimo run k_reits_marimo.py
 py -m marimo edit k_reits_marimo.py
 ```
 
-Windows의 `py` launcher를 사용하지 않는 환경에서는 같은 명령의 `py`를 `python`으로 바꾸면 됩니다. 로컬 모듈, CSS와 Snapshot 상대경로를 찾을 수 있도록 저장소 루트에서 실행하십시오.
+Windows의 `py` launcher를 사용하지 않는 환경에서는 같은 명령의 `py`를 `python`으로 바꾸면 됩니다. Marimo notebook은 notebook 위치와 제한된 상위 경로에서 저장소 marker를 확인한 뒤 root를 `sys.path` 앞에 등록합니다. CSS와 Snapshot도 각각 helper module과 저장소 root 기준 절대경로를 사용하므로 저장소 밖 working directory에서 notebook 절대경로로 실행할 수 있습니다.
 
 ## 검증 명령
 
@@ -178,15 +178,29 @@ py -m pytest -q tests/test_marimo_assurance.py
 
 ## Molab 배포 준비
 
+공식 GitHub mirror 진입점은 다음 URL이며 **Server 모드**를 권장합니다.
+
+<https://molab.marimo.io/github/hahnjune0118/k-reit-risk-intelligence-platform/blob/main/k_reits_marimo.py/server>
+
 Molab 배포에는 notebook 진입 파일뿐 아니라 다음 저장소 상대경로가 함께 필요합니다.
 
-- `k_reits_marimo.py`, `marimo_assurance.py`, `marimo_ui.py`, `marimo_styles.css`
+- `k_reits_marimo.py`, `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `marimo_styles.css`
 - `src/__init__.py`, `src/tax_v15/**`
 - `data/v15/*.csv`, `data/v15/golden_asset/*.json`
 
-Python 3.10 이상이 필요합니다. 패키지는 `marimo==0.24.0`, `pandas>=2.3`, `plotly>=6.0`, `openpyxl>=3.1`이며 모두 `requirements.txt`와 `k_reits_marimo.py`의 PEP 723 inline metadata에 기록되어 있습니다. 의존성을 변경할 때는 두 목록을 함께 갱신하거나 `marimo edit --sandbox k_reits_marimo.py`로 metadata를 관리하십시오.
+Python 3.10 이상이 필요하며 Molab의 Python 3.13 계열에서 사용할 수 있는 버전으로 검증합니다. PEP 723에는 실제 외부 패키지인 `marimo==0.24.0`, `pandas>=2.3`, `plotly>=6.0`, `openpyxl>=3.1`만 기록합니다. `marimo_assurance`, `marimo_risk`, `marimo_ui`, `src`는 PyPI 패키지가 아니라 저장소 내부 코드이므로 dependency에 추가하지 않습니다.
 
-GitHub notebook URL은 `https://molab.marimo.io/github/hahnjune0118/k-reit-risk-intelligence-platform/blob/<branch>/k_reits_marimo.py` 형식으로 열 수 있습니다. 공식 Molab 문서에 따르면 GitHub에서 notebook을 열 때 같은 저장소의 파일이 notebook에 제공되므로 helper, CSS, `src/tax_v15`와 `data/v15`를 동일 branch와 위 상대경로로 커밋해야 합니다. 다만 이 앱의 package 설치, CSS·Snapshot 경로, Excel export에 대한 Molab/WASM 실제 실행은 별도로 smoke test해야 합니다. 현재 상태는 Molab-ready 배포본이 아니라 배포 준비본입니다. Molab notebook은 공개될 수 있으므로 API 키나 `.streamlit/secrets.toml`을 업로드하지 마십시오.
+GitHub mirror에서는 setup cell이 notebook 위치, current working directory와 각 경로의 제한된 상위 디렉터리를 조사합니다. `marimo_assurance.py`, `marimo_risk.py`, `marimo_ui.py`, `src/tax_v15`, `data/v15`가 함께 있는 디렉터리만 저장소 root로 인정하고 local import 전에 `sys.path[0]`에 한 번 등록합니다. 로컬 모듈은 root 확인 후 `importlib.import_module()`로 불러와 Marimo의 정적 package inference가 `marimo-risk`, `marimo-ui`, `marimo-assurance` 또는 무관한 `src` 배포판 설치를 시도하지 않게 합니다. CSS는 `marimo_ui.py` 위치, 데이터는 각 loader의 module 위치를 기준으로 읽습니다.
+
+현재 지원 export는 화면에서 제공하는 CSV, Markdown, HTML과 Excel 검토팩입니다. Server 모드에서는 Python 파일 생성과 `openpyxl` 기반 Excel export를 사용할 수 있습니다. 브라우저 전용 WASM 모드는 저장소 내부 Python module, 파일 기반 Snapshot과 Excel export 호환성을 보장하지 않으므로 현재 지원하지 않습니다. Molab 세션은 영구 호스팅이나 영구 파일 저장소가 아니며 공개 URL에서의 실제 smoke test가 끝나기 전에는 배포 완료로 간주하지 않습니다. Molab notebook은 공개될 수 있으므로 API 키나 `.streamlit/secrets.toml`을 업로드하지 마십시오.
+
+오류가 발생하면 다음을 확인합니다.
+
+1. URL 끝이 `/server`이고 notebook과 helper/data 파일이 모두 같은 GitHub branch에 있는지 확인합니다.
+2. 오류 메시지의 저장소 root 발견 여부와 누락 marker를 확인합니다.
+3. 설치 목록에 `marimo-risk`, `marimo-ui`, `marimo-assurance`, `src`가 나타나면 오래된 notebook revision을 열고 있지 않은지 확인합니다.
+4. `marimo`, `pandas`, `plotly`, `openpyxl` 네 외부 dependency 설치가 완료됐는지 확인합니다.
+5. branch 변경 후에는 Molab GitHub mirror URL을 새로 열어 이전 세션 cache와 구분합니다.
 
 ## 검토 문서
 
