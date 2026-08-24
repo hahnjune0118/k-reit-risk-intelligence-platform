@@ -30,6 +30,8 @@ def test_notebook_hides_repository_modules_from_static_package_inference():
     assert 'importlib.import_module("marimo_risk")' in source
     assert 'importlib.import_module("marimo_ui")' in source
     assert 'importlib.import_module("src.tax_v15.reporting")' in source
+    assert "load_css = _ui_module.load_css" in source
+    assert 'mo.Html(f"<style>{load_css()}</style>")' in source
 
 
 def test_molab_archive_fallback_is_bounded_and_path_checked():

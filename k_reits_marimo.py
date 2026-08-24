@@ -213,6 +213,7 @@ with app.setup:
     format_eok = _ui_module.format_eok
     format_krw = _ui_module.format_krw
     html_table = _ui_module.html_table
+    load_css = _ui_module.load_css
     mini_stat = _ui_module.mini_stat
     panel = _ui_module.panel
     reconciliation_flow = _ui_module.reconciliation_flow
@@ -224,7 +225,7 @@ with app.setup:
 
 @app.cell
 def _():
-    mo.Html(f"<style>{_ui_module.load_css()}</style>")
+    mo.Html(f"<style>{load_css()}</style>")
     return
 
 
