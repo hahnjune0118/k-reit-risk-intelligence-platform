@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
+import sys
 
 import pandas as pd
 
@@ -21,6 +23,34 @@ def test_marimo_risk_loader_has_no_streamlit_runtime_dependency():
 
     assert "import streamlit" not in source
     assert "from data_loader" not in source
+    assert "from formatting" not in source
+
+
+def test_marimo_risk_import_succeeds_when_streamlit_is_unavailable():
+    script = """
+import importlib.abc
+import sys
+
+class BlockStreamlit(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == "streamlit" or fullname.startswith("streamlit."):
+            raise ModuleNotFoundError("streamlit is intentionally unavailable")
+        return None
+
+sys.meta_path.insert(0, BlockStreamlit())
+import marimo_risk
+print(marimo_risk.scenario_presets())
+"""
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "기준" in completed.stdout
 
 
 def test_sk_risk_view_reuses_detailed_calculation_contract():

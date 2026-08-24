@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -33,11 +34,25 @@ from calculations_scenario import (
     macro_scenario_parameters,
 )
 from data_validation import validate_bundle
-from formatting import extract_number
 from red_flag_engine import build_assurance_red_flags, load_red_flag_rules
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 SNAPSHOT_AS_OF = pd.Timestamp("2026-07-15")
+
+
+def _extract_number(value):
+    """Parse disclosed numeric text without importing Streamlit UI helpers."""
+    if value is None or value is pd.NA:
+        return pd.NA
+    try:
+        if pd.isna(value):
+            return pd.NA
+    except (TypeError, ValueError):
+        pass
+    if isinstance(value, (int, float)):
+        return float(value)
+    match = re.search(r"[-+]?\d*\.?\d+", str(value).replace(",", ""))
+    return pd.NA if match is None else float(match.group())
 
 
 class RiskDataUnavailableError(RuntimeError):
@@ -142,7 +157,7 @@ def load_risk_snapshot(data_dir: str | Path = DATA_DIR) -> RiskSnapshot:
     assets = bundle["assets"]
     assets["estimated_annual_rent_mn_krw_num"] = assets[
         "estimated_annual_rent_mn_krw"
-    ].apply(extract_number)
+    ].apply(_extract_number)
     assets["annual_rent_yield_on_acquisition_pct"] = (
         assets["estimated_annual_rent_mn_krw_num"]
         / assets["acquisition_price_mn_krw"]

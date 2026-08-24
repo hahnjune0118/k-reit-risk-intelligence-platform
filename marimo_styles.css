@@ -624,10 +624,10 @@ button[role="tab"][data-state="active"] {
 /* Dense three-page analytical workspace */
 .dense-header {
   margin: 0 0 0.65rem;
-  border: 1px solid #9fb0bf;
+  border: 1px solid #255a72;
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 4px 14px rgba(15, 39, 66, 0.07);
+  background: linear-gradient(120deg, #0c263f 0%, #143e60 62%, #0e6268 100%);
+  box-shadow: 0 6px 18px rgba(15, 39, 66, 0.14);
   overflow: hidden;
 }
 
@@ -638,12 +638,12 @@ button[role="tab"][data-state="active"] {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.8rem 1rem 0.6rem;
-  border-top: 5px solid #0b6267;
+  border-top: 5px solid #41a4a8;
 }
 
 .dense-title-row h1 {
   margin: 0;
-  color: #0f2742;
+  color: #ffffff;
   font-size: clamp(1.625rem, 2vw, 1.9375rem);
   line-height: 1.25;
   letter-spacing: -0.025em;
@@ -651,7 +651,7 @@ button[role="tab"][data-state="active"] {
 
 .dense-title-row p {
   margin: 0.25rem 0 0;
-  color: #475569;
+  color: #dce7f0;
   font-size: 0.875rem;
   line-height: 1.45;
 }
@@ -665,10 +665,10 @@ button[role="tab"][data-state="active"] {
 
 .dense-meta span {
   padding: 0.25rem 0.52rem;
-  border: 1px solid #a9c2d7;
+  border: 1px solid rgba(255, 255, 255, 0.46);
   border-radius: 999px;
-  background: #e7f0f8;
-  color: #0f2742;
+  background: rgba(8, 30, 49, 0.38);
+  color: #ffffff;
   font-size: 0.8125rem;
   font-weight: 750;
 }
@@ -688,6 +688,7 @@ button[role="tab"][data-state="active"] {
   white-space: nowrap;
 }
 
+.compact-workflow { background: #ffffff; }
 .compact-workflow b { color: #0b6267; }
 .compact-source { background: #e7f0f8; color: #475569; }
 .compact-source-time { margin-left: auto; color: #526274; font-weight: 750; }

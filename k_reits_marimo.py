@@ -15,38 +15,236 @@ app = marimo.App(width="full", css_file="marimo_styles.css")
 
 
 with app.setup:
+    import ast
+    import importlib
+    import io
+    import os
+    import stat
+    import sys
+    import tempfile
+    import urllib.request
+    import zipfile
+    from pathlib import Path
+
     import marimo as mo
     import pandas as pd
     import plotly.graph_objects as go
 
-    from marimo_assurance import build_view_model_from_snapshot, load_assurance_snapshot
-    from marimo_risk import (
-        DashboardCharts,
-        DetailCharts,
-        build_risk_view,
-        load_risk_snapshot,
-        scenario_presets,
+    _repository_markers = (
+        Path("marimo_styles.css"),
+        Path("marimo_assurance.py"),
+        Path("marimo_risk.py"),
+        Path("marimo_ui.py"),
+        Path("src/tax_v15"),
+        Path("data/v15"),
     )
-    from marimo_ui import (
-        bullet_list,
-        callout,
-        compact_header,
-        dense_metric,
-        dense_metric_grid,
-        format_eok,
-        format_krw,
-        html_table,
-        mini_stat,
-        panel,
-        reconciliation_flow,
+    _required_css_selectors = (
+        ".app-shell",
+        ".dense-header",
+        ".dense-panel",
+        ".dense-metric",
+        ".dense-metric-grid",
+        ".dashboard-grid",
+        ".audit-table",
+        "@media (max-width: 760px)",
     )
-    from src.tax_v15.reporting import (
-        build_tax_review_memo,
-        dataframe_csv_bytes,
-        review_document_html,
-        review_pack_excel_bytes,
+    _notebook_path = Path(__file__).resolve()
+    _candidate_roots = []
+    for _origin in (_notebook_path.parent, Path.cwd().resolve()):
+        for _candidate in (_origin, *_origin.parents[:3]):
+            if _candidate not in _candidate_roots:
+                _candidate_roots.append(_candidate)
+
+    def _css_is_valid(_candidate):
+        try:
+            _css_text = (_candidate / "marimo_styles.css").read_text(
+                encoding="utf-8"
+            )
+        except (OSError, UnicodeError):
+            return False
+        return bool(_css_text.strip()) and all(
+            _selector in _css_text for _selector in _required_css_selectors
+        )
+
+    def _root_is_compatible(_candidate):
+        if not all(
+            (_candidate / _marker).exists() for _marker in _repository_markers
+        ):
+            return False
+        if not _css_is_valid(_candidate):
+            return False
+        try:
+            _formatting_tree = ast.parse(
+                (_candidate / "formatting.py").read_text(encoding="utf-8-sig")
+            )
+        except (OSError, SyntaxError, UnicodeError):
+            return False
+        for _node in _formatting_tree.body:
+            if isinstance(_node, ast.Import) and any(
+                _alias.name.split(".")[0] == "streamlit" for _alias in _node.names
+            ):
+                return False
+            if (
+                isinstance(_node, ast.ImportFrom)
+                and _node.module
+                and _node.module.split(".")[0] == "streamlit"
+            ):
+                return False
+        return True
+
+    _repository_root = next(
+        (
+            _candidate
+            for _candidate in _candidate_roots
+            if _root_is_compatible(_candidate)
+        ),
+        None,
     )
 
+    def _public_path(_path):
+        _resolved = str(_path.resolve())
+        _home = str(Path.home().resolve())
+        return _resolved.replace(_home, "<home>", 1) if _resolved.startswith(_home) else _resolved
+
+    def _runtime_label():
+        if sys.platform in {"emscripten", "wasi"}:
+            return "WASM"
+        _location_hint = f"{_notebook_path} {Path.cwd()}".lower()
+        _molab_env_present = any(
+            _name.startswith(("MOLAB", "MARIMO_CLOUD"))
+            for _name in os.environ
+        )
+        _molab_server_path = (
+            _notebook_path.as_posix() == "/marimo/notebook.py"
+            or Path.cwd().resolve().as_posix() == "/marimo"
+        )
+        return (
+            "Molab Server"
+            if _molab_env_present or _molab_server_path or "molab" in _location_hint
+            else "Local"
+        )
+
+    def _download_molab_repository():
+        _repository = "hahnjune0118/k-reit-risk-intelligence-platform"
+        _refs = (
+            "main",
+            "aed3f0f39bb68f1bd4e0eb2ea4f38884d82931b5",
+        )
+        _maximum_archive_bytes = 50 * 1024 * 1024
+        for _ref in _refs:
+            _archive_url = f"https://codeload.github.com/{_repository}/zip/{_ref}"
+            try:
+                _request = urllib.request.Request(
+                    _archive_url,
+                    headers={"User-Agent": "k-reits-marimo-molab-bootstrap"},
+                )
+                with urllib.request.urlopen(_request, timeout=30) as _response:
+                    _archive_bytes = _response.read(_maximum_archive_bytes + 1)
+                if len(_archive_bytes) > _maximum_archive_bytes:
+                    raise ValueError("repository archive exceeds size limit")
+
+                _extract_root = Path(tempfile.mkdtemp(prefix="k-reits-molab-"))
+                with zipfile.ZipFile(io.BytesIO(_archive_bytes)) as _archive:
+                    for _member in _archive.infolist():
+                        _mode = _member.external_attr >> 16
+                        if stat.S_ISLNK(_mode):
+                            raise ValueError("repository archive contains a symbolic link")
+                        _destination = (_extract_root / _member.filename).resolve()
+                        if (
+                            _destination != _extract_root
+                            and _extract_root not in _destination.parents
+                        ):
+                            raise ValueError("repository archive contains an unsafe path")
+                    _archive.extractall(_extract_root)
+
+                _extracted_candidates = [
+                    _path for _path in _extract_root.iterdir() if _path.is_dir()
+                ]
+                _downloaded_root = next(
+                    (
+                        _candidate
+                        for _candidate in _extracted_candidates
+                        if _root_is_compatible(_candidate)
+                    ),
+                    None,
+                )
+                if _downloaded_root is not None:
+                    return _downloaded_root
+            except (OSError, ValueError, zipfile.BadZipFile):
+                continue
+        return None
+
+    if _repository_root is None and _runtime_label() == "Molab Server":
+        _repository_root = _download_molab_repository()
+
+    if _repository_root is None:
+        _candidate_summary = []
+        for _candidate in _candidate_roots:
+            _missing = [
+                _marker.as_posix()
+                for _marker in _repository_markers
+                if not (_candidate / _marker).exists()
+            ]
+            _candidate_summary.append(
+                f"- {_public_path(_candidate)} (누락: {', '.join(_missing)})"
+            )
+        raise RuntimeError(
+            "K-REIT 저장소 파일을 찾지 못했습니다.\n"
+            f"실행 환경: {_runtime_label()}\n"
+            "사용자 정의 CSS 발견·검증 여부: 아니요\n"
+            "저장소 root 발견 여부: 아니요\n"
+            f"현재 working directory: {_public_path(Path.cwd())}\n"
+            f"notebook file 위치: {_public_path(_notebook_path)}\n"
+            "확인한 후보 경로와 누락 marker:\n"
+            + "\n".join(_candidate_summary)
+            + "\nGitHub mirror가 notebook과 같은 branch의 repository files를 제공하는지 "
+            "확인해 주세요."
+        )
+
+    _repository_root_text = str(_repository_root)
+    if not sys.path or sys.path[0] != _repository_root_text:
+        if _repository_root_text in sys.path:
+            sys.path.remove(_repository_root_text)
+        sys.path.insert(0, _repository_root_text)
+
+    try:
+        _assurance_module = importlib.import_module("marimo_assurance")
+        _risk_module = importlib.import_module("marimo_risk")
+        _ui_module = importlib.import_module("marimo_ui")
+        _reporting_module = importlib.import_module("src.tax_v15.reporting")
+    except ImportError as _local_import_error:
+        _missing_module = getattr(_local_import_error, "name", None) or "저장소 내부 모듈"
+        raise RuntimeError(
+            "K-REIT 로컬 모듈을 불러오지 못했습니다.\n"
+            f"실행 환경: {_runtime_label()}\n"
+            "저장소 root 발견 여부: 예\n"
+            f"누락된 모듈 또는 파일: {_missing_module}\n"
+            "notebook, helper, src/tax_v15, data/v15가 같은 GitHub branch에 "
+            "있는지 확인해 주세요."
+        ) from None
+
+    build_view_model_from_snapshot = _assurance_module.build_view_model_from_snapshot
+    load_assurance_snapshot = _assurance_module.load_assurance_snapshot
+    DashboardCharts = _risk_module.DashboardCharts
+    DetailCharts = _risk_module.DetailCharts
+    build_risk_view = _risk_module.build_risk_view
+    load_risk_snapshot = _risk_module.load_risk_snapshot
+    scenario_presets = _risk_module.scenario_presets
+    bullet_list = _ui_module.bullet_list
+    callout = _ui_module.callout
+    compact_header = _ui_module.compact_header
+    dense_metric = _ui_module.dense_metric
+    dense_metric_grid = _ui_module.dense_metric_grid
+    format_eok = _ui_module.format_eok
+    format_krw = _ui_module.format_krw
+    html_table = _ui_module.html_table
+    mini_stat = _ui_module.mini_stat
+    panel = _ui_module.panel
+    reconciliation_flow = _ui_module.reconciliation_flow
+    build_tax_review_memo = _reporting_module.build_tax_review_memo
+    dataframe_csv_bytes = _reporting_module.dataframe_csv_bytes
+    review_document_html = _reporting_module.review_document_html
+    review_pack_excel_bytes = _reporting_module.review_pack_excel_bytes
 
 @app.cell
 def _():
