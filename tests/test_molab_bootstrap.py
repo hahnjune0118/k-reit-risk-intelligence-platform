@@ -6,7 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK = ROOT / "k_reits_marimo.py"
 LOCAL_MODULE_ROOTS = {"marimo_assurance", "marimo_risk", "marimo_ui", "src"}
