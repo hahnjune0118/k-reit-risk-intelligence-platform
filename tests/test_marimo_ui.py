@@ -98,6 +98,8 @@ def test_readability_components_have_explicit_semantic_hooks():
 def test_notebook_preserves_active_tab_and_wraps_mobile_hstacks():
     source = (ROOT / "k_reits_marimo.py").read_text(encoding="utf-8")
 
+    assert 'id="k-reits-inline-styles"' in source
+    assert 'css_file="marimo_styles.css"' not in source
     assert 'mo.state("1. 종합 위험 및 시나리오")' in source
     assert "value=get_active_tab()" in source
     assert "on_change=set_active_tab" in source
