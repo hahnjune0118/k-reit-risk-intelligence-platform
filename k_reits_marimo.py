@@ -508,7 +508,7 @@ def _(
     controls = mo.vstack([
         mo.md("### 분석조건"), company_select, peer_group_select, preset_select, gdp_growth, cpi_growth, policy_rate, credit_spread, refinancing_share, cap_rate_shock,
         mo.Html(callout("neutral", "계산 기준", "전망 입력은 확률가중 preset에 반영됩니다. 사용자 설정은 금리·스프레드·성장률·물가를 동일 시나리오 엔진의 충격값으로 변환합니다.")),
-    ], gap=0.35).style({"border": "1px solid #b8c5d1", "border-radius": "12px", "padding": "0.8rem", "background": "#ffffff", "min-width": "0", "overflow": "hidden"})
+    ], gap=0.35).style({"border": "1px solid #b8c5d1", "border-radius": "12px", "padding": "0.8rem", "background": "#ffffff", "width": "100%", "min-width": "250px", "max-width": "280px", "overflow": "hidden"})
 
     def _mn(value):
         return "미확인" if pd.isna(value) else f"{float(value)/1000:,.1f}십억원"
@@ -525,12 +525,12 @@ def _(
         dense_metric("배당 후 여력", _mn(scenario["dividend_cushion"]), baseline="배당부담 " + _pct(scenario["stressed_payout"]), delta="FFO proxy 기준", severity="critical" if pd.notna(scenario["dividend_cushion"]) and scenario["dividend_cushion"] < 0 else "ok"),
     ]) + '</section>')
     peer_table = mo.Html('<section class="dense-panel dense-table"><div class="dense-panel-title"><h2>Peer Benchmark</h2><span>8개 상장리츠 저장 시점 자료</span></div>' + html_table(risk_view.peer_comparison, numeric_formats={"현재": "{:,.2f}", "Peer 중앙값": "{:,.2f}", "백분위": "{:,.1f}%"}, max_rows=8, caption="Peer Benchmark 비교") + '</section>')
-    risk_center = mo.vstack([metrics, peer_table], gap=0.65).style({"min-width": "0", "overflow": "hidden"})
+    risk_center = mo.vstack([metrics, peer_table], gap=0.65).style({"width": "100%", "min-width": "0", "max-width": "900px", "overflow": "hidden"})
     charts = mo.vstack([
         mo.ui.plotly(dashboard_charts.risk_heatmap, config={"responsive": True, "displaylogo": False, "displayModeBar": False}),
         mo.ui.plotly(dashboard_charts.risk_composition, config={"responsive": True, "displaylogo": False, "displayModeBar": False}),
-    ], gap=0.35).style({"border": "1px solid #b8c5d1", "border-radius": "12px", "padding": "0.35rem", "background": "#ffffff", "min-width": "0", "overflow": "hidden"})
-    top = mo.hstack([controls, risk_center, charts], widths=[25, 38, 37], gap=0.65, align="start", wrap=True)
+    ], gap=0.35).style({"border": "1px solid #b8c5d1", "border-radius": "12px", "padding": "0.35rem", "background": "#ffffff", "width": "100%", "min-width": "320px", "max-width": "430px", "overflow": "hidden"})
+    top = mo.hstack([controls, risk_center, charts], widths=[18, 56, 26], gap=0.65, align="start", wrap=True)
 
     if lower_detail_select.value == "최근 흐름":
         lower_body = mo.vstack([mo.Html('<div class="decision-strip">공시된 기간별 총자산·차입금·장부 NAV proxy 흐름입니다. 인과관계가 아니라 위험 신호로만 사용합니다.</div>'), mo.ui.plotly(detail_charts.historical, config={"responsive": True, "displaylogo": False, "displayModeBar": False})], gap=0.3)
@@ -650,7 +650,10 @@ def _(
     if issue_filter.value in {"P0", "P1"}:
         visible_issues = visible_issues[visible_issues["priority"].eq(issue_filter.value)]
     issue_table = mo.Html('<section class="dense-panel dense-table"><div class="dense-panel-title"><h2>P0/P1 미해결 사항</h2><span>증거·담당절차·다음 조치 연결</span></div>' + html_table(visible_issues, columns=["priority", "tax_issue", "evidence_status", "potential_tax_effect", "required_document", "responsible_reviewer", "resolution_status"], labels={"priority": "우선순위", "tax_issue": "미해결 사항", "evidence_status": "증거 상태", "potential_tax_effect": "예상 영향", "required_document": "필요 감사증거", "responsible_reviewer": "담당 절차", "resolution_status": "상태"}, status_columns=["evidence_status", "resolution_status"], max_rows=8, caption="P0 P1 미해결 사항") + '</section>')
-    conclusion_center = mo.vstack([flow, mo.Html(callout("critical", "대사 결론 보류", "실제 고지서가 확보되지 않아 실제 고지세액과 차이는 계산하지 않았으며, 대사 결론도 보류했습니다.")), issue_table], gap=0.45).style({"min-width": "0", "overflow": "hidden"})
+    reconciliation = mo.vstack([
+        flow,
+        mo.Html(callout("critical", "대사 결론 보류", "실제 고지서가 확보되지 않아 실제 고지세액과 차이는 계산하지 않았으며, 대사 결론도 보류했습니다.")),
+    ], gap=0.45).style({"min-width": "0", "overflow": "hidden"})
 
     conclusion = mo.Html('<section class="dense-panel"><h2>검토자 결론</h2><div class="mini-stat-grid">' + mini_stat("현재 판단", "추가 감사증거 필요", "독립적 재계산 완료·고지서 대사 미완료", "warning") + mini_stat("결론 승인 상태", "보류", "모의 감사검토 단계", "critical") + '</div>' + panel("판단 근거", f'<p>공식 입력자료 기반 재수행액은 <strong>{format_eok(assurance_view.base_total)}</strong>입니다. 실제 고지서·과세구분 코드·과세기준일 등기 및 신탁상태가 미확인되어 확정세액으로 결론내리지 않습니다.</p>') + panel("미해결 감사증거 공백", bullet_list(assurance_view.snapshot_payload.get("open_items", []))) + '</section>')
     request_table = mo.Html('<div class="dense-table">' + html_table(assurance_view.request_list, columns=["priority", "required_document", "request_reason", "reviewer_status"], labels={"priority": "우선순위", "required_document": "추가 요청자료", "request_reason": "후속조치", "reviewer_status": "상태"}, status_columns=["reviewer_status"], max_rows=8, caption="추가 요청자료") + '</div>')
@@ -661,8 +664,18 @@ def _(
         mo.hstack([excel_download, memo_download, html_download], gap=0.4, wrap=True),
         mo.Html(callout("neutral", "실행환경", "로컬 Python과 Molab Python notebook에서는 파일 생성을 지원합니다. 브라우저 전용 WASM에서는 Excel 생성 라이브러리와 파일 내려받기가 제한될 수 있습니다.")),
     ], gap=0.35).style({"border": "1px solid #b8c5d1", "border-radius": "12px", "padding": "0.65rem", "background": "#ffffff"})
-    right = mo.vstack([conclusion, mo.accordion({"추가 요청자료와 후속조치": request_table}), exports], gap=0.45).style({"min-width": "0", "overflow": "hidden"})
-    conclusion_page = mo.vstack([conclusion_header, mo.hstack([left, conclusion_center, right], widths=[30, 40, 30], gap=0.65, align="start", wrap=True)], gap=0.55)
+    follow_up = mo.vstack([
+        mo.accordion({"추가 요청자료와 후속조치": request_table}),
+        exports,
+    ], gap=0.45).style({"min-width": "0", "overflow": "hidden"})
+    evidence_row = mo.hstack([left, reconciliation], widths=[42, 58], gap=0.65, align="start", wrap=True)
+    conclusion_row = mo.hstack([conclusion, follow_up], widths=[58, 42], gap=0.65, align="start", wrap=True)
+    conclusion_page = mo.vstack([
+        conclusion_header,
+        evidence_row,
+        issue_table,
+        conclusion_row,
+    ], gap=0.65)
     return (conclusion_page,)
 
 
