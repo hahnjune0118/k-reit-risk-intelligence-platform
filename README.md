@@ -3,7 +3,7 @@
 
 **현재 버전: v15.1.0 - Decision-First Tax Review**
 
-**Marimo Dashboard 바로가기**(https://molab.marimo.io/notebooks/nb_haCXQuxL2iAqAwPcx8tA4M/app)
+[**Marimo Dashboard 바로가기**](https://molab.marimo.io/notebooks/nb_haCXQuxL2iAqAwPcx8tA4M/app)
 
 상장리츠의 공시자료, 거시경제 지표, 자산별 정보와 공시가격 데이터를 연결하여 Assurance 및 Tax 관점의 초기 위험 검토를 지원하는 공개 포트폴리오 프로젝트입니다. 기존 Streamlit 앱과 Golden Asset 감사 검토에 집중한 Marimo Assurance 앱을 병행합니다.
 
@@ -180,9 +180,9 @@ py -m pytest -q tests/test_marimo_assurance.py
 
 ## Molab 배포 준비
 
-공식 GitHub mirror 진입점은 다음 URL이며 **Server 모드**를 권장합니다.
+공식 공개 Marimo 앱 진입점은 다음 URL입니다.
 
-<https://molab.marimo.io/github/hahnjune0118/k-reit-risk-intelligence-platform/blob/main/k_reits_marimo.py/server>
+<https://molab.marimo.io/notebooks/nb_haCXQuxL2iAqAwPcx8tA4M/app>
 
 Molab 배포에는 notebook 진입 파일뿐 아니라 다음 저장소 상대경로가 함께 필요합니다.
 
@@ -200,7 +200,7 @@ Marimo의 `css_file`은 앱 생성 시점의 notebook 경로를 기준으로 해
 
 오류가 발생하면 다음을 확인합니다.
 
-1. URL 끝이 `/server`이고 notebook과 helper/data 파일이 모두 같은 GitHub branch에 있는지 확인합니다.
+1. GitHub mirror로 배포 문제를 진단할 때는 URL 끝이 `/server`이고 notebook과 helper/data 파일이 모두 같은 GitHub branch에 있는지 확인합니다.
 2. 오류 메시지의 저장소 root 발견 여부와 누락 marker를 확인합니다.
 3. 설치 목록에 `marimo-risk`, `marimo-ui`, `marimo-assurance`, `src`가 나타나면 오래된 notebook revision을 열고 있지 않은지 확인합니다.
 4. `marimo`, `pandas`, `plotly`, `openpyxl` 네 외부 dependency 설치가 완료됐는지 확인합니다.
