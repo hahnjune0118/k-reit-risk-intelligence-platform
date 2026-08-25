@@ -31,8 +31,9 @@ def test_notebook_hides_repository_modules_from_static_package_inference():
     assert 'importlib.import_module("src.tax_v15.reporting")' in source
     assert 'css_file="marimo_styles.css"' not in source
     assert 'load_css = _ui_module.load_css' in source
-    assert 'id="k-reits-inline-styles"' in source
-    assert 'f\'<style id="k-reits-inline-styles">{_css_text}</style>\'' in source
+    assert 'data-k-reits-component-styles="true"' in source
+    assert source.count("mo.Html(") == 1
+    assert source.count("styled_html(") >= 25
 
     tree = ast.parse(source)
     app_call = next(
@@ -111,7 +112,7 @@ def test_exported_notebook_contains_verified_inline_styles(tmp_path):
 
     assert completed.returncode == 0, completed.stderr
     rendered = exported.read_text(encoding="utf-8")
-    assert 'id=\\"k-reits-inline-styles\\"' in rendered
+    assert rendered.count("data-k-reits-component-styles") >= 20
     assert ".dense-header" in rendered
     assert "linear-gradient(120deg, #0c263f" in rendered
 
