@@ -3,7 +3,7 @@
 
 **현재 버전: v15.1.0 - Decision-First Tax Review**
 
-**Marimo Dashboard 바로가기**(https://molab.marimo.io/notebooks/nb_7YuJg1PbT4zBe2GTy2QmCj)
+**Marimo Dashboard 바로가기**(https://molab.marimo.io/notebooks/nb_haCXQuxL2iAqAwPcx8tA4M/app)
 
 상장리츠의 공시자료, 거시경제 지표, 자산별 정보와 공시가격 데이터를 연결하여 Assurance 및 Tax 관점의 초기 위험 검토를 지원하는 공개 포트폴리오 프로젝트입니다. 기존 Streamlit 앱과 Golden Asset 감사 검토에 집중한 Marimo Assurance 앱을 병행합니다.
 
